@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="theme-color" content="#1a237e">
+<title>ورود — مدرسه پورصابری</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Vazirmatn','Tahoma',sans-serif;background:linear-gradient(135deg,#0d1440,#1a237e 50%,#3949ab);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .login-card{background:#fff;border-radius:20px;padding:30px 24px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4);animation:fadeIn .5s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .emblem{display:flex;align-items:center;justify-content:center;width:80px;height:80px;border-radius:50%;font-size:40px;margin:0 auto 16px;box-shadow:0 0 0 5px rgba(255,213,79,.2),0 6px 15px rgba(0,0,0,.15);overflow:hidden}
+  .emblem img{width:100%;height:100%;object-fit:cover}
+  h1{text-align:center;font-size:17px;color:#1a237e;margin-bottom:6px;font-weight:800;line-height:1.4}
+  .sub{text-align:center;font-size:12px;color:#6b7890;margin-bottom:20px;line-height:1.7}
+  .info-box{background:#f0f4fc;border-radius:10px;padding:10px 12px;font-size:11.5px;color:#3949ab;margin-bottom:16px;line-height:1.7;border-right:3px solid #3949ab}
+  .info-box b{color:#1a237e}
+  .form-group{margin-bottom:14px}
+  .form-label{display:block;font-size:12px;font-weight:600;color:#5a6a85;margin-bottom:6px}
+  .form-input{width:100%;padding:13px 15px;border:1.5px solid #e3e9f2;border-radius:12px;font-family:inherit;font-size:15px;outline:none;background:#f7f9fc;transition:all .2s;text-align:center;letter-spacing:2px;direction:ltr;color:#1a2233}
+  .form-input:focus{border-color:#3949ab;background:#fff;box-shadow:0 0 0 4px rgba(57,73,171,.1)}
+  .form-input::placeholder{letter-spacing:0;direction:rtl;font-size:11.5px;color:#97a2b5}
+  .password-wrapper{position:relative}
+  .password-wrapper .form-input{padding-left:80px}
+  .toggle-password{position:absolute;left:8px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;font-size:18px;padding:6px;color:#97a2b5;font-family:inherit}
+  .cal-toggle{position:absolute;left:38px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;font-size:18px;padding:6px;color:#97a2b5;font-family:inherit}
+  .remember-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;font-size:12px;color:#5a6a85;gap:10px}
+  .remember-label{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-weight:600}
+  .remember-label input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:#3949ab}
+  .clear-saved{background:transparent;border:none;color:#c62828;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;text-decoration:underline;padding:4px}
+  .submit-btn{width:100%;padding:14px;background:linear-gradient(135deg,#1a237e,#3949ab);color:#fff;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;box-shadow:0 6px 18px rgba(26,35,126,.3);transition:transform .1s}
+  .submit-btn:active{transform:scale(.97)}
+  .submit-btn:disabled{opacity:.6;cursor:not-allowed}
+  .msg{padding:10px 12px;border-radius:10px;font-size:12.5px;margin-bottom:12px;text-align:center;display:none;line-height:1.6}
+  .msg.visible{display:block}
+  .msg.error{background:#ffebee;color:#c62828}
+  .msg.success{background:#e8f5e9;color:#2e7d32}
+  .loading{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-left:8px;vertical-align:middle}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .hint{text-align:center;font-size:11px;color:#97a2b5;margin-top:16px;line-height:1.8}
+  .hint .icon{display:inline-block;width:20px;height:20px;background:#eef2f9;border-radius:50%;text-align:center;line-height:20px;margin-left:4px;font-size:11px}
+  .saved-badge{display:inline-block;background:#e8f5e9;color:#2e7d32;padding:4px 12px;border-radius:10px;font-size:11px;font-weight:700;margin-bottom:12px;width:100%;text-align:center}
+  .saved-badge.hidden{display:none}
+
+  /* 🎂 تقویم شمسی */
+  .date-picker-popup{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border:1px solid #e3e9f2;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.25);padding:12px;z-index:300;direction:rtl}
+  .dp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #e3e9f2}
+  .dp-month-year{font-size:13px;font-weight:800;color:#1a237e}
+  .dp-nav{display:flex;gap:4px}
+  .dp-nav button{width:30px;height:30px;border-radius:8px;border:1px solid #e3e9f2;background:#f7f9fc;cursor:pointer;font-family:inherit;font-size:14px;color:#6b7890}
+  .dp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .dp-day-head{font-size:10px;font-weight:700;color:#97a2b5;text-align:center;padding:5px 0}
+  .dp-day{aspect-ratio:1;border:none;background:transparent;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;color:#1a2233;cursor:pointer;padding:0}
+  .dp-day:hover{background:#f0f4fc}
+  .dp-day.today{border:2px solid #ffb300}
+  .dp-day.selected{background:linear-gradient(135deg,#1a237e,#3949ab);color:#fff}
+  .dp-day.empty{visibility:hidden}
+  .dp-footer{padding-top:8px;margin-top:8px;border-top:1px solid #e3e9f2;display:flex;gap:6px}
+  .dp-footer button{flex:1;padding:8px;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;border:1px solid #e3e9f2}
+  .dp-footer .dp-close{background:#f7f9fc;color:#6b7890}
+  .dp-footer .dp-clear{background:#ffebee;color:#c62828;border:none}
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="emblem" id="emblemBox">🎓</div>
+  <h1>دبیرستان شبانه‌روزی شهید پورصابری</h1>
+  <div class="sub">ورود دانش‌آموزان، دبیران و مدیران</div>
+
+  <div id="savedBadge" class="saved-badge hidden">✅ کد ملی شما ذخیره شده</div>
+
+  <div class="info-box">
+    <b>دانش‌آموزان:</b> کد ملی + تاریخ تولد<br>
+    <b>دبیران و مدیران:</b> کد ملی + کد پرسنلی
+  </div>
+
+  <div class="msg" id="msg"></div>
+
+  <form id="loginForm" onsubmit="handleLogin(event)" autocomplete="off">
+    <div class="form-group">
+      <label class="form-label">کد ملی</label>
+      <input type="text" class="form-input" id="nationalId" name="userCodeX" placeholder="کد ملی خود را وارد کنید" maxlength="20" inputmode="text" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="form-group" style="position:relative">
+      <label class="form-label">رمز ورود</label>
+      <div class="password-wrapper">
+        <input type="password" class="form-input" id="password" name="passCodeX" placeholder="مثال: ۱۳۸۷۰۵۱۵ (تاریخ تولد)" maxlength="20" inputmode="numeric" required autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <button type="button" class="cal-toggle" id="calToggleBtn" onclick="toggleBirthdayPicker(event)" title="انتخاب از تقویم">📅</button>
+        <button type="button" class="toggle-password" id="togglePassBtn" onclick="togglePasswordVisibility()" title="نمایش رمز">👁️</button>
+      </div>
+      <div id="birthdayPickerContainer" style="position:relative"></div>
+    </div>
+    
+    <div class="remember-row">
+      <label class="remember-label">
+        <input type="checkbox" id="rememberMe">
+        <span>کد ملی را به خاطر بسپار</span>
+      </label>
+      <button type="button" class="clear-saved" id="clearSavedBtn" onclick="clearSaved()" style="display:none">پاک کردن</button>
+    </div>
+    
+    <button type="submit" class="submit-btn" id="submitBtn">
+      <span id="btnText">ورود به اپلیکیشن</span>
+    </button>
+  </form>
+
+  <div class="hint">
+    <span class="icon">🔒</span> اطلاعات شما نزد ما محفوظ است
+  </div>
+</div>
+
+<script>
+  const API_URL = 'https://script.google.com/macros/s/AKfycbzEaFypApt9n16GB_OyCXM1e6hWlCMjptaXYIuvNDoejt3jr77qldqEPWiFiXhVOiGV/exec';
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const emblem = document.getElementById('emblemBox');
+    const img = new Image();
+    img.onload = () => { emblem.innerHTML = '<img src="icon-512.png" alt="لوگو">'; };
+    img.src = 'icon-512.png';
+    
+    // 🎯 بازیابی کد ملی ذخیره‌شده
+    const savedNid = localStorage.getItem('saved_nationalId');
+    if (savedNid) {
+      document.getElementById('nationalId').value = savedNid;
+      document.getElementById('rememberMe').checked = true;
+      document.getElementById('savedBadge').classList.remove('hidden');
+      document.getElementById('clearSavedBtn').style.display = 'block';
+      // 🎯 فوکوس خودکار روی فیلد رمز
+      setTimeout(() => {
+        const pwd = document.getElementById('password');
+        if (pwd) pwd.focus();
+      }, 200);
+    }
+  });
+
+  function toEnglishNumbers(str) {
+    const persian = '۰۱۲۳۴۵۶۷۸۹';
+    const arabic = '٠١٢٣٤٥٦٧٨٩';
+    return str.replace(/[۰-۹٠-٩]/g, ch => {
+      let idx = persian.indexOf(ch);
+      if (idx === -1) idx = arabic.indexOf(ch);
+      return idx;
+    });
+  }
+
+  document.getElementById('nationalId').addEventListener('input', function(e) {
+    e.target.value = toEnglishNumbers(e.target.value).replace(/[^0-9A-Za-z]/g, '').slice(0, 20);
+  });
+  
+  document.getElementById('password').addEventListener('input', function(e) {
+    e.target.value = toEnglishNumbers(e.target.value).replace(/[^0-9A-Za-z]/g, '').slice(0, 20);
+  });
+
+  function togglePasswordVisibility() {
+    const inp = document.getElementById('password');
+    const btn = document.getElementById('togglePassBtn');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      btn.textContent = '🙈';
+    } else {
+      inp.type = 'password';
+      btn.textContent = '👁️';
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 🎂 تقویم شمسی تاریخ تولد
+  // ═══════════════════════════════════════════════════════════
+  let _dpState = { jy: 0, jm: 0, jd: 0, popup: null };
+
+  function isJalaliLeap(jy){
+    var m = jy % 33;
+    return m===1||m===5||m===9||m===13||m===17||m===22||m===26||m===30;
+  }
+  function getJalaliMonthDays(jy, jm){
+    if(jm <= 6) return 31;
+    if(jm <= 11) return 30;
+    return isJalaliLeap(jy) ? 30 : 29;
+  }
+  function jalaliToGregorian(jy, jm, jd){
+    jy = parseInt(jy); jm = parseInt(jm); jd = parseInt(jd);
+    var jy2 = jy - 979;
+    var days = 365*jy2 + Math.floor(jy2/33)*8 + Math.floor(((jy2%33)+3)/4);
+    var jm_days = [0,31,31,31,31,31,31,30,30,30,30,30,29];
+    for(var i=1; i<jm; i++) days += jm_days[i];
+    days += jd - 1;
+    days += 79;
+    var gy = 1600 + 400*Math.floor(days/146097); days %= 146097;
+    var leap = true;
+    if(days >= 36525){ days--; gy += 100*Math.floor(days/36524); days %= 36524; if(days>=365) days++; else leap=false; }
+    gy += 4*Math.floor(days/1461); days %= 1461;
+    if(days >= 366){ leap=false; days--; gy += Math.floor(days/365); days %= 365; }
+    var gd = [0,31,28,31,30,31,30,31,31,30,31,30,31];
+    if(leap) gd[2] = 29;
+    var gm;
+    for(gm=1; gm<=12; gm++){ if(days < gd[gm]) break; days -= gd[gm]; }
+    return { gy: gy, gm: gm, gd: days + 1 };
+  }
+  function jalaliWeekdayCol(jy, jm, jd){
+    var g = jalaliToGregorian(jy, jm, jd);
+    var d = new Date(g.gy, g.gm-1, g.gd);
+    return (d.getDay() + 1) % 7;
+  }
+  function toFaDigits(n){
+    return String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+  }
+
+  function toggleBirthdayPicker(e){
+    e.stopPropagation();
+    if(_dpState.popup){ closeBirthdayPicker(); return; }
+    
+    // اگه مقدار داره، ازش شروع کن
+    const cur = document.getElementById('password').value.trim();
+    let jy, jm, jd;
+    if(/^\d{8}$/.test(cur)){
+      jy = parseInt(cur.substring(0,4));
+      jm = parseInt(cur.substring(4,6));
+      jd = parseInt(cur.substring(6,8));
+    } else {
+      // پیش‌فرض: ۱۵ سال پیش
+      const today = new Date();
+      jy = today.getFullYear() - 1387 + 1387 - 15 + 1403 - 1403 + 1404; // fallback
+      // ساده‌تر: تاریخ پیش‌فرض 1387/05/15
+      jy = 1387; jm = 5; jd = 15;
+    }
+    _dpState.jy = jy; _dpState.jm = jm; _dpState.jd = jd;
+    
+    const popup = document.createElement('div');
+    popup.className = 'date-picker-popup';
+    popup.onclick = (ev) => ev.stopPropagation();
+    document.getElementById('birthdayPickerContainer').innerHTML = '';
+    document.getElementById('birthdayPickerContainer').appendChild(popup);
+    _dpState.popup = popup;
+    renderBirthdayPicker();
+    setTimeout(() => document.addEventListener('click', _closeDpOutside), 10);
+  }
+
+  function _closeDpOutside(e){
+    if(_dpState.popup && !_dpState.popup.contains(e.target)) closeBirthdayPicker();
+  }
+
+  function closeBirthdayPicker(){
+    document.removeEventListener('click', _closeDpOutside);
+    if(_dpState.popup){ try{ _dpState.popup.remove(); }catch(e){} }
+    _dpState.popup = null;
+  }
+
+    function renderBirthdayPicker(){
+    if(!_dpState.popup) return;
+    const jy = _dpState.jy, jm = _dpState.jm, jd = _dpState.jd;
+    const monthNames = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+    const days = getJalaliMonthDays(jy, jm);
+    const startCol = jalaliWeekdayCol(jy, jm, 1);
+    
+    let h = '';
+    h += '<div class="dp-header">';
+    h += '<div class="dp-month-year">' + monthNames[jm-1] + ' ' + toFaDigits(jy) + '</div>';
+    h += '<div class="dp-nav">';
+    h += '<button type="button" onclick="dpPrevYear()" title="سال قبل">«</button>';
+    h += '<button type="button" onclick="dpPrevMonth()" title="ماه قبل">‹</button>';
+    h += '<button type="button" onclick="dpNextMonth()" title="ماه بعد">›</button>';
+    h += '<button type="button" onclick="dpNextYear()" title="سال بعد">»</button>';
+    h += '</div></div>';
+    
+    h += '<div class="dp-grid">';
+    ['ش','ی','د','س','چ','پ','ج'].forEach(d => { h += '<div class="dp-day-head">' + d + '</div>'; });
+    for(let i=0; i<startCol; i++) h += '<div class="dp-day empty"></div>';
+    for(let d=1; d<=days; d++){
+      const cls = 'dp-day' + (d === jd ? ' selected' : '');
+      h += '<button type="button" class="' + cls + '" onclick="dpSelectDay(' + d + ')">' + toFaDigits(d) + '</button>';
+    }
+    h += '</div>';
+    
+    h += '<div class="dp-footer">';
+    h += '<button type="button" class="dp-clear" onclick="dpClear()">پاک کردن</button>';
+    h += '<button type="button" class="dp-close" onclick="closeBirthdayPicker()">بستن</button>';
+    h += '</div>';
+    
+    _dpState.popup.innerHTML = h;
+  }
+
+  function dpPrevYear(){
+    _dpState.jy--;
+    renderBirthdayPicker();
+  }
+  function dpNextYear(){
+    _dpState.jy++;
+    renderBirthdayPicker();
+  }
+
+  function dpPrevMonth(){
+    _dpState.jm--;
+    if(_dpState.jm < 1){ _dpState.jm = 12; _dpState.jy--; }
+    renderBirthdayPicker();
+  }
+  function dpNextMonth(){
+    _dpState.jm++;
+    if(_dpState.jm > 12){ _dpState.jm = 1; _dpState.jy++; }
+    renderBirthdayPicker();
+  }
+  function dpSelectDay(d){
+    _dpState.jd = d;
+    const jy = _dpState.jy, jm = _dpState.jm;
+    const val = jy + '' + (jm < 10 ? '0' + jm : jm) + (d < 10 ? '0' + d : d);
+    document.getElementById('password').value = val;
+    closeBirthdayPicker();
+    document.getElementById('password').focus();
+  }
+  function dpClear(){
+    document.getElementById('password').value = '';
+    closeBirthdayPicker();
+    document.getElementById('password').focus();
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // ورود
+  // ═══════════════════════════════════════════════════════════
+  function showMsg(text, type) {
+    const msg = document.getElementById('msg');
+    msg.textContent = text;
+    msg.className = 'msg visible ' + type;
+  }
+  function hideMsg() { document.getElementById('msg').classList.remove('visible'); }
+
+  function clearSaved() {
+    if (confirm('کد ملی ذخیره‌شده پاک شود؟')) {
+      localStorage.removeItem('saved_nationalId');
+      document.getElementById('savedBadge').classList.add('hidden');
+      document.getElementById('clearSavedBtn').style.display = 'none';
+      document.getElementById('rememberMe').checked = false;
+      document.getElementById('nationalId').value = '';
+      document.getElementById('password').value = '';
+      showMsg('✅ کد ملی ذخیره‌شده پاک شد', 'success');
+      setTimeout(hideMsg, 2000);
+    }
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    
+    const nationalId = document.getElementById('nationalId').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const rememberMe = document.getElementById('rememberMe').checked;
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    
+    hideMsg();
+
+    if (nationalId.length < 4) { showMsg('⚠️ کد ملی معتبر نیست', 'error'); return; }
+    if (password.length < 4) { showMsg('⚠️ رمز ورود معتبر نیست', 'error'); return; }
+
+    submitBtn.disabled = true;
+    btnText.innerHTML = 'در حال بررسی <span class="loading"></span>';
+
+    try {
+      const params = new URLSearchParams();
+      params.append('action', 'login');
+      params.append('nationalId', nationalId);
+      params.append('password', password);
+      
+      const response = await fetch(API_URL, { method: 'POST', body: params });
+      const result = await response.json();
+
+      if (result.success) {
+        // 🎯 ذخیره کد ملی
+        if (rememberMe) {
+          localStorage.setItem('saved_nationalId', nationalId);
+        } else {
+          localStorage.removeItem('saved_nationalId');
+        }
+        
+        const roleLabel = { 'دانش‌آموز':'دانش‌آموز','دبیر':'دبیر','مدیر':'مدیر','معاون':'معاون' };
+        showMsg('✅ خوش آمدید ' + result.name + ' (' + (roleLabel[result.role] || result.role) + ')', 'success');
+        
+        localStorage.setItem('user_name', result.name);
+        localStorage.setItem('user_nationalId', result.nationalId);
+        localStorage.setItem('user_role', result.role);
+        localStorage.setItem('login_time', Date.now());
+        
+        if (result.role === 'دانش‌آموز') {
+          localStorage.setItem('student_gradeCode', result.gradeCode);
+          localStorage.setItem('student_gradeName', result.gradeName);
+          localStorage.setItem('student_base', result.base);
+          localStorage.setItem('student_field', result.field);
+          localStorage.setItem('student_phone', result.phone);
+        }
+        if (result.role === 'دبیر' || result.role === 'مدیر' || result.role === 'معاون') {
+          localStorage.setItem('teacher_subject', result.subject || '');
+          localStorage.setItem('teacher_classes', JSON.stringify(result.classes || []));
+        }
+
+        setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+      } else {
+        showMsg('❌ ' + (result.message || 'خطای ناشناخته'), 'error');
+        submitBtn.disabled = false;
+        btnText.textContent = 'ورود به اپلیکیشن';
+      }
+    } catch (err) {
+      console.error('خطا:', err);
+      showMsg('❌ خطا در ارتباط با سرور. لطفاً دوباره تلاش کنید.', 'error');
+      submitBtn.disabled = false;
+      btnText.textContent = 'ورود به اپلیکیشن';
+    }
+  }
+</script>
+
+</body>
+</html>
