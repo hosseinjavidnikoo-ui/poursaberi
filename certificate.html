@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ویرایشگر تقدیرنامه</title>
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/shabnam-font@v5.0.1/dist/font-face.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/sahel-font@v3.4.0/dist/font-face.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/samim-font@v4.0.5/dist/font-face.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/rastikerdar/gandom-font@v2.0.1/dist/font-face.css" rel="stylesheet">
+<style>
+    @font-face { font-family: 'IranNastaliq'; src: url('https://cdn.jsdelivr.net/gh/mostafaebrahimi/nastaliq-font@main/IranNastaliq.ttf') format('truetype'); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Vazirmatn', sans-serif; background: #2d3748; display: flex; flex-direction: column; align-items: center; }
+    
+    /* 🎛️ نوار ابزار */
+    .toolbar { background: #fff; padding: 10px 15px; width: 100%; display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: sticky; top: 0; z-index: 100; border-bottom: 2px solid #cbd5e0; }
+    .toolbar select, .toolbar button { padding: 6px 10px; font-family: 'Vazirmatn', sans-serif; font-size: 13px; font-weight: bold; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; background: #edf2f7; color: #2d3748; }
+    .toolbar button:hover { background: #cbd5e0; }
+    .toolbar .divider { width: 1px; height: 24px; background: #cbd5e0; margin: 0 4px; }
+    .toolbar .btn-var { background: #e2e8f0; color: #1a202c; border-color: #a0aec0; }
+    .btn-special { background: #f59e0b !important; color: #fff !important; border: none !important; }
+    .btn-bulk { background: #8b5cf6 !important; color: #fff !important; border: none !important; }
+    .btn-print { background: #2e7d32 !important; color: #fff !important; border: none !important; }
+    .padding-controls { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #4a5568; background: #f7fafc; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0; }
+    .padding-controls input { width: 50px; padding: 4px; text-align: center; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold; }
+
+    /* 📜 کادر A4 */
+    .cert-page { width: 210mm; height: 296mm; margin: 20px 0; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); background-color: #fff; transition: all 0.3s ease; -webkit-print-color-adjust: exact; print-color-adjust: exact; overflow: hidden; }
+    .cert-inner { width: 100%; height: 100%; position: relative; display: flex; flex-direction: column; z-index: 2; background-color: #fff; transition: all 0.3s ease; }
+
+    /* 🎨 طرح‌ها */
+    .theme-classic { padding: 15mm; background-color: #0d1440; background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23d4af37' stroke-width='1'%3E%3Cpath d='M30 0l15 15 15 15-15 15-15 15-15-15-15-15 15-15z'/%3E%3Cpath d='M30 10l10 10 10 10-10 10-10 10-10-10-10-10 10-10z'/%3E%3Ccircle cx='30' cy='30' r='4' fill='%23d4af37'/%3E%3C/g%3E%3C/svg%3E"); }
+    .theme-classic .cert-inner { background-color: #fdfbf7; border: 3px solid #d4af37; box-shadow: inset 0 0 0 8px #fdfbf7, inset 0 0 0 10px #0d1440; padding: 20mm; }
+
+    .theme-emerald { padding: 15mm; background-color: #064e3b; background-image: url("data:image/svg+xml,%3Csvg width='50' height='50' viewBox='0 0 50 50' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23fbbf24' stroke-width='1.2'%3E%3Cpath d='M25 0c10 15 15 10 25 25-10 15-15 10-25 25C15 35 10 40 0 25 10 10 15 15 25 0z'/%3E%3Ccircle cx='25' cy='25' r='3' fill='%23fbbf24'/%3E%3C/g%3E%3C/svg%3E"); }
+    .theme-emerald .cert-inner { background-color: #f4fbf7; border: 3px solid #fbbf24; box-shadow: inset 0 0 0 8px #f4fbf7, inset 0 0 0 10px #064e3b; padding: 20mm; }
+
+    .theme-crimson { padding: 15mm; background-color: #881337; background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23fcd34d' stroke-width='1.2'%3E%3Cpath d='M20 0C20 20 0 20 0 40M20 0C20 20 40 20 40 40M0 0C20 0 20 40 40 40'/%3E%3Ccircle cx='20' cy='20' r='5' fill='%23fcd34d' fill-opacity='0.5'/%3E%3C/g%3E%3C/svg%3E"); }
+    .theme-crimson .cert-inner { background-color: #fff1f2; border: 3px solid #fcd34d; box-shadow: inset 0 0 0 8px #fff1f2, inset 0 0 0 10px #881337; padding: 20mm; }
+
+    .theme-golbolbol { padding: 12mm; background-color: #0d1440; background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23d4af37' stroke-width='1'%3E%3Cpath d='M30 0 L40 10 L60 10 L60 30 L50 40 L60 50 L60 60 L40 60 L30 50 L20 60 L0 60 L0 50 L10 40 L0 30 L0 10 L20 10 Z' stroke-opacity='0.3'/%3E%3Cpath d='M30 15 Q45 30 30 45 Q15 30 30 15 Z' stroke-width='2'/%3E%3Ccircle cx='30' cy='30' r='4' fill='%23d4af37'/%3E%3C/g%3E%3C/svg%3E"); }
+    .theme-golbolbol .cert-inner { background-color: #fefdfa; border: 4px solid #d4af37; box-shadow: inset 0 0 0 6px #0d1440, inset 0 0 0 9px #d4af37; padding: 22mm; }
+
+    .theme-custom { padding: 0; background-color: #fff; background-size: 100% 100%; background-repeat: no-repeat; }
+    .theme-custom .cert-inner { background-color: transparent; border: none; box-shadow: none; }
+
+    .theme-none { padding: 0; background-color: #fff; background-image: none; }
+    .theme-none .cert-inner { background-color: #fff; border: none; box-shadow: none; padding: 20mm 30mm; }
+
+    /* 📝 ناحیه ویرایش */
+    .editable-area { width: 100%; height: 100%; outline: none; display: flex; flex-direction: column; text-align: center; font-size: 26px; line-height: 1.8; position: relative; z-index: 2; font-family: 'IranNastaliq', 'Vazirmatn', serif; color: #0d1440; cursor: text; min-height: 100%; }
+    .bismillah { font-size: 26px; margin-bottom: 10px; }
+    .school-name { font-size: 22px; margin-bottom: 25px; color: #333; }
+    .cert-title { font-size: 95px; line-height: 1; margin-bottom: 35px; }
+    .student-line { width: 100%; text-align: right; font-size: 28px; margin-bottom: 30px; line-height: 1.5; }
+    .student-name { font-size: 48px; color: #c62828; }
+    .cert-body { font-size: 26px; line-height: inherit; text-align: justify; text-align-last: center; margin-bottom: 20px; width: 100%; }
+    .cert-footer { margin-top: auto; width: 100%; display: flex; justify-content: space-between; font-size: 24px; padding: 0 10px; }
+
+    /* 🖱️ اجزای شناور */
+    .draggable { cursor: move; position: absolute; z-index: 10; }
+    
+    /* مهر - بدون کادر */
+    #stampContainer { 
+        bottom: 100px; left: 80px; width: 120px; height: 120px; 
+        display: none; justify-content: center; align-items: center;
+        background: transparent;
+    }
+    #stampImg { width: 100%; height: 100%; object-fit: contain; opacity: 0.9; }
+    
+    /* QR - بدون کادر و پس‌زمینه سفید */
+    #qrContainer { 
+        bottom: 40px; right: 40px; 
+        width: 120px;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        background: transparent;
+        padding: 0;
+    }
+    #qrcodeImg { 
+        width: 105px; 
+        height: 105px; 
+        object-fit: contain;
+        display: block;
+        mix-blend-mode: multiply;
+    }
+    #qrContainer .qr-caption {
+        font-family: 'Vazirmatn', sans-serif;
+        font-size: 8.5px;
+        font-weight: 700;
+        color: #0d1440;
+        text-align: center;
+        margin-top: 2px;
+        padding: 2px;
+        border-top: 1px solid rgba(212, 175, 55, 0.6);
+        width: 100%;
+        line-height: 1.3;
+        background: transparent;
+    }
+
+    @media print {
+        @page { size: A4 portrait; margin: 0; }
+        body { background: #fff; }
+        .toolbar { display: none !important; }
+        .cert-page { box-shadow: none; margin: 0 !important; }
+    }
+</style>
+</head>
+<body>
+
+<!-- 🎛️ نوار ابزار -->
+<div class="toolbar">
+    <select id="bgThemeSelect" onchange="changeBgTheme(this.value)" style="background: #e3f2fd; border-color: #64b5f6; color: #1565c0;">
+        <option value="theme-none" selected>طرح: بدون طرح</option>
+        <option value="theme-classic">طرح ۱: لاجوردی</option>
+        <option value="theme-emerald">طرح ۲: زمردی</option>
+        <option value="theme-crimson">طرح ۳: اناری</option>
+        <option value="theme-golbolbol">طرح ۴: تذهیب</option>
+    </select>
+    <input type="file" id="bgUploadInput" accept="image/*" style="display: none;" onchange="handleBgUpload(event)">
+    <button onclick="document.getElementById('bgUploadInput').click()" style="background: #e0f2fe; color: #0284c7; border-color: #38bdf8;">🖼️ آپلود طرح</button>
+    
+    <select id="rankTemplateSelect" onchange="loadRankTemplate(this.value)" style="background: #fff3e0; border-color: #ffb74d; color: #e65100;">
+        <option value="1" selected>متن: رتبه اول</option>
+        <option value="2">متن: رتبه دوم</option>
+        <option value="3">متن: رتبه سوم</option>
+    </select>
+    <div class="divider"></div>
+    
+    <button onclick="formatDoc('undo')" title="برگشت">↩️</button>
+    <button onclick="formatDoc('redo')" title="جلو">↪️</button>
+    <button onclick="formatDoc('bold')" style="font-weight:900;" title="بولد">B</button>
+    <button onclick="formatDoc('italic')" style="font-style:italic;" title="ایتالیک">I</button>
+    <button onclick="formatDoc('justifyRight')" title="راست‌چین">⬅️</button>
+    <button onclick="formatDoc('justifyCenter')" title="وسط‌چین">↔️</button>
+    <button onclick="formatDoc('justifyLeft')" title="چپ‌چین">➡️</button>
+    
+    <button onclick="formatDoc('foreColor', '#c62828')" style="background:#ffebee; color:#c62828; font-weight:900;" title="قرمز">🔴 قرمز</button>
+    <button onclick="formatDoc('foreColor', '#0d1440')" style="background:#e8eaf6; color:#0d1440; font-weight:900;" title="سرمه‌ای">⚫ سرمه</button>
+    <button onclick="formatDoc('foreColor', '#2e7d32')" style="background:#e8f5e9; color:#2e7d32; font-weight:900;" title="سبز">🟢 سبز</button>
+    
+    <select onchange="formatDoc('fontName', this.value)">
+        <option value="'IranNastaliq', serif">نستعلیق</option>
+        <option value="'Vazirmatn', sans-serif" selected>وزیرمتن</option>
+        <option value="'Shabnam', sans-serif">شبنم</option>
+        <option value="'Sahel', sans-serif">ساحل</option>
+        <option value="'Samim', sans-serif">صمیم</option>
+        <option value="'Gandom', sans-serif">گندم</option>
+    </select>
+    <button onclick="changeFontSize(1)" title="بزرگ‌تر">A+</button>
+    <button onclick="changeFontSize(-1)" title="کوچک‌تر">A-</button>
+    <button onclick="changeLineHeight(0.2)" title="فاصله خطوط +">↕️+</button>
+    <button onclick="changeLineHeight(-0.2)" title="فاصله خطوط -">↕️-</button>
+    <div class="divider"></div>
+    
+    <button class="btn-var" onclick="insertVar('[نام دانش‌آموز]')">[نام]</button>
+    <button class="btn-var" onclick="insertVar('[کلاس]')">[کلاس]</button>
+    <button class="btn-var" onclick="insertVar('[رتبه]')">[رتبه]</button>
+    <div class="divider"></div>
+    
+    <div class="padding-controls">
+        <span>پدینگ (mm):</span>
+        <input type="number" id="padVert" value="20" min="5" max="100" onchange="applyPadding()" title="بالا/پایین">
+        <span>↕️</span>
+        <input type="number" id="padHoriz" value="30" min="5" max="100" onchange="applyPadding()" title="چپ/راست">
+        <span>↔️</span>
+    </div>
+    <div class="divider"></div>
+    
+    <button class="btn-special" onclick="document.getElementById('stampInput').click()">🖋️ مهر</button>
+    <button class="btn-special" onclick="openQRModal()">🔳 QR</button>
+    <button class="btn-bulk" onclick="openBulkModal()">📦 گروهی</button>
+    <button class="btn-print" onclick="printCertificate()">🖨️ پرینت / PDF</button>
+</div>
+
+<input type="file" id="stampInput" accept="image/png, image/jpeg" style="display: none;" onchange="handleStampUpload(event)">
+
+<!-- 📜 تقدیرنامه -->
+<div class="cert-page theme-none" id="certPage">
+    <div class="cert-inner" id="certInner">
+        <div class="editable-area" id="editor" contenteditable="true">
+            <div class="bismillah">باسمه تعالی</div>
+            <div class="school-name">دبیرستان شهید پور صابری</div>
+            <div class="cert-title">تقدیرنامه</div>
+            <div class="student-line">
+                دانش‌آموز گرامی، جناب آقای <span class="student-name" id="studentNameText">[نام دانش‌آموز]</span>
+            </div>
+            <div class="cert-body" id="mainText"></div>
+            <div class="cert-footer">
+                <div>تاریخ: <span id="certDate">۱۴۰۵/۰۷/۳۰</span></div>
+                <div>مدیر دبیرستان</div>
+            </div>
+            <p style="min-height: 100px; margin: 0;"><br></p>
+        </div>
+    </div>
+    <div id="stampContainer" class="draggable"><img id="stampImg" src=""></div>
+    <div id="qrContainer" class="draggable">
+        <img id="qrcodeImg" src="">
+        <div class="qr-caption">🔐 کد راستی‌آزمایی</div>
+    </div>
+</div>
+
+<!-- 🔳 پنجره ساخت کد راستی‌آزمایی -->
+<div id="qrModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9999; align-items:center; justify-content:center; padding:20px; overflow-y:auto;">
+    <div style="background:#fff; padding:24px; border-radius:16px; width:100%; max-width:460px; box-shadow:0 20px 60px rgba(0,0,0,0.5); margin:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h3 style="font-size:17px; color:#0d1440;">🔳 ساخت کد راستی‌آزمایی</h3>
+            <button onclick="closeQRModal()" style="background:transparent; border:none; font-size:22px; cursor:pointer; color:#666;">✕</button>
+        </div>
+        <p style="font-size:11.5px; color:#6b7890; margin-bottom:18px; line-height:1.7; background:#fef3c7; padding:10px; border-radius:8px; border-right:3px solid #f59e0b;">
+            💡 این کد به عنوان <b>تأییدیه اصالت</b> روی تقدیرنامه قرار می‌گیرد. هر کسی QR را اسکن کند، اطلاعات را می‌بیند و از جعلی نبودن مطمئن می‌شود.
+        </p>
+        
+        <label style="font-size:12.5px; font-weight:700; display:block; margin-bottom:5px; color:#1a202c;">👤 نام دانش‌آموز:</label>
+        <input type="text" id="qrName" style="width:100%; padding:11px; margin-bottom:12px; border:1.5px solid #cbd5e0; border-radius:8px; font-family:inherit; font-size:13px;">
+        
+        <label style="font-size:12.5px; font-weight:700; display:block; margin-bottom:5px; color:#1a202c;">🎓 کلاس / پایه:</label>
+        <input type="text" id="qrClass" style="width:100%; padding:11px; margin-bottom:12px; border:1.5px solid #cbd5e0; border-radius:8px; font-family:inherit; font-size:13px;">
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+            <div>
+                <label style="font-size:12.5px; font-weight:700; display:block; margin-bottom:5px; color:#1a202c;">🏆 رتبه:</label>
+                <select id="qrRank" style="width:100%; padding:11px; border:1.5px solid #cbd5e0; border-radius:8px; font-family:inherit; font-size:13px;">
+                    <option value="اول">رتبه اول</option>
+                    <option value="دوم">رتبه دوم</option>
+                    <option value="سوم">رتبه سوم</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size:12.5px; font-weight:700; display:block; margin-bottom:5px; color:#1a202c;">📅 تاریخ:</label>
+                <input type="text" id="qrDate" style="width:100%; padding:11px; border:1.5px solid #cbd5e0; border-radius:8px; font-family:inherit; font-size:13px; direction:ltr; text-align:center;">
+            </div>
+        </div>
+        
+        <label style="font-size:12.5px; font-weight:700; display:block; margin-bottom:5px; color:#1a202c;">🔐 کد راستی‌آزمایی (خودکار):</label>
+        <div style="display:flex; gap:8px; margin-bottom:18px;">
+            <input type="text" id="qrCode" style="flex:1; padding:11px; border:1.5px solid #fbbf24; border-radius:8px; font-family:'Courier New',monospace; direction:ltr; text-align:center; font-weight:900; letter-spacing:2px; color:#c62828; background:#fef3c7; font-size:14px;">
+            <button onclick="regenCode()" title="تولید کد جدید" style="padding:11px 16px; background:#3b82f6; color:#fff; border:none; border-radius:8px; cursor:pointer; font-family:inherit; font-weight:700; font-size:15px;">🎲</button>
+        </div>
+        
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button onclick="closeQRModal()" style="padding:11px 20px; border-radius:8px; border:1.5px solid #cbd5e0; background:#f7fafc; cursor:pointer; font-family:inherit; font-weight:700; font-size:13px;">لغو</button>
+            <button onclick="generateQRCode()" style="padding:11px 24px; border-radius:8px; border:none; background:#2e7d32; color:#fff; cursor:pointer; font-family:inherit; font-weight:700; font-size:13px;">✓ ساخت QR</button>
+        </div>
+    </div>
+</div>
+
+<!-- 📦 پنجره صدور گروهی -->
+<div id="bulkModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:#fff; padding:20px; border-radius:12px; width:100%; max-width:400px;">
+        <h3 style="margin-bottom:15px; font-size:16px; color:#0d1440;">📦 صدور گروهی (۳ نفر)</h3>
+        <label style="font-size:12px; font-weight:bold;">نام کلاس:</label>
+        <input type="text" id="bulkClass" style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px;">
+        <label style="font-size:12px; font-weight:bold;">نام نفر اول (رتبه ۱):</label>
+        <input type="text" id="bulk1" style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px;">
+        <label style="font-size:12px; font-weight:bold;">نام نفر دوم (رتبه ۲):</label>
+        <input type="text" id="bulk2" style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:6px;">
+        <label style="font-size:12px; font-weight:bold;">نام نفر سوم (رتبه ۳):</label>
+        <input type="text" id="bulk3" style="width:100%; padding:8px; margin-bottom:15px; border:1px solid #ccc; border-radius:6px;">
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button onclick="document.getElementById('bulkModal').style.display='none'" style="padding:8px 15px; border-radius:8px; border:1px solid #ccc; cursor:pointer; font-family:inherit;">لغو</button>
+            <button onclick="executeBulkPrint()" style="padding:8px 15px; border-radius:8px; border:none; background:#8b5cf6; color:#fff; cursor:pointer; font-family:inherit;">تولید PDF</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// 📌 متغیرها
+// ============================================================
+const studentData = { name: '', className: '', rank: 'رتبه اول' };
+let currentZoom = 1;
+let customBgData = null;
+
+const rankTemplates = {
+    '1': 'با افتخار و احترام، کسب <b style="color:#c62828;">رتبه اول</b> در میان دانش‌آموزان کلاس <b style="color:#c62828;">[کلاس]</b>، نشان از تلاش، پشتکار و تعهد ارزشمند شما به علم و دانش دارد.<br><br>این موفقیت ارزشمند را به شما، دانش‌آموز عزیز و خانواده محترم‌تان تبریک گفته و از زحمات و کوشش‌های بی‌وقفه‌تان صمیمانه قدردانی می‌کنیم. با آرزوی موفقیت‌های روزافزون در مسیر آینده.',
+    '2': 'با افتخار و احترام، کسب <b style="color:#c62828;">رتبه دوم</b> در میان دانش‌آموزان کلاس <b style="color:#c62828;">[کلاس]</b>، نشان از همت والا، پشتکار و اراده استوار شما در مسیر کسب علم و دانش دارد.<br><br>این موفقیت ارزشمند را به شما و خانواده محترم‌تان صمیمانه تبریک عرض نموده و توفیق روزافزون شما را در تمامی مراحل زندگی و تحصیل از درگاه خداوند متعال خواستاریم.',
+    '3': 'با افتخار و احترام، کسب <b style="color:#c62828;">رتبه سوم</b> در میان دانش‌آموزان کلاس <b style="color:#c62828;">[کلاس]</b>، بازتابی از تلاش‌های مستمر و انگیزه درخشان شما در راه یادگیری و پیشرفت است.<br><br>ضمن تبریک این موفقیت به شما و خانواده محترم‌تان، امیدواریم در سایه توجهات الهی، همواره در قله‌های افتخار و دانش بدرخشید.'
+};
+
+// ============================================================
+// 🎛️ توابع ابزار
+// ============================================================
+function loadRankTemplate(rankNum) {
+    const body = document.getElementById('mainText');
+    const clsName = studentData.className || '[کلاس]';
+    body.innerHTML = rankTemplates[rankNum].replace(/\[کلاس\]/g, clsName);
+    studentData.rank = rankNum === '1' ? 'رتبه اول' : (rankNum === '2' ? 'رتبه دوم' : 'رتبه سوم');
+}
+
+function formatDoc(cmd, value = null) {
+    document.execCommand(cmd, false, value);
+    document.getElementById('editor').focus();
+}
+
+function changeFontSize(change) {
+    currentZoom = Math.max(0.6, Math.min(2, currentZoom + (change * 0.1)));
+    document.getElementById('editor').style.zoom = currentZoom;
+}
+
+function changeLineHeight(change) {
+    const editor = document.getElementById('editor');
+    let current = parseFloat(editor.style.lineHeight) || 1.8;
+    current = Math.max(1.2, Math.min(3, current + change));
+    editor.style.lineHeight = current;
+}
+
+function insertVar(variableText) {
+    document.getElementById('editor').focus();
+    document.execCommand('insertText', false, variableText);
+}
+
+function changeBgTheme(theme) {
+    const page = document.getElementById('certPage');
+    const inner = document.getElementById('certInner');
+    page.className = 'cert-page ' + theme;
+    if (theme === 'theme-custom' && customBgData) {
+        page.style.backgroundImage = 'url(' + customBgData + ')';
+        page.style.backgroundColor = '#fff';
+        inner.style.backgroundColor = 'transparent';
+        inner.style.border = 'none';
+        inner.style.boxShadow = 'none';
+        applyPadding();
+    } else {
+        page.style.backgroundImage = '';
+        inner.style.backgroundColor = '';
+        inner.style.border = '';
+        inner.style.boxShadow = '';
+        if (theme === 'theme-none') applyPadding();
+        else inner.style.padding = '';
+    }
+}
+
+function applyPadding() {
+    const theme = document.getElementById('bgThemeSelect').value;
+    if (theme === 'theme-none' || theme === 'theme-custom') {
+        const v = document.getElementById('padVert').value || 20;
+        const h = document.getElementById('padHoriz').value || 30;
+        document.getElementById('certInner').style.padding = v + 'mm ' + h + 'mm';
+    }
+}
+
+function handleBgUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            customBgData = e.target.result;
+            const select = document.getElementById('bgThemeSelect');
+            let opt = select.querySelector('option[value="theme-custom"]');
+            if (!opt) {
+                opt = document.createElement('option');
+                opt.value = 'theme-custom';
+                opt.textContent = 'طرح آپلود شده';
+                select.appendChild(opt);
+            }
+            select.value = 'theme-custom';
+            changeBgTheme('theme-custom');
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function handleStampUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('stampImg').src = e.target.result;
+            document.getElementById('stampContainer').style.display = 'flex';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// ============================================================
+// 🔳 سیستم راستی‌آزمایی QR
+// ============================================================
+function genVerificationCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+    code += '-';
+    for (let i = 0; i < 4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+    return code;
+}
+
+function regenCode() {
+    document.getElementById('qrCode').value = genVerificationCode();
+}
+
+function closeQRModal() {
+    document.getElementById('qrModal').style.display = 'none';
+}
+
+function openQRModal() {
+    const container = document.getElementById('qrContainer');
+    if (container.style.display === 'flex') {
+        if (confirm('کد QR قبلی حذف شود؟')) {
+            container.style.display = 'none';
+        }
+        return;
+    }
+    document.getElementById('qrName').value = studentData.name || '';
+    document.getElementById('qrClass').value = studentData.className || '';
+    document.getElementById('qrRank').value = studentData.rank.replace('رتبه ', '').trim();
+    document.getElementById('qrDate').value = document.getElementById('certDate').textContent;
+    document.getElementById('qrCode').value = genVerificationCode();
+    document.getElementById('qrModal').style.display = 'flex';
+}
+
+function generateQRCode() {
+    const name = document.getElementById('qrName').value.trim();
+    const cls = document.getElementById('qrClass').value.trim();
+    const rank = document.getElementById('qrRank').value;
+    const date = document.getElementById('qrDate').value.trim();
+    const code = document.getElementById('qrCode').value.trim();
+    
+    if (!name || !cls || !code) {
+        alert('⚠️ لطفاً همه فیلدها را پر کنید');
+        return;
+    }
+    
+    const qrText = 
+        '✅ تقدیرنامه معتبر\n' +
+        'دبیرستان شهید پور صابری\n' +
+        '══════════════\n' +
+        '👤 نام: ' + name + '\n' +
+        '🎓 کلاس: ' + cls + '\n' +
+        '🏆 رتبه: ' + rank + '\n' +
+        '📅 تاریخ: ' + date + '\n' +
+        '══════════════\n' +
+        '🔐 کد راستی‌آزمایی:\n' +
+        code + '\n' +
+        '══════════════\n' +
+        'این کد توسط مدرسه صادر شده';
+    
+    document.getElementById('qrcodeImg').src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(qrText) + '&color=0d1440&bgcolor=ffffff';
+    document.getElementById('qrContainer').style.display = 'flex';
+    
+    window._qrVerification = { name, cls, rank, date, code, qrText };
+    console.log('🎫 کد راستی‌آزمایی صادر شد:', window._qrVerification);
+    
+    closeQRModal();
+}
+
+// ============================================================
+// 🖱️ درگ و دراپ
+// ============================================================
+function makeDraggable(elmnt) {
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    elmnt.onmousedown = dragMouseDown;
+    elmnt.ontouchstart = dragTouchStart;
+    function dragMouseDown(e) {
+        if (e.target.closest('[contenteditable="true"]') && !e.target.classList.contains('draggable')) return;
+        e = e || window.event; e.preventDefault();
+        pos3 = e.clientX; pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+    }
+    function dragTouchStart(e) {
+        if (e.target.closest('[contenteditable="true"]') && !e.target.classList.contains('draggable')) return;
+        let touch = e.touches[0];
+        pos3 = touch.clientX; pos4 = touch.clientY;
+        document.ontouchend = closeDragElement;
+        document.ontouchmove = elementDragTouch;
+    }
+    function elementDrag(e) {
+        e = e || window.event; e.preventDefault();
+        pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY;
+        pos3 = e.clientX; pos4 = e.clientY;
+        elmnt.style.top = (elmnt.offsetTop - pos2) + 'px';
+        elmnt.style.left = (elmnt.offsetLeft - pos1) + 'px';
+        elmnt.style.bottom = 'auto'; elmnt.style.right = 'auto';
+    }
+    function elementDragTouch(e) {
+        let touch = e.touches[0];
+        pos1 = pos3 - touch.clientX; pos2 = pos4 - touch.clientY;
+        pos3 = touch.clientX; pos4 = touch.clientY;
+        elmnt.style.top = (elmnt.offsetTop - pos2) + 'px';
+        elmnt.style.left = (elmnt.offsetLeft - pos1) + 'px';
+        elmnt.style.bottom = 'auto'; elmnt.style.right = 'auto';
+    }
+    function closeDragElement() {
+        document.onmouseup = null; document.onmousemove = null;
+        document.ontouchend = null; document.ontouchmove = null;
+    }
+}
+
+// ============================================================
+// 📅 تاریخ شمسی
+// ============================================================
+function getTodayPersian() {
+    const d = new Date();
+    const gy = d.getFullYear(), gm = d.getMonth() + 1, gd = d.getDate();
+    const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    let jy = (gy <= 1600) ? 0 : 979;
+    let y = (gy <= 1600) ? gy : gy - 1600;
+    const gy2 = (gm > 2) ? (y + 1) : y;
+    let days = (365 * y) + parseInt((gy2 + 3) / 4) - parseInt((gy2 + 99) / 100) + parseInt((gy2 + 399) / 400) - 80 + gd + g_d_m[gm - 1];
+    jy += 33 * parseInt(days / 12053); days %= 12053;
+    jy += 4 * parseInt(days / 1461); days %= 1461;
+    if (days > 365) { jy += parseInt((days - 1) / 365); days = (days - 1) % 365; }
+    const jm = (days < 186) ? 1 + parseInt(days / 31) : 7 + parseInt((days - 186) / 30);
+    const jd = 1 + ((days < 186) ? (days % 31) : ((days - 186) % 30));
+    return jy + '/' + (jm < 10 ? '0' : '') + jm + '/' + (jd < 10 ? '0' : '') + jd;
+}
+
+// ============================================================
+// 🎯 موقعیت اجزا
+// ============================================================
+function getPosition(container) {
+    const rect = container.getBoundingClientRect();
+    const pageRect = document.getElementById('certPage').getBoundingClientRect();
+    return {
+        x: rect.left - pageRect.left,
+        y: rect.top - pageRect.top
+    };
+}
+
+// ============================================================
+// 🖨️ ساخت HTML پرینت
+// ============================================================
+function buildPrintHTML(forBulk, bulkNames, bulkClass) {
+    const editor = document.getElementById('editor');
+    const computed = window.getComputedStyle(editor);
+    const currentFont = computed.fontFamily;
+    const currentFontSize = computed.fontSize;
+    const currentLineHeight = computed.lineHeight;
+    const activeTheme = document.getElementById('bgThemeSelect').value;
+    const innerPadding = document.getElementById('certInner').style.padding || '';
+    const dateStr = document.getElementById('certDate').textContent;
+
+    // مهر
+    const stampContainer = document.getElementById('stampContainer');
+    const stampEl = document.getElementById('stampImg');
+    let stampHTML = '';
+    if (stampContainer.style.display === 'flex' && stampEl.src) {
+        const pos = getPosition(stampContainer);
+        stampHTML = '<img src="' + stampEl.src + '" style="position:absolute;top:' + pos.y + 'px;left:' + pos.x + 'px;width:120px;height:120px;object-fit:contain;opacity:0.9;">';
+    }
+
+    // QR - بدون کادر، با mix-blend-mode
+    const qrContainer = document.getElementById('qrContainer');
+    const qrEl = document.getElementById('qrcodeImg');
+    let qrHTML = '';
+    if (qrContainer.style.display === 'flex' && qrEl.src) {
+        const pos = getPosition(qrContainer);
+        qrHTML = '<div style="position:absolute;top:' + pos.y + 'px;left:' + pos.x + 'px;width:120px;display:flex;flex-direction:column;align-items:center;background:transparent;">' +
+            '<img src="' + qrEl.src + '" style="width:105px;height:105px;object-fit:contain;display:block;mix-blend-mode:multiply;">' +
+            '<div style="font-family:Vazirmatn,sans-serif;font-size:8.5px;font-weight:700;color:#0d1440;text-align:center;margin-top:2px;padding:2px;border-top:1px solid rgba(212,175,55,0.6);width:100%;line-height:1.3;">🔐 کد راستی‌آزمایی</div>' +
+            '</div>';
+    }
+
+    let bgStyle = '';
+    if (activeTheme === 'theme-custom' && customBgData) {
+        bgStyle = "background-image:url('" + customBgData + "');background-size:100% 100%;background-color:#fff;";
+    }
+
+    let pagesContent = '';
+    if (forBulk) {
+        for (let i = 0; i < 3; i++) {
+            const rankNum = (i + 1).toString();
+            const bodyText = rankTemplates[rankNum].replace(/\[کلاس\]/g, bulkClass);
+            pagesContent += '<div class="cert-page ' + activeTheme + '" style="' + bgStyle + 'page-break-after:always;">' +
+                '<div class="cert-inner" ' + (innerPadding && (activeTheme === 'theme-none' || activeTheme === 'theme-custom') ? 'style="padding:' + innerPadding + '"' : '') + '>' +
+                '<div class="editable-area" style="font-family:' + currentFont + ';font-size:' + currentFontSize + ';line-height:' + currentLineHeight + ';zoom:' + currentZoom + ';">' +
+                '<div class="bismillah">باسمه تعالی</div>' +
+                '<div class="school-name">دبیرستان شهید پور صابری</div>' +
+                '<div class="cert-title">تقدیرنامه</div>' +
+                '<div class="student-line">دانش‌آموز گرامی، جناب آقای <span class="student-name">' + bulkNames[i] + '</span></div>' +
+                '<div class="cert-body">' + bodyText + '</div>' +
+                '<div class="cert-footer"><div>تاریخ: ' + dateStr + '</div><div>مدیر دبیرستان</div></div>' +
+                '</div></div></div>';
+        }
+    } else {
+        pagesContent = '<div class="cert-page ' + activeTheme + '" style="' + bgStyle + '">' +
+            '<div class="cert-inner" ' + (innerPadding && (activeTheme === 'theme-none' || activeTheme === 'theme-custom') ? 'style="padding:' + innerPadding + '"' : '') + '>' +
+            '<div class="editable-area" style="font-family:' + currentFont + ';font-size:' + currentFontSize + ';line-height:' + currentLineHeight + ';zoom:' + currentZoom + ';">' +
+            editor.innerHTML +
+            '</div>' +
+            stampHTML + qrHTML +
+            '</div></div>';
+    }
+
+    // CSS پرینت - با box-sizing درست
+    let css = '*{box-sizing:border-box;margin:0;padding:0}';
+    css += '@font-face{font-family:IranNastaliq;src:url(https://cdn.jsdelivr.net/gh/mostafaebrahimi/nastaliq-font@main/IranNastaliq.ttf)}';
+    css += 'html,body{margin:0;padding:0;background:#fff;font-family:Vazirmatn,sans-serif;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}';
+    css += '.cert-page{width:210mm;height:297mm;position:relative;margin:0;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}';
+    css += '.cert-inner{width:100%;height:100%;position:relative;display:flex;flex-direction:column;z-index:2}';
+    css += '.editable-area{display:flex;flex-direction:column;text-align:center;height:100%;color:#0d1440;position:relative;z-index:2}';
+    css += '.bismillah{font-size:26px;margin-bottom:10px}.school-name{font-size:22px;margin-bottom:25px;color:#333}';
+    css += '.cert-title{font-size:95px;line-height:1;margin-bottom:35px}.student-line{font-size:28px;text-align:right;margin-bottom:30px}';
+    css += '.student-name{font-size:48px;color:#c62828}.cert-body{font-size:26px;line-height:inherit;text-align:justify;text-align-last:center;margin-bottom:20px}';
+    css += '.cert-footer{margin-top:auto;width:100%;display:flex;justify-content:space-between;font-size:24px;padding:0 10px}';
+    
+    css += '.theme-classic{padding:15mm;background-color:#0d1440;background-image:url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' stroke=\'%23d4af37\' stroke-width=\'1\'%3E%3Cpath d=\'M30 0l15 15 15 15-15 15-15 15-15-15-15-15 15-15z\'/%3E%3Cpath d=\'M30 10l10 10 10 10-10 10-10 10-10-10-10-10 10-10z\'/%3E%3Ccircle cx=\'30\' cy=\'30\' r=\'4\' fill=\'%23d4af37\'/%3E%3C/g%3E%3C/svg%3E")}';
+    css += '.theme-classic .cert-inner{background-color:#fdfbf7;border:3px solid #d4af37;box-shadow:inset 0 0 0 8px #fdfbf7,inset 0 0 0 10px #0d1440;padding:20mm}';
+    
+    css += '.theme-emerald{padding:15mm;background-color:#064e3b;background-image:url("data:image/svg+xml,%3Csvg width=\'50\' height=\'50\' viewBox=\'0 0 50 50\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' stroke=\'%23fbbf24\' stroke-width=\'1.2\'%3E%3Cpath d=\'M25 0c10 15 15 10 25 25-10 15-15 10-25 25C15 35 10 40 0 25 10 10 15 15 25 0z\'/%3E%3C/g%3E%3C/svg%3E")}';
+    css += '.theme-emerald .cert-inner{background-color:#f4fbf7;border:3px solid #fbbf24;box-shadow:inset 0 0 0 8px #f4fbf7,inset 0 0 0 10px #064e3b;padding:20mm}';
+    
+    css += '.theme-crimson{padding:15mm;background-color:#881337;background-image:url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' stroke=\'%23fcd34d\' stroke-width=\'1.2\'%3E%3Cpath d=\'M20 0C20 20 0 20 0 40M20 0C20 20 40 20 40 40\'/%3E%3C/g%3E%3C/svg%3E")}';
+    css += '.theme-crimson .cert-inner{background-color:#fff1f2;border:3px solid #fcd34d;box-shadow:inset 0 0 0 8px #fff1f2,inset 0 0 0 10px #881337;padding:20mm}';
+    
+    css += '.theme-golbolbol{padding:12mm;background-color:#0d1440;background-image:url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' stroke=\'%23d4af37\' stroke-width=\'1\'%3E%3Cpath d=\'M30 15 Q45 30 30 45 Q15 30 30 15 Z\' stroke-width=\'2\'/%3E%3C/g%3E%3C/svg%3E")}';
+    css += '.theme-golbolbol .cert-inner{background-color:#fefdfa;border:4px solid #d4af37;box-shadow:inset 0 0 0 6px #0d1440,inset 0 0 0 9px #d4af37;padding:22mm}';
+    
+    css += '.theme-none{padding:0;background:#fff}';
+    css += '.theme-none .cert-inner{background:#fff;border:none;box-shadow:none;padding:20mm 30mm}';
+    
+    css += '.theme-custom{padding:0}';
+    css += '.theme-custom .cert-inner{background:transparent;border:none;box-shadow:none}';
+    
+    css += '@page{size:A4 portrait;margin:0}';
+
+    return '<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>پرینت تقدیرنامه</title>' +
+        '<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">' +
+        '<style>' + css + '</style></head><body>' + pagesContent + '</body></html>';
+}
+
+// ============================================================
+// 🖨️ پرینت با iframe مخفی
+// ============================================================
+function printWithFrame(html) {
+    const old = document.getElementById('printHelperFrame');
+    if (old) old.remove();
+    
+    const frame = document.createElement('iframe');
+    frame.id = 'printHelperFrame';
+    frame.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none;';
+    document.body.appendChild(frame);
+    
+    const doc = frame.contentWindow.document;
+    doc.open();
+    doc.write(html);
+    doc.close();
+    
+    const waitForFonts = () => {
+        if (doc.fonts && doc.fonts.ready) {
+            return doc.fonts.ready;
+        }
+        return Promise.resolve();
+    };
+    
+    waitForFonts().then(() => {
+        setTimeout(() => {
+            try {
+                frame.contentWindow.focus();
+                frame.contentWindow.print();
+            } catch(e) {
+                alert('خطا در پرینت. لطفاً از Ctrl+P استفاده کنید.');
+            }
+            setTimeout(() => { 
+                try { frame.remove(); } catch(e) {} 
+            }, 5000);
+        }, 1500);
+    }).catch(() => {
+        setTimeout(() => {
+            try { frame.contentWindow.print(); } catch(e) {}
+        }, 2000);
+    });
+}
+
+function printCertificate() {
+    const html = buildPrintHTML(false, null, null);
+    printWithFrame(html);
+}
+
+// ============================================================
+// 📦 صدور گروهی
+// ============================================================
+function openBulkModal() {
+    document.getElementById('bulkClass').value = studentData.className || '';
+    document.getElementById('bulk1').value = '';
+    document.getElementById('bulk2').value = '';
+    document.getElementById('bulk3').value = '';
+    document.getElementById('bulkModal').style.display = 'flex';
+}
+
+function executeBulkPrint() {
+    const className = document.getElementById('bulkClass').value.trim();
+    const names = [
+        document.getElementById('bulk1').value.trim(),
+        document.getElementById('bulk2').value.trim(),
+        document.getElementById('bulk3').value.trim()
+    ];
+    if (!className || !names[0] || !names[1] || !names[2]) { 
+        alert('همه فیلدها را پر کنید'); 
+        return; 
+    }
+    document.getElementById('bulkModal').style.display = 'none';
+    
+    const html = buildPrintHTML(true, names, className);
+    printWithFrame(html);
+}
+
+// ============================================================
+// 🎯 لود اولیه از URL
+// ============================================================
+const urlParams = new URLSearchParams(window.location.search);
+const paramName = urlParams.get('name');
+const paramClass = urlParams.get('class');
+const paramRank = urlParams.get('rank');
+const paramBulk = urlParams.get('bulk');
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('certDate').textContent = getTodayPersian();
+    makeDraggable(document.getElementById('stampContainer'));
+    makeDraggable(document.getElementById('qrContainer'));
+
+    if (paramBulk === 'true') {
+        setTimeout(openBulkModal, 300);
+    } else if (paramName) {
+        studentData.name = paramName;
+        studentData.className = paramClass || '';
+        document.getElementById('studentNameText').textContent = paramName;
+        const rankNum = (paramRank === '2' ? '2' : (paramRank === '3' ? '3' : '1'));
+        document.getElementById('rankTemplateSelect').value = rankNum;
+        loadRankTemplate(rankNum);
+    } else {
+        loadRankTemplate('1');
+    }
+});
+</script>
+</body>
+</html>
