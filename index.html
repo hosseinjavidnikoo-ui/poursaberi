@@ -774,6 +774,106 @@ window._gradeSubjectsMap = {
   '11e': ['ریاضی و آمار', 'علوم و فنون', 'فلسفه', 'روان‌شناسی', 'دین و زندگی', 'تاریخ', 'جامعه‌شناسی', 'فارسی', 'عربی', 'زبان انگلیسی', 'ورزش', 'جغرافیا', 'نگارش', 'انسان و محیط'],
   '12e': ['ریاضی و آمار', 'علوم و فنون', 'فلسفه', 'منطق', 'روان‌شناسی', 'ادبیات فارسی', 'نگارش', 'دین و زندگی', 'عربی', 'زبان انگلیسی', 'تاریخ', 'جغرافیا', 'جامعه‌شناسی', 'اقتصاد', 'سلامت و بهداشت', 'هویت اجتماعی', 'ورزش']
 };
+
+// 🎯 نقشه درس‌ها به دبیر (بر اساس برنامه هفتگی)
+window._subjectTeacherMap = {
+  '10t': {
+    'ریاضیات': 'اردستانی',
+    'زیست‌شناسی': 'نقوی',
+    'فیزیک': 'میراخوری',
+    'شیمی': 'فدایی',
+    'ادبیات فارسی': 'رسالتی',
+    'نگارش': 'رسالتی',
+    'دین و زندگی': 'حسینی‌نواز',
+    'عربی': 'خوش‌بیان',
+    'زبان انگلیسی': 'رمضانی',
+    'جغرافیا': 'ابراهیمی',
+    'تفکر': 'حسینی‌نواز',
+    'دفاعی': 'اردستانی',
+    'ورزش': 'کچویی'
+  },
+  '10e': {
+    'ریاضی و آمار': 'اردستانی',
+    'اقتصاد': 'الله‌نوری',
+    'منطق': 'کیاشمشکی',
+    'تاریخ': 'قاسم‌خانلو',
+    'دین و زندگی': 'حسینی‌نواز',
+    'جامعه‌شناسی': 'گراوند',
+    'فارسی': 'کاظمی',
+    'جغرافیا': 'ابراهیمی',
+    'ورزش': 'کچویی',
+    'علوم و فنون': 'رسالتی',
+    'تفکر': 'حسینی‌نواز',
+    'عربی': 'خوش‌بیان',
+    'دفاعی': 'ابراهیمی',
+    'زبان انگلیسی': 'رمضانی'
+  },
+  '11t': {
+    'ریاضیات': 'اردستانی',
+    'زیست‌شناسی': 'نقوی',
+    'فیزیک': 'میراخوری',
+    'شیمی': 'فدائی',
+    'ادبیات فارسی': 'کاظمی',
+    'نگارش': 'رسالتی',
+    'دین و زندگی': 'حسینی‌نواز',
+    'عربی': 'خوش‌بیان',
+    'زبان انگلیسی': 'میراخوری',
+    'تاریخ معاصر': 'گراوند',
+    'زمین‌شناسی': 'آل‌بویه',
+    'انسان و محیط': 'پرتوئی',
+    'ورزش': 'کچوئی'
+  },
+  '11e': {
+    'ریاضی و آمار': 'اردستانی',
+    'علوم و فنون': 'رسالتی',
+    'فلسفه': 'کیاشمشکی',
+    'روان‌شناسی': 'الله‌نوری',
+    'دین و زندگی': 'حسینی‌نواز',
+    'تاریخ': 'قاسم‌خانلو',
+    'جامعه‌شناسی': 'نظری',
+    'فارسی': 'کاظمی',
+    'عربی': 'خوش‌بیان',
+    'زبان انگلیسی': 'میراخوری',
+    'ورزش': 'کچوئی',
+    'جغرافیا': 'ابراهیمی',
+    'نگارش': 'رسالتی',
+    'انسان و محیط': 'پرتوئی'
+  },
+  '12t': {
+    'ریاضیات': 'اردستانی',
+    'زیست‌شناسی': 'نقوی',
+    'فیزیک': 'میراخوری',
+    'شیمی': 'فدایی',
+    'ادبیات فارسی': 'رسالتی',
+    'نگارش': 'کاظمی',
+    'دین و زندگی': 'حسینی‌نواز',
+    'عربی': 'خوش‌بیان',
+    'زبان انگلیسی': 'میراخوری',
+    'سلامت و بهداشت': 'آل‌بویه',
+    'هویت اجتماعی': 'گراوند',
+    'مدیریت خانواده': 'الله‌نوری',
+    'ورزش': 'کچویی'
+  },
+  '12e': {
+    'ریاضی و آمار': 'اردستانی',
+    'علوم و فنون': 'رسالتی',
+    'فلسفه': 'کیاشمشکی',
+    'منطق': 'کیاشمشکی',
+    'روان‌شناسی': 'الله‌نوری',
+    'ادبیات فارسی': 'رسالتی',
+    'نگارش': 'کاظمی',
+    'دین و زندگی': 'حسینی‌نواز',
+    'عربی': 'خوش‌بیان',
+    'زبان انگلیسی': 'رمضانی',
+    'تاریخ': 'قاسم‌خانلو',
+    'جغرافیا': 'ابراهیمی',
+    'جامعه‌شناسی': 'نظری',
+    'اقتصاد': 'الله‌نوری',
+    'سلامت و بهداشت': 'پرتوئی',
+    'هویت اجتماعی': 'گراوند',
+    'ورزش': 'کچوئی'
+  }
+};
 let currentUser={};
 let hwStatusCache={};
 let selectedPriority='عادی';
@@ -845,7 +945,7 @@ async function buildTabs(){
   }else if(role==='دبیر'){
     tabs=[{id:'home',icon:'🏠',label:'خانه'},{id:'myClasses',icon:'🎓',label:'کلاس‌ها'},{id:'attendance',icon:'✅',label:'حضور و غیاب'},{id:'grades',icon:'📝',label:'ثبت نمرات'},{id:'addExam',icon:'➕',label:'ثبت امتحان'},{id:'addHomework',icon:'📚',label:'ثبت تکلیف'},{id:'myHomework',icon:'📖',label:'تکالیف'},{id:'chat',icon:'💬',label:'چت'},{id:'news',icon:'📢',label:'اطلاعیه'}];
   }else{
-    tabs=[{id:'home',icon:'🏠',label:'خانه'},{id:'attendance',icon:'✅',label:'حضور و غیاب'},{id:'attReport',icon:'📊',label:'گزارش غیبت'},{id:'contactLogs',icon:'📞',label:'گزارش تماس و پیامک'},{id:'manageGrades',icon:'📈',label:'مدیریت نمرات'},{id:'adminGradeEntry',icon:'✏️',label:'ورود نمرات'},{id:'sendNews',icon:'📢',label:'اطلاعیه'},{id:'manageNews',icon:'📰',label:'مدیریت'},{id:'manageFeedback',icon:'✍️',label:'انتقادات'},{id:'addExam',icon:'➕',label:'ثبت امتحان'},{id:'myExams',icon:'📋',label:'امتحانات'},{id:'myHomework',icon:'📖',label:'تکالیف'},{id:'chat',icon:'💬',label:'چت'}];
+    tabs=[{id:'home',icon:'🏠',label:'خانه'},{id:'attendance',icon:'✅',label:'حضور و غیاب'},{id:'attReport',icon:'📊',label:'گزارش غیبت'},{id:'contactLogs',icon:'📞',label:'گزارش تماس'},{id:'certificates',icon:'🏆',label:'تقدیرنامه‌ها'},{id:'manageGrades',icon:'📈',label:'مدیریت نمرات'},{id:'adminGradeEntry',icon:'✏️',label:'ورود نمرات'},{id:'sendNews',icon:'📢',label:'اطلاعیه'},{id:'manageNews',icon:'📰',label:'مدیریت'},{id:'manageFeedback',icon:'✍️',label:'انتقادات'},{id:'addExam',icon:'➕',label:'ثبت امتحان'},{id:'myExams',icon:'📋',label:'امتحانات'},{id:'myHomework',icon:'📖',label:'تکالیف'},{id:'chat',icon:'💬',label:'چت'}];
   }
   
   const tabBar=document.getElementById('tabBar');tabBar.innerHTML='';
@@ -925,6 +1025,7 @@ function switchTab(tabId,btn){
   if(tabId==='adminGradeEntry')renderAdminGradeEntry();
   if(tabId==='myReportCard')renderStudentReportCard();
   if(tabId==='contactLogs')loadContactLogs();
+  if(tabId==='certificates') renderCertificatesPage();
 }
 
 function goToTab(tabId){
@@ -3392,9 +3493,13 @@ async function loadManagerGradeTable() {
     const allGrades = (rGrades.success && rGrades.data) ? rGrades.data : [];
     
     // استفاده از لیست درس‌های دقیق خود کلاس
-    const expectedSubjects = {};
+   const expectedSubjects = {};
     const subjList = window._gradeSubjectsMap[classCode] || [];
-    subjList.forEach(s => { expectedSubjects[s] = ['دبیر مربوطه']; });
+    const teacherMap = window._subjectTeacherMap[classCode] || {};
+    subjList.forEach(s => { 
+      const teacherName = teacherMap[s];
+      expectedSubjects[s] = [teacherName ? 'آقای ' + teacherName : 'دبیر مربوطه'];
+    });
     expectedSubjects['انضباط'] = ['معاونت/مدیریت'];
     
     const conductData = (rConduct && rConduct.success && rConduct.data) ? rConduct.data : [];
@@ -4199,6 +4304,111 @@ async function loadContactLogs() {
   } catch(e) {
     list.innerHTML = '<div class="empty-state"><div class="empty-title">خطا در دریافت اطلاعات</div></div>';
   }
+} // 🎯 این آکولاد بسته شدن تابع بود که جا افتاده بود!
+  // ============================================================
+// 🏆 توابع تب تقدیرنامه‌ها (بدون باز شدن صفحه جدید)
+// ============================================================
+
+// ============================================================
+// 🏆 توابع تب تقدیرنامه‌ها
+// ============================================================
+
+// ============================================================
+// 🏆 توابع تب تقدیرنامه‌ها
+// ============================================================
+
+function renderCertificatesPage() {
+  const el = document.getElementById('tab-certificates');
+  if(!el) return;
+  
+  const classes = ['10t','10e','11t','11e','12t','12e'];
+  const cn = {'10t':'دهم تجربی','10e':'دهم انسانی','11t':'یازدهم تجربی','11e':'یازدهم انسانی','12t':'دوازدهم تجربی','12e':'دوازدهم انسانی'};
+  const co = classes.map(c=>`<option value="${escAttr(c)}">${esc(cn[c]||c)}</option>`).join('');
+  
+  const months = [
+    {key:'m', label:'مهر'}, {key:'aban', label:'آبان'}, {key:'azar', label:'آذر'}, {key:'mid1', label:'میان‌ترم ۱'}, {key:'dey', label:'دی'},
+    {key:'bahman', label:'بهمن'}, {key:'esfand', label:'اسفند'}, {key:'farvardin', label:'فروردین'}, {key:'mid2', label:'میان‌ترم ۲'}, {key:'ordibehesht', label:'اردیبهشت'}, {key:'khordad', label:'خرداد'}, {key:'all', label:'کل سال'}
+  ];
+  const mo = months.map(m=>`<option value="${escAttr(m.key)}">${esc(m.label)}</option>`).join('');
+  
+  el.innerHTML = `
+    <div class="report-header" style="margin-bottom:12px; padding:14px;">
+      <div style="font-size:14px; font-weight:800; color:var(--header-2); margin-bottom:12px;">🏆 صدور تقدیرنامه نفرات برتر</div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <div style="flex:1; min-width:130px">
+          <label class="form-label">کلاس</label>
+          <select class="form-select" id="certClassSelect">${co}</select>
+        </div>
+        <div style="flex:1; min-width:130px">
+          <label class="form-label">ماه</label>
+          <select class="form-select" id="certMonthSelect">${mo}</select>
+        </div>
+        <button class="submit-btn primary-blue" onclick="loadTopStudents()" style="margin-top:18px; padding:11px 20px; border-radius:10px; width:auto;">🔍 مشاهده نفرات</button>
+      </div>
+    </div>
+    <div id="topStudentsContainer" style="margin-top:14px;"></div>
+  `;
+}
+
+async function loadTopStudents() {
+  const classCode = document.getElementById('certClassSelect').value;
+  const monthKey = document.getElementById('certMonthSelect').value;
+  const container = document.getElementById('topStudentsContainer');
+  
+  container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+  
+  try {
+    const url = API_URL + '?action=getTopStudents&classCode=' + encodeURIComponent(classCode) + '&monthKey=' + encodeURIComponent(monthKey) + '&t=' + Date.now();
+    const res = await fetch(url).then(r=>r.json());
+    
+    if (!res.success || !res.data || res.data.length === 0) {
+  let debugMsg = 'ممکن است نمرات این ماه کامل ثبت نشده باشد.';
+  if (res.debug) {
+    debugMsg = JSON.stringify(res.debug, null, 2).replace(/[{}"]/g, '').replace(/,/g, '\n');
+  } else if (res.message) {
+    debugMsg = res.message;
+  }
+  container.innerHTML = '<div class="empty-state"><div class="empty-icon">🏆</div><div class="empty-title">نفری با نمرات کامل پیدا نشد</div><div class="empty-desc" style="white-space:pre-wrap;text-align:right;font-size:11px;direction:ltr;background:#f5f5f5;padding:10px;border-radius:8px;margin-top:10px">' + debugMsg + '</div></div>';
+  return;
+}
+    
+    let html = '<div style="font-size:13px;font-weight:800;color:var(--header-2);margin-bottom:12px;">نفرات برتر (بر اساس معدل و انضباط)</div>';
+    
+    res.data.forEach((st) => {
+      const medal = st.rank === 1 ? '🥇' : (st.rank === 2 ? '🥈' : '🥉');
+      const rankText = st.isShared ? `مشترکاً ${st.rank === 1 ? 'اول' : st.rank === 2 ? 'دوم' : 'سوم'}` : `رتبه ${st.rank === 1 ? 'اول' : st.rank === 2 ? 'دوم' : 'سوم'}`;
+      
+      html += `<div class="student-row" style="flex-wrap:wrap; gap:10px; padding:12px; margin-bottom:8px; background:var(--card); border:1px solid var(--line); border-radius:12px;">`;
+      html += `<div class="s-avatar" style="background:linear-gradient(135deg,#1a237e,#3949ab); width:40px; height:40px;">${medal}</div>`;
+      html += `<div class="s-info" style="flex:1;"><div class="s-name" style="font-size:14px;">${esc(st.name)}</div><div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${esc(st.gradeName)}</div></div>`;
+      html += `<div style="font-size:12px; font-weight:700; color:#c62828;">${rankText}</div>`;
+      
+      html += `<button onclick="openCertFrame('${escAttr(st.name)}', '${escAttr(st.gradeName)}', '${st.rank}')" style="padding:8px 16px; border-radius:8px; background:#2e7d32; color:#fff; border:none; cursor:pointer; font-family:inherit; font-weight:700; font-size:12px;">🖨️ صدور تقدیرنامه</button>`;
+      
+      html += `</div>`;
+    });
+    
+    html += `<button onclick="openCertFrame('', '', '')" class="submit-btn primary-orange" style="margin-top:15px; padding:12px; border-radius:10px; width:100%; display:block; text-align:center; font-family:inherit; border:none; cursor:pointer;">📦 صدور تقدیرنامه گروهی (دستی)</button>`;
+    
+    container.innerHTML = html;
+  } catch(e) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-title">خطا در دریافت اطلاعات</div></div>';
+  }
+}
+
+function openCertFrame(name, className, rank) {
+    const frame = document.getElementById('certFrame');
+    if(!name) {
+        frame.src = 'certificate.html?bulk=true';
+    } else {
+        frame.src = 'certificate.html?name=' + encodeURIComponent(name) + '&class=' + encodeURIComponent(className) + '&rank=' + rank;
+    }
+    document.getElementById('certModalOverlay').style.display = 'flex';
+}
+
+function closeCertFrame() {
+    document.getElementById('certModalOverlay').style.display = 'none';
+    document.getElementById('certFrame').src = ''; 
 }
 // ============================================================
 // راه‌اندازی
@@ -4799,5 +5009,13 @@ document.addEventListener('visibilitychange', () => {
 });
 </script>
 
+<!-- 🎯 پنجره شناور برای نمایش تقدیرنامه (بدون باز شدن تب جدید) -->
+<div id="certModalOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:99999; flex-direction:column;">
+    <div style="background:#fff; padding:10px 15px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
+        <span style="font-weight:800; color:#0d1440; font-size:14px;">🏆 ویرایشگر و صدور تقدیرنامه</span>
+        <button onclick="closeCertFrame()" style="background:#c62828; color:#fff; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-family:inherit; font-weight:bold;">✕ بستن و بازگشت</button>
+    </div>
+    <iframe id="certFrame" style="flex:1; width:100%; border:none; background:#2d3748;"></iframe>
+</div>
 </body>
 </html>
