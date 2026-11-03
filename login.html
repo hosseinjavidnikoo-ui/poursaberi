@@ -72,9 +72,10 @@
 
   <div id="savedBadge" class="saved-badge hidden">✅ کد ملی شما ذخیره شده</div>
 
-  <div class="info-box">
+    <div class="info-box">
     <b>دانش‌آموزان:</b> کد ملی + تاریخ تولد<br>
-    <b>دبیران و مدیران:</b> کد ملی + کد پرسنلی
+    <b>دبیران و مدیران:</b> کد ملی + کد پرسنلی<br>
+    <b>👨‍👩‍👧 والدین:</b> کد ملی دانش‌آموز + شماره تلفن والدین
   </div>
 
   <div class="msg" id="msg"></div>
@@ -87,8 +88,7 @@
     <div class="form-group" style="position:relative">
       <label class="form-label">رمز ورود</label>
       <div class="password-wrapper">
-        <input type="password" class="form-input" id="password" name="passCodeX" placeholder="مثال: ۱۳۸۷۰۵۱۵ (تاریخ تولد)" maxlength="20" inputmode="numeric" required autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false">
-        <button type="button" class="cal-toggle" id="calToggleBtn" onclick="toggleBirthdayPicker(event)" title="انتخاب از تقویم">📅</button>
+<input type="password" class="form-input" id="password" name="passCodeX" placeholder="تاریخ تولد یا شماره والدین" maxlength="20" inputmode="numeric" required autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false">        <button type="button" class="cal-toggle" id="calToggleBtn" onclick="toggleBirthdayPicker(event)" title="انتخاب از تقویم">📅</button>
         <button type="button" class="toggle-password" id="togglePassBtn" onclick="togglePasswordVisibility()" title="نمایش رمز">👁️</button>
       </div>
       <div id="birthdayPickerContainer" style="position:relative"></div>
@@ -338,7 +338,7 @@
     }
   }
 
-  async function handleLogin(e) {
+    async function handleLogin(e) {
     e.preventDefault();
     
     const nationalId = document.getElementById('nationalId').value.trim();
@@ -356,13 +356,25 @@
     btnText.innerHTML = 'در حال بررسی <span class="loading"></span>';
 
     try {
+      // ۱. تلاش اول: ورود دانش‌آموز / دبیر / مدیر
       const params = new URLSearchParams();
       params.append('action', 'login');
       params.append('nationalId', nationalId);
       params.append('password', password);
       
       const response = await fetch(API_URL, { method: 'POST', body: params });
-      const result = await response.json();
+      let result = await response.json();
+
+      // ۲. اگر ورود عادی موفق نبود، تلاش برای ورود والدین
+      if (!result.success) {
+        const parentUrl = API_URL + '?action=parentLogin&studentNationalId=' + encodeURIComponent(nationalId) + '&parentPhone=' + encodeURIComponent(password) + '&t=' + Date.now();
+        const parentResponse = await fetch(parentUrl);
+        const parentResult = await parentResponse.json();
+        
+        if (parentResult.success) {
+          result = parentResult; // نتیجه والدین رو جایگزین میکنیم
+        }
+      }
 
       if (result.success) {
         // 🎯 ذخیره کد ملی
@@ -372,29 +384,46 @@
           localStorage.removeItem('saved_nationalId');
         }
         
-        const roleLabel = { 'دانش‌آموز':'دانش‌آموز','دبیر':'دبیر','مدیر':'مدیر','معاون':'معاون' };
-        showMsg('✅ خوش آمدید ' + result.name + ' (' + (roleLabel[result.role] || result.role) + ')', 'success');
+        let welcomeMsg = '';
         
-        localStorage.setItem('user_name', result.name);
-        localStorage.setItem('user_nationalId', result.nationalId);
-        localStorage.setItem('user_role', result.role);
-        localStorage.setItem('login_time', Date.now());
-        
-        if (result.role === 'دانش‌آموز') {
+        // 🎯 تشخیص خودکار نقش و ذخیره اطلاعات
+                // 🎯 تشخیص خودکار نقش و ذخیره اطلاعات
+        if (result.role === 'والدین') {
+          welcomeMsg = '✅ خوش آمدید اولیاء گرامی دانش‌آموز ' + result.name;
+          
+          localStorage.setItem('user_name', 'اولیاء محترم ' + result.name);
+          localStorage.setItem('user_role', 'والدین');           // 🎯 این خط خیلی مهمه
+          localStorage.setItem('user_nationalId', result.nationalId); // برای سازگاری با کل برنامه
+          localStorage.setItem('student_nationalId', result.nationalId);
           localStorage.setItem('student_gradeCode', result.gradeCode);
           localStorage.setItem('student_gradeName', result.gradeName);
-          localStorage.setItem('student_base', result.base);
-          localStorage.setItem('student_field', result.field);
-          localStorage.setItem('student_phone', result.phone);
+        } else {
+          const roleLabel = { 'دانش‌آموز':'دانش‌آموز','دبیر':'دبیر','مدیر':'مدیر','معاون':'معاون' };
+          welcomeMsg = '✅ خوش آمدید ' + result.name + ' (' + (roleLabel[result.role] || result.role) + ')';
+          
+          localStorage.setItem('user_name', result.name);
+          localStorage.setItem('user_nationalId', result.nationalId);
+          localStorage.setItem('user_role', result.role);
+          
+          if (result.role === 'دانش‌آموز') {
+            localStorage.setItem('student_gradeCode', result.gradeCode);
+            localStorage.setItem('student_gradeName', result.gradeName);
+            localStorage.setItem('student_base', result.base);
+            localStorage.setItem('student_field', result.field);
+            localStorage.setItem('student_phone', result.phone);
+          }
+          if (result.role === 'دبیر' || result.role === 'مدیر' || result.role === 'معاون') {
+            localStorage.setItem('teacher_subject', result.subject || '');
+            localStorage.setItem('teacher_classes', JSON.stringify(result.classes || []));
+          }
         }
-        if (result.role === 'دبیر' || result.role === 'مدیر' || result.role === 'معاون') {
-          localStorage.setItem('teacher_subject', result.subject || '');
-          localStorage.setItem('teacher_classes', JSON.stringify(result.classes || []));
-        }
-
-        setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+        
+        localStorage.setItem('login_time', Date.now());
+        showMsg(welcomeMsg, 'success');
+        
+        setTimeout(() => { window.location.href = 'index.html'; }, 1500);
       } else {
-        showMsg('❌ ' + (result.message || 'خطای ناشناخته'), 'error');
+        showMsg('❌ ' + (result.message || 'کد ملی یا رمز عبور اشتباه است'), 'error');
         submitBtn.disabled = false;
         btnText.textContent = 'ورود به اپلیکیشن';
       }
