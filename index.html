@@ -560,15 +560,7 @@ html.dark .dp-month-year{color:#9fa8da}
     /* مخفی کردن کادر امضا برای دانش‌آموز (چون A5 است) */
     .rc-signatures { display: none !important; }
 }
-}
-/* مخفی کردن کنترل‌ها موقع چاپ */
-@media print {
-  body * { visibility: hidden; }
-  #print-area, #print-area * { visibility: visible; }
-  #print-area { position: absolute; left: 0; top: 0; width: 100%; }
-  .report-card-container { box-shadow: none; padding: 0; }
-  .no-print { display: none !important; }
-}
+
 .chat-block-banner { display: none; align-items: center; gap: 10px; background: linear-gradient(135deg,#c62828,#e53935); color: #fff; padding: 10px 14px; font-size: 12px; font-weight: 700; flex-shrink: 0; }
 .chat-block-banner.visible { display: flex; }
 .chat-block-banner .cbb-text { flex: 1; line-height: 1.5; }
@@ -633,6 +625,156 @@ html.dark .dp-month-year{color:#9fa8da}
 .sms-btn-send { width: 100%; padding: 12px; border: none; border-radius: 10px; background: linear-gradient(135deg,#2e7d32,#43a047); color: #fff; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(46,125,50,.3); }
 .sms-btn-copy { width: 100%; padding: 12px; border: none; border-radius: 10px; background: linear-gradient(135deg,#1565c0,#1976d2); color: #fff; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(21,101,192,.3); }
 
+/* 🎯 استایل‌های تب لیست دانش‌آموزان و دبیران */
+.dir-main-tabs { display: flex; gap: 8px; margin-bottom: 16px; background: var(--card); padding: 6px; border-radius: 12px; border: 1px solid var(--line); }
+.dir-main-tab { flex: 1; padding: 12px; text-align: center; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; font-family: inherit; border: none; background: transparent; color: var(--text-soft); transition: 0.2s; }
+.dir-main-tab.active { background: linear-gradient(135deg, var(--header-2), var(--header-3)); color: #fff; }
+.dir-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--line); background: var(--card); }
+.dir-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 12px; min-width: 700px; }
+.dir-table th { background: var(--bg); color: var(--text-soft); padding: 12px 6px; font-weight: 700; position: sticky; top: 0; }
+.dir-table td { padding: 10px 6px; border-bottom: 1px solid var(--line); }
+.dir-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--line); background: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; background: linear-gradient(135deg, #1a237e, #3949ab); margin: 0 auto; }
+.dir-action-btn { width: 30px; height: 30px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; margin: 0 2px; }
+.dir-call { background: #e8f5e9; color: #2e7d32; }
+.dir-sms { background: #e3f2fd; color: #0d47a1; }
+.dir-edit { background: #fff3e0; color: #ef6c00; }
+.dir-photo { background: #f3e5f5; color: #7b1fa2; }
+
+/* 🎯 استایل‌های Drag & Drop عکس */
+.photo-dropzone { border: 2px dashed #90caf9; background: #e3f2fd; border-radius: 12px; padding: 30px 20px; text-align: center; color: #0d47a1; cursor: pointer; transition: 0.2s; margin-bottom: 16px; }
+.photo-dropzone.dragover { background: #bbdefb; border-color: #1565c0; }
+.photo-thumbnails { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; min-height: 80px; padding: 10px; background: var(--bg); border-radius: 10px; }
+.photo-thumb { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; cursor: grab; border: 2px solid transparent; transition: 0.2s; }
+.photo-thumb:hover { border-color: #3949ab; transform: scale(1.05); }
+.student-photo-slot { width: 50px; height: 50px; border-radius: 50%; border: 2px dashed #cbd5e0; display: flex; align-items: center; justify-content: center; background: var(--bg); overflow: hidden; margin: 0 auto; position: relative; }
+.student-photo-slot img { width: 100%; height: 100%; object-fit: cover; }
+.student-photo-slot.dropped { border-style: solid; border-color: #2e7d32; }
+
+@media print {
+    body * { visibility: hidden; }
+    #tab-directory, #tab-directory * { visibility: visible !important; }
+    #printOverlay, #printOverlay * { visibility: visible !important; }
+    #tab-directory { 
+        display: block !important; 
+        position: absolute !important; 
+        left: 0 !important; 
+        top: 0 !important; 
+        width: 100% !important; 
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    #tab-directory .tab-content { display: block !important; }
+    #tab-directory .dir-table-wrap { 
+        border: 1px solid #000 !important; 
+        box-shadow: none !important; 
+        overflow: visible !important;
+        background: #fff !important;
+    }
+    #tab-directory .dir-table { 
+        min-width: 100% !important; 
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+    #tab-directory .dir-table th, 
+    #tab-directory .dir-table td { 
+        border: 1px solid #666 !important; 
+        padding: 6px !important; 
+        color: #000 !important; 
+        font-size: 11px !important;
+        background: #fff !important;
+    }
+    #tab-directory .dir-table th {
+        background: #e3e9f2 !important;
+        font-weight: 800 !important;
+    }
+    #tab-directory .app-header, 
+    #tab-directory .tab-bar, 
+    #tab-directory .app-footer, 
+    #tab-directory .report-header, 
+    #tab-directory .dir-main-tabs, 
+    #tab-directory .dir-action-btn, 
+    #tab-directory .ft-chip,
+    #tab-directory .dir-edit { 
+        display: none !important; 
+    }
+    #tab-directory .dir-avatar { 
+        print-color-adjust: exact; 
+        -webkit-print-color-adjust: exact; 
+    }
+}@media print {
+    body * { visibility: hidden; }
+    #tab-directory, #tab-directory * { visibility: visible; }
+    #printOverlay, #printOverlay * { visibility: visible !important; }
+    #tab-directory { position: absolute; left: 0; top: 0; width: 100%; }
+    .app-header, .tab-bar, .app-footer, .report-header, .dir-main-tabs, .dir-action-btn, .ft-chip { display: none !important; }
+    .dir-table-wrap { border: none !important; box-shadow: none !important; }
+    .dir-table th, .dir-table td { border: 1px solid #000 !important; padding: 8px !important; color: #000 !important; font-size: 14px !important; }
+    .dir-table { min-width: 100% !important; }
+    .dir-avatar { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+/* 🎯 استایل‌های تقویم یکپارچه */
+.cal-wrapper { background: var(--card); border-radius: 14px; border: 1px solid var(--line); overflow: hidden; box-shadow: 0 4px 15px var(--shadow); }
+.cal-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: linear-gradient(135deg, var(--header-2), var(--header-3)); color: #fff; }
+.cal-title { font-size: 15px; font-weight: 800; }
+.cal-nav { display: flex; gap: 8px; }
+.cal-nav button { background: rgba(255,255,255,.2); border: none; color: #fff; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+.cal-nav button:hover { background: rgba(255,255,255,.3); }
+.cal-body { padding: 10px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-day-head { text-align: center; font-size: 11px; font-weight: 700; color: var(--text-muted); padding: 8px 0; }
+.cal-day { aspect-ratio: 1; border-radius: 10px; border: 1px solid transparent; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 6px; cursor: pointer; position: relative; transition: 0.2s; background: var(--bg); }
+.cal-day:hover { border-color: var(--accent); transform: scale(1.02); }
+.cal-day.empty { background: transparent; cursor: default; }
+.cal-day.empty:hover { border-color: transparent; transform: none; }
+.cal-day.today { border: 2px solid #ffb300; background: #fff8e1; }
+.cal-day-num { font-size: 13px; font-weight: 800; color: var(--text); }
+.cal-day.today .cal-day-num { color: #ef6c00; }
+.cal-events-dots { display: flex; gap: 2px; margin-top: 4px; flex-wrap: wrap; justify-content: center; }
+.cal-dot { width: 6px; height: 6px; border-radius: 50%; }
+.cal-dot.exam { background: #c62828; }
+.cal-dot.hw { background: #2e7d32; }
+.cal-dot.news { background: #f59e0b; }
+.cal-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; }
+.cal-modal.visible { display: flex; }
+.cal-modal-card { background: var(--card); border-radius: 16px; width: 100%; max-width: 400px; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
+.cal-modal-header { padding: 15px; background: var(--bg); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+.cal-modal-title { font-size: 14px; font-weight: 800; color: var(--header-2); }
+.cal-modal-body { padding: 15px; overflow-y: auto; flex: 1; }
+.cal-event-item { padding: 10px; border-radius: 8px; margin-bottom: 8px; display: flex; gap: 10px; align-items: flex-start; }
+.cal-event-item.exam { background: #ffebee; border-right: 3px solid #c62828; }
+.cal-event-item.hw { background: #e8f5e9; border-right: 3px solid #2e7d32; }
+.cal-event-item.news { background: #fff3e0; border-right: 3px solid #f59e0b; }
+.cal-event-icon { font-size: 18px; }
+.cal-event-info { flex: 1; }
+.cal-event-title { font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.cal-event-desc { font-size: 11px; color: var(--text-soft); line-height: 1.5; }
+/* 🎯 سلول‌های رنگی تقویم (کل روز رنگی میشه) */
+.cal-day.exam { background: linear-gradient(135deg, #ffcdd2, #ffebee) !important; border: 1.5px solid #ef9a9a !important; }
+.cal-day.exam .cal-day-num { color: #b71c1c; }
+.cal-day.hw { background: linear-gradient(135deg, #c8e6c9, #e8f5e9) !important; border: 1.5px solid #a5d6a7 !important; }
+.cal-day.hw .cal-day-num { color: #1b5e20; }
+.cal-day.news { background: linear-gradient(135deg, #e1bee7, #f3e5f5) !important; border: 1.5px solid #ce93d8 !important; }.cal-day.news .cal-day-num { color: #6a1b9a; }
+.cal-day.exam.today, .cal-day.hw.today, .cal-day.news.today { border: 2.5px solid #ffb300 !important; }
+/* راهنمای رنگی بالای تقویم */
+.cal-legend { display: flex; justify-content: center; gap: 16px; padding: 12px; font-size: 12px; font-weight: 700; background: var(--bg); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.cal-legend-item { display: flex; align-items: center; gap: 6px; color: var(--text-soft); }
+.cal-legend-swatch { width: 16px; height: 16px; border-radius: 4px; }
+.cal-legend-swatch.exam { background: #ef9a9a; }
+.cal-legend-swatch.hw { background: #a5d6a7; }
+.cal-legend-swatch.news { background: #ce93d8; }
+.eval-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 10px var(--shadow)}.eval-header{display:flex;align-items:center;gap:12px;margin-bottom:10px;border-bottom:1px dashed var(--line);padding-bottom:10px}.eval-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#1a237e,#3949ab);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800}.eval-info{flex:1}.eval-name{font-size:14px;font-weight:800;color:var(--text)}.eval-subject{font-size:11.5px;color:var(--text-muted);margin-top:2px}.star-rating{display:flex;gap:4px;margin-bottom:12px;justify-content:center;direction:ltr}.star-btn{background:transparent;border:none;font-size:28px;cursor:pointer;color:#e2e8f0;padding:0;transition:0.2s;line-height:1}.star-btn.active{color:#ffb300;transform:scale(1.1)}.star-btn:hover{transform:scale(1.2)}.eval-textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:12.5px;background:var(--bg);color:var(--text);resize:vertical;min-height:70px;margin-bottom:10px}
+.eval-result-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 2px 10px var(--shadow)}.eval-rank-badge{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;font-weight:800;font-size:14px;color:#fff;flex-shrink:0}.rank-1{background:linear-gradient(135deg,#ffb300,#ff8f00);box-shadow:0 2px 8px rgba(255,179,0,.4)}.rank-2{background:linear-gradient(135deg,#90a4ae,#607d8b)}.rank-3{background:linear-gradient(135deg,#a1887f,#795548)}.rank-other{background:linear-gradient(135deg,#5c6bc0,#3949ab)}.eval-comment-item{background:var(--bg);border-radius:10px;padding:8px 10px;margin-top:6px;font-size:11.5px;color:var(--text);border-right:3px solid var(--header-2)}.eval-stat-row{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap}.eval-stat-pill{background:var(--bg);border-radius:8px;padding:6px 10px;font-size:11.5px;color:var(--text);display:flex;align-items:center;gap:4px}.eval-stat-pill b{color:var(--header-2)}
+/* 📸 برنامه امتحانات */
+.exam-schedule-card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:10px;box-shadow:0 2px 10px var(--shadow);cursor:pointer;transition:0.2s}
+.exam-schedule-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px var(--shadow-strong)}
+.exam-schedule-card img{width:100%;max-height:320px;object-fit:contain;background:#f8fafc;display:block}
+.exam-schedule-card .esc-info{padding:10px 14px;background:var(--card)}
+.exam-schedule-card .esc-title{font-size:13px;font-weight:800;color:var(--text)}
+.exam-schedule-card .esc-meta{font-size:11px;color:var(--text-muted);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap}
+.exam-schedule-card .esc-type{background:#e3f2fd;color:#0d47a1;padding:2px 8px;border-radius:10px;font-weight:700;font-size:10px}
+.exam-schedule-card .esc-type.midterm{background:#fff3e0;color:#e65100}
+.exam-schedule-card .esc-type.class-exam{background:#f3e5f5;color:#7b1fa2}
+.exam-schedule-card .esc-hint{font-size:10.5px;color:var(--text-muted);text-align:center;padding:6px;background:var(--bg);border-top:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -937,15 +1079,74 @@ async function buildTabs(){
   } catch(e) {}
 
   const role=currentUser.role;let tabs=[];
-  if(role==='دانش‌آموز'){
-    tabs=[{id:'home',icon:'🏠',label:'خانه'},{id:'schedule',icon:'📅',label:'برنامه'},{id:'exams',icon:'📝',label:'امتحانات'},{id:'homework',icon:'📚',label:'تکالیف'},{id:'chat',icon:'💬',label:'چت'},{id:'news',icon:'📢',label:'اطلاعیه'},{id:'feedback',icon:'✍️',label:'انتقادات'}];
+  
+  // ۱. والدین
+    if(role==='والدین'){
+    tabs=[
+      {id:'home',icon:'🏠',label:'خانه'},
+      {id:'calendar',icon:'🗓️',label:'تقویم'},
+      {id:'parentAttendance',icon:'✅',label:'حضور و غیاب'},
+      {id:'parentGrades',icon:'📊',label:'نمرات'},
+      {id:'parentHomework',icon:'📚',label:'تکالیف'},
+      {id:'parentExams',icon:'📝',label:'امتحانات'},
+      {id:'parentSchedule',icon:'📅',label:'برنامه'},
+      {id:'news',icon:'📢',label:'اطلاعیه'}
+    ];
+  }
+  // ۲. دانش‌آموز
+  else if(role==='دانش‌آموز'){
+    tabs=[
+      {id:'home',icon:'🏠',label:'خانه'},
+      {id:'calendar',icon:'🗓️',label:'تقویم'},
+      {id:'schedule',icon:'📅',label:'برنامه'},
+      {id:'exams',icon:'📝',label:'امتحانات'},
+      {id:'homework',icon:'📚',label:'تکالیف'},
+      {id:'chat',icon:'💬',label:'چت'},
+      {id:'news',icon:'📢',label:'اطلاعیه'},
+      {id:'feedback',icon:'✍️',label:'انتقادات'},
+      {id:'teacherEval',icon:'⭐',label:'نظرسنجی'}
+    ];
     if(showGradesToStudent){
-      tabs.splice(3, 0, {id:'myReportCard',icon:'📊',label:'کارنامه من'});
+      tabs.splice(4, 0, {id:'myReportCard',icon:'📊',label:'کارنامه من'});
     }
-  }else if(role==='دبیر'){
-    tabs=[{id:'home',icon:'🏠',label:'خانه'},{id:'myClasses',icon:'🎓',label:'کلاس‌ها'},{id:'attendance',icon:'✅',label:'حضور و غیاب'},{id:'grades',icon:'📝',label:'ثبت نمرات'},{id:'addExam',icon:'➕',label:'ثبت امتحان'},{id:'addHomework',icon:'📚',label:'ثبت تکلیف'},{id:'myHomework',icon:'📖',label:'تکالیف'},{id:'chat',icon:'💬',label:'چت'},{id:'news',icon:'📢',label:'اطلاعیه'}];
-  }else{
-    tabs=[{id:'home',icon:'🏠',label:'خانه'},{id:'attendance',icon:'✅',label:'حضور و غیاب'},{id:'attReport',icon:'📊',label:'گزارش غیبت'},{id:'contactLogs',icon:'📞',label:'گزارش تماس'},{id:'certificates',icon:'🏆',label:'تقدیرنامه‌ها'},{id:'manageGrades',icon:'📈',label:'مدیریت نمرات'},{id:'adminGradeEntry',icon:'✏️',label:'ورود نمرات'},{id:'sendNews',icon:'📢',label:'اطلاعیه'},{id:'manageNews',icon:'📰',label:'مدیریت'},{id:'manageFeedback',icon:'✍️',label:'انتقادات'},{id:'addExam',icon:'➕',label:'ثبت امتحان'},{id:'myExams',icon:'📋',label:'امتحانات'},{id:'myHomework',icon:'📖',label:'تکالیف'},{id:'chat',icon:'💬',label:'چت'}];
+  }
+  // ۳. دبیر
+  else if(role==='دبیر'){
+    tabs=[
+      {id:'home',icon:'🏠',label:'خانه'},
+      {id:'calendar',icon:'🗓️',label:'تقویم'},
+      {id:'myClasses',icon:'🎓',label:'کلاس‌ها'},
+      {id:'attendance',icon:'✅',label:'حضور و غیاب'},
+      {id:'grades',icon:'📝',label:'ثبت نمرات'},
+      {id:'addExam',icon:'➕',label:'ثبت امتحان'},
+      {id:'addHomework',icon:'📚',label:'ثبت تکلیف'},
+      {id:'myHomework',icon:'📖',label:'تکالیف'},
+      {id:'chat',icon:'💬',label:'چت'},
+      {id:'news',icon:'📢',label:'اطلاعیه'}
+    ];
+  }
+  // ۴. مدیر و معاون
+  else{
+    tabs=[
+      {id:'home',icon:'🏠',label:'خانه'},
+      {id:'calendar',icon:'🗓️',label:'تقویم'},
+      {id:'attendance',icon:'✅',label:'حضور و غیاب'},
+      {id:'attReport',icon:'📊',label:'گزارش غیبت'},
+      {id:'contactLogs',icon:'📞',label:'گزارش تماس'},
+      {id:'certificates',icon:'🏆',label:'تقدیرنامه‌ها'},
+      {id:'directory',icon:'📋',label:'دفترچه تلفن'},
+      {id:'manageGrades',icon:'📈',label:'مدیریت نمرات'},
+      {id:'adminGradeEntry',icon:'✏️',label:'ورود نمرات'},
+      {id:'sendNews',icon:'📢',label:'اطلاعیه'},
+      {id:'manageNews',icon:'📰',label:'مدیریت'},
+      {id:'manageFeedback',icon:'✍️',label:'انتقادات'},
+      {id:'addExam',icon:'➕',label:'ثبت امتحان'},
+      {id:'myExams',icon:'📋',label:'امتحانات'},
+      {id:'examSchedules',icon:'📸',label:'برنامه امتحانات'},
+      {id:'myHomework',icon:'📖',label:'تکالیف'},
+      {id:'evalResults',icon:'📊',label:'نتایج نظرسنجی'},
+      {id:'chat',icon:'💬',label:'چت'}
+    ];
   }
   
   const tabBar=document.getElementById('tabBar');tabBar.innerHTML='';
@@ -961,11 +1162,6 @@ async function buildTabs(){
   tabs.forEach(tab=>{const d=document.createElement('div');d.className='tab-content';d.id='tab-'+tab.id;c.appendChild(d)});
   if(tabs.length>0)switchTab(tabs[0].id,tabBar.querySelector('.tab-btn'));
   startUnreadPolling();
-}
-function startUnreadPolling(){
-  if(unreadPollingTimer)clearInterval(unreadPollingTimer);
-  updateUnreadBadges();
-  unreadPollingTimer=setInterval(updateUnreadBadges,20000);
 }
 
 async function updateUnreadBadges(){
@@ -994,6 +1190,12 @@ async function updateUnreadBadges(){
     }
   }catch(e){}
 }
+// 🔔 شروع polling برای خواندن پیام‌های خوانده‌نشده
+function startUnreadPolling() {
+  if (unreadPollingTimer) clearInterval(unreadPollingTimer);
+  updateUnreadBadges();
+  unreadPollingTimer = setInterval(updateUnreadBadges, 30000); // هر ۳۰ ثانیه
+}
 
 function switchTab(tabId,btn){
   if(chatPollingTimer){clearInterval(chatPollingTimer);chatPollingTimer=null}
@@ -1004,7 +1206,7 @@ function switchTab(tabId,btn){
   if(el)el.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
   if(tabId==='home')loadHome();
-  if(tabId==='schedule')loadSchedule();
+  if(tabId==='schedule') loadSchedule('tab-schedule');
   if(tabId==='exams')loadStudentExams();
   if(tabId==='homework')loadStudentHomework();
   if(tabId==='news')loadAnnouncements();
@@ -1026,6 +1228,17 @@ function switchTab(tabId,btn){
   if(tabId==='myReportCard')renderStudentReportCard();
   if(tabId==='contactLogs')loadContactLogs();
   if(tabId==='certificates') renderCertificatesPage();
+  if(tabId==='directory')renderDirectoryPage();
+  if(tabId==='parentAttendance') renderParentAttendancePage();
+  if(tabId==='parentGrades') renderParentGradesPage();
+  if(tabId==='parentHomework') renderParentHomeworkPage();
+  if(tabId==='parentSchedule') loadSchedule('tab-parentSchedule');  
+  if(tabId==='calendar') renderCalendarPage();
+  if(tabId==='parentExams') renderParentExamsPage();
+  if(tabId==='teacherEval') renderTeacherEvalPage();
+  if(tabId==='evalResults') renderEvalResultsPage();
+  if(tabId==='examSchedules') renderExamSchedulesPage();
+   // که از قبل بود
 }
 
 function goToTab(tabId){
@@ -1041,29 +1254,46 @@ async function loadHome(){
   await fetchImportantBanners();
   const el=document.getElementById('tab-home');if(!el)return;
   const role=currentUser.role;
-  const roleLabel={ 'دانش‌آموز':'دانش‌آموز عزیز','دبیر':'استاد گرامی','مدیر':'مدیر محترم','معاون':'معاون محترم'};
-  const emoji=role==='دانش‌آموز'?'🎓':(role==='دبیر'?'👨‍🏫':'👨‍💼');
+  const roleLabel={ 'دانش‌آموز':'دانش‌آموز عزیز','دبیر':'استاد گرامی','مدیر':'مدیر محترم','معاون':'معاون محترم','والدین':''};
+  const emoji=role==='دانش‌آموز'?'🎓':(role==='دبیر'?'👨‍🏫':(role==='والدین'?'👨‍👩‍👧':'👨‍💼'));
   const dateStr=new Date().toLocaleDateString('fa-IR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  
   let h='<div class="welcome-card">';
   h+=renderWelcomeBanners();
-  h+='<div class="welcome-inner"><span class="w-emoji">'+emoji+'</span><div class="w-hello">'+esc(roleLabel[role])+'، خوش آمدید</div><div class="w-sub">'+esc(currentUser.name)+(currentUser.gradeName?' · '+esc(currentUser.gradeName):(currentUser.subject?' · '+esc(currentUser.subject):''))+'</div><div class="w-date">📅 '+esc(dateStr)+'</div></div></div>';
+  
+  let helloText = (role === 'والدین') ? 'خوش آمدید' : esc(roleLabel[role]) + '، خوش آمدید';
+  h+='<div class="welcome-inner"><span class="w-emoji">'+emoji+'</span><div class="w-hello">' + helloText + '</div><div class="w-sub">'+esc(currentUser.name)+(currentUser.gradeName?' · '+esc(currentUser.gradeName):(currentUser.subject?' · '+esc(currentUser.subject):''))+'</div><div class="w-date">📅 '+esc(dateStr)+'</div></div></div>';
+
+  // 📸 برنامه امتحانات روی خانه
+  h += '<div id="homeExamSchedules"></div>';
+
   h+='<div style="font-size:12.5px;font-weight:700;color:var(--text-soft);margin-bottom:8px;padding:0 4px">⚡ دسترسی سریع</div>';
   h+='<div class="shortcut-grid">';
-  if(role==='دانش‌آموز'){
+  
+  if(role==='والدین'){
+    h+=shortcutBtn('parentAttendance','✅','حضور و غیاب','green','وضعیت فرزند');
+    h+=shortcutBtn('parentGrades','📊','نمرات','orange','کارنامه');
+    h+=shortcutBtn('parentHomework','📚','تکالیف','purple','تکالیف و نمرات');
+    h+=shortcutBtn('parentSchedule','📅','برنامه','blue','برنامه هفتگی');
+    h+=shortcutBtn('news','📢','اطلاعیه‌ها','red','خبرهای مدرسه');
+  }
+  else if(role==='دانش‌آموز'){
     h+=shortcutBtn('schedule','📅','برنامه هفتگی','blue','درس‌های این هفته');
     h+=shortcutBtn('exams','📝','امتحانات','orange','کلاسی و ترم');
     h+=shortcutBtn('homework','📚','تکالیف','green','تکالیف در انتظار');
     h+=shortcutBtn('chat','💬','چت','purple','گفتگو');
     h+=shortcutBtn('news','📢','اطلاعیه‌ها','red','خبرهای مدرسه');
     h+=shortcutBtn('feedback','✍️','انتقادات','teal','نظر شما');
-  }else if(role==='دبیر'){
+  }
+  else if(role==='دبیر'){
     h+=shortcutBtn('myClasses','🎓','کلاس‌های من','blue','مشاهده');
     h+=shortcutBtn('attendance','✅','حضور و غیاب','green','ثبت امروز');
     h+=shortcutBtn('addExam','➕','ثبت امتحان','orange','جدید');
     h+=shortcutBtn('addHomework','📚','ثبت تکلیف','purple','جدید');
     h+=shortcutBtn('chat','💬','چت','teal','گفتگو');
     h+=shortcutBtn('news','📢','اطلاعیه‌ها','red','خبرهای مدرسه');
-  }else{
+  }
+  else{
     h+=shortcutBtn('attendance','✅','حضور و غیاب','blue','ثبت و ویرایش');
     h+=shortcutBtn('attReport','📊','گزارش غیبت','red','لیست + اکسل');
     h+=shortcutBtn('sendNews','📢','ارسال اطلاعیه','green','جدید');
@@ -1071,10 +1301,12 @@ async function loadHome(){
     h+=shortcutBtn('chat','💬','چت','teal','گفتگو');
     h+=shortcutBtn('myHomework','📖','تکالیف','orange','همه');
   }
+  
   h+='</div><div id="homeRecentNews"></div>';
   h+='<div class="school-info"><div class="info-title">🏫 اطلاعات مدرسه</div><div class="info-row"><span class="info-icon">📞</span><div><div class="info-label">شماره تلفن</div><div class="info-value"><a href="tel:02136212217">۰۲۱-۳۶۲۱۲۲۱۷</a></div></div></div><div class="info-row"><span class="info-icon">📍</span><div><div class="info-label">آدرس</div><div class="info-value fa">شهر جوادآباد، میدان معلم، خیابان معلم غربی، پلاک ۲</div></div></div></div>';
   el.innerHTML=h;
   loadHomeRecentNews();
+  loadHomeExamSchedules();
 }
 function shortcutBtn(tabId,icon,title,color,sub){
   return '<button class="shortcut" onclick="goToTab(\''+tabId+'\')"><div class="sc-icon '+color+'">'+icon+'</div><div class="sc-text"><div class="sc-title">'+esc(title)+'</div><div class="sc-sub">'+esc(sub)+'</div></div></button>';
@@ -1095,6 +1327,48 @@ async function loadHomeRecentNews(){
     });
     el.innerHTML=h;
   }catch(e){el.innerHTML=''}
+}
+// 📸 بارگذاری برنامه امتحانات روی صفحه خانه
+async function loadHomeExamSchedules() {
+  const el = document.getElementById('homeExamSchedules');
+  if (!el) {
+    console.warn('❌ #homeExamSchedules پیدا نشد');
+    return;
+  }
+
+  console.log('✅ loadHomeExamSchedules - نقش:', currentUser.role);
+
+  if (currentUser.role !== 'دانش‌آموز' && currentUser.role !== 'والدین') {
+    return;
+  }
+
+  try {
+    const res = await fetch(API_URL + '?action=getExamSchedules&t=' + Date.now()).then(r => r.json());
+    if (!res.success || !res.data) return;
+
+    const activeSchedules = res.data.filter(x => x.active);
+    if (activeSchedules.length === 0) return;
+
+    let h = '<div style="font-size:12.5px;font-weight:700;color:var(--text-soft);margin-bottom:8px;padding:0 4px;margin-top:14px;">📸 برنامه امتحانات</div>';
+
+    activeSchedules.slice(0, 3).forEach(item => {
+      h += '<div class="exam-schedule-card" onclick="openImageViewer(\'' + escAttr(item.imageUrl) + '\')">';
+      h += '<img src="' + escAttr(item.imageUrl) + '" loading="lazy" alt="' + escAttr(item.title) + '">';
+      h += '<div class="esc-info">';
+      h += '<div class="esc-title">' + esc(item.title) + '</div>';
+      h += '<div class="esc-meta">';
+      h += '<span class="esc-type">' + esc(item.type) + '</span>';
+      h += '<span>📅 ' + esc(item.date) + '</span>';
+      h += '</div></div>';
+      h += '<div class="esc-hint">👆 برای بزرگ‌نمایی کلیک کنید</div>';
+      h += '</div>';
+    });
+
+    el.innerHTML = h;
+    console.log('✅ تصاویر درج شدند');
+  } catch (e) {
+    console.error('❌ خطا در loadHomeExamSchedules:', e);
+  }
 }
 async function fetchImportantBanners(){
   try{
@@ -1660,22 +1934,38 @@ const SCHEDULE_DATA={
   '12t':{name:'دوازدهم تجربی',days:[{day:'شنبه',lessons:[['مدیریت خانواده','الله‌نوری'],['ریاضی','اردستانی'],['زیست‌شناسی','نقوی'],null]},{day:'یکشنبه',lessons:[['فیزیک','میراخوری'],['فارسی','رسالتی'],['هویت اجتماعی','گراوند'],['زبان انگلیسی','میراخوری']]},{day:'دوشنبه',lessons:[['ورزش','کچویی'],['شیمی','فدایی'],['عربی','خوش‌بیان'],null]},{day:'سه‌شنبه',lessons:[['فیزیک','میراخوری'],['ریاضی','اردستانی'],['دینی','حسینی‌نواز'],['سلامت و بهداشت','آل‌بویه']]},{day:'چهارشنبه',lessons:[['نگارش','کاظمی'],['زیست‌شناسی','نقوی'],['شیمی','فدایی'],['زبان انگلیسی','میراخوری']]}]},
   '12e':{name:'دوازدهم انسانی',days:[{day:'شنبه',lessons:[['فلسفه','کیاشمشکی'],['سلامت و بهداشت','پرتوئی'],['دینی','حسینی‌نواز'],null]},{day:'یکشنبه',lessons:[['ریاضی','اردستانی'],['تحلیل فرهنگی','گراوند'],['علوم و فنون','رسالتی'],['تاریخ','قاسم‌خانلو']]},{day:'دوشنبه',lessons:[['جغرافیا','ابراهیمی'],['جامعه‌شناسی','نظری'],['نگارش','کاظمی'],null]},{day:'سه‌شنبه',lessons:[['عربی','خوش‌بیان'],['فارسی','رسالتی'],['ورزش','کچوئی'],['دینی','حسینی‌نواز']]},{day:'چهارشنبه',lessons:[['زبان','رمضانی'],['مدیریت خانواده','میراخوری'],['زبان','رمضانی'],null]}]}
 };
-function loadSchedule(){
-  const el=document.getElementById('tab-schedule');if(!el)return;
-  const data=SCHEDULE_DATA[currentUser.gradeCode];
-  if(!data){el.innerHTML='<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-title">کلاس شما مشخص نیست</div></div>';return}
-  const todayIdx=getTodayIndex();let html='';
-  data.days.forEach((day,idx)=>{
-    html+='<div class="day-block'+(idx===todayIdx?' highlight':'')+'"><div class="day-title">📅 '+esc(day.day);
-    if(idx===todayIdx)html+='<span class="today-badge">امروز</span>';
-    html+='</div>';
-    day.lessons.forEach((lesson,i)=>{
-      if(!lesson){html+='<div class="lesson-row empty"><span class="z-num">'+toFa(i+1)+'</span><div class="lesson-content"><span class="lesson-name">—</span></div></div>'}
-      else{const isRot=lesson[2]===true;html+='<div class="lesson-row'+(isRot?' rot':'')+'"><span class="z-num">'+toFa(i+1)+'</span><div class="lesson-content"><div class="lesson-name">'+esc(lesson[0])+'</div>'+(isRot?'<div class="teacher-name">'+esc(lesson[1])+'</div>':'<div class="teacher-name">آقای '+esc(lesson[1])+'</div>')+'</div></div>'}
+function loadSchedule(targetId) {
+  // اگر آیدی پاس داده نشه، پیش‌فرض تب دانش‌آموز رو می‌گیره
+  const tabId = targetId || 'tab-schedule';
+  const el = document.getElementById(tabId);
+  if (!el) return;
+  
+  // 🎯 برای والدین، کد کلاس از localStorage خونده میشه (چون توی checkLogin ست شده)
+  const gradeCode = currentUser.gradeCode || localStorage.getItem('student_gradeCode');
+  const data = SCHEDULE_DATA[gradeCode];
+  
+  if (!data) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-title">برنامه‌ای برای این کلاس یافت نشد</div></div>';
+    return;
+  }
+  
+  const todayIdx = getTodayIndex();
+  let html = '';
+  data.days.forEach((day, idx) => {
+    html += '<div class="day-block' + (idx === todayIdx ? ' highlight' : '') + '"><div class="day-title">📅 ' + esc(day.day);
+    if (idx === todayIdx) html += '<span class="today-badge">امروز</span>';
+    html += '</div>';
+    day.lessons.forEach((lesson, i) => {
+      if (!lesson) {
+        html += '<div class="lesson-row empty"><span class="z-num">' + toFa(i + 1) + '</span><div class="lesson-content"><span class="lesson-name">—</span></div></div>';
+      } else {
+        const isRot = lesson[2] === true;
+        html += '<div class="lesson-row' + (isRot ? ' rot' : '') + '"><span class="z-num">' + toFa(i + 1) + '</span><div class="lesson-content"><div class="lesson-name">' + esc(lesson[0]) + '</div>' + (isRot ? '<div class="teacher-name">' + esc(lesson[1]) + '</div>' : '<div class="teacher-name">آقای ' + esc(lesson[1]) + '</div>') + '</div></div>';
+      }
     });
-    html+='</div>';
+    html += '</div>';
   });
-  el.innerHTML=html;
+  el.innerHTML = html;
 }
 
 // ============================================================
@@ -1684,7 +1974,40 @@ function loadSchedule(){
 async function loadStudentExams(){
   const el=document.getElementById('tab-exams');if(!el)return;
   el.innerHTML='<div class="sub-tabs"><button class="sub-tab active" onclick="renderExamList(\'ترم\',this)">📋 امتحانات ترم</button><button class="sub-tab" onclick="renderExamList(\'کلاسی\',this)">📝 امتحانات کلاسی</button></div><div id="examList"></div>';
+  loadExamSchedulesInExamsTab();
   renderExamList('ترم');
+}
+async function loadExamSchedulesInExamsTab() {
+  const el = document.getElementById('tab-exams');
+  if (!el) return;
+  const anchor = el.querySelector('.sub-tabs');
+  if (!anchor) return;
+
+  try {
+    const res = await fetch(API_URL + '?action=getExamSchedules&t=' + Date.now()).then(r => r.json());
+    if (!res.success || !res.data) return;
+
+    const active = res.data.filter(x => x.active);
+    if (active.length === 0) return;
+
+    let h = '<div style="margin-bottom:14px;">';
+    h += '<div style="font-size:12.5px;font-weight:700;color:var(--text-soft);margin-bottom:8px;padding:0 4px;">📸 تصاویر برنامه امتحانات</div>';
+
+    active.forEach(item => {
+      h += '<div class="exam-schedule-card" onclick="openImageViewer(\'' + escAttr(item.imageUrl) + '\')">';
+      h += '<img src="' + escAttr(item.imageUrl) + '" loading="lazy" alt="' + escAttr(item.title) + '">';
+      h += '<div class="esc-info">';
+      h += '<div class="esc-title">' + esc(item.title) + '</div>';
+      h += '<div class="esc-meta"><span class="esc-type">' + esc(item.type) + '</span><span>📅 ' + esc(item.date) + '</span></div>';
+      h += '</div></div>';
+    });
+    h += '</div>';
+
+    // درج بعد از sub-tabs
+    anchor.insertAdjacentHTML('afterend', h);
+  } catch (e) {
+    console.error(e);
+  }
 }
 async function renderExamList(type,btn){
   if(btn){document.querySelectorAll('.sub-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active')}
@@ -1778,12 +2101,60 @@ async function loadStudentHomework(){
       fetch(API_URL+'?action=getHomework&grade='+currentUser.gradeCode+'&t='+Date.now()).then(r=>r.json()),
       fetch(API_URL+'?action=getHomeworkStatus&nationalId='+currentUser.nationalId+'&t='+Date.now()).then(r=>r.json())
     ]);
+    
     hwStatusCache={};
-    if(stR.success&&stR.data)stR.data.forEach(s=>{const id=String(s['شماره تکلیف']||'').trim();hwStatusCache[id]={status:String(s['وضعیت']||'').trim(),fileUrl:s['لینک فایل']||'',fileName:s['نام فایل']||''}});
-    if(!hwR.success||!hwR.data||hwR.data.length===0){el.innerHTML='<div class="empty-state"><div class="empty-icon">📚</div><div class="empty-title">تکلیفی نیست</div></div>';return}
-    el.innerHTML=hwR.data.map(hw=>renderHomeworkCardStudent(hw)).join('');
-  }catch(err){el.innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">خطا</div></div>'}
+    
+    // 🎯 ذخیره اسم واقعی تکالیف برای استفاده توی کارنامه
+    window._hwTitles = {};
+    if(hwR.success && hwR.data) {
+      hwR.data.forEach(hw => {
+        const id = String(hw['شماره'] || '').trim();
+        if(id) window._hwTitles[id] = hw['عنوان'] || 'تکلیف بدون عنوان';
+      });
+    }
+    
+    function normKey(k){
+      return String(k).trim()
+        .replace(/\u200c/g,' ')
+        .replace(/[آأإ]/g,'ا')
+        .replace(/ي/g,'ی')
+        .replace(/ك/g,'ک')
+        .replace(/\s+/g,' ')
+        .trim();
+    }
+    
+    if(stR.success && stR.data) {
+      stR.data.forEach(s=>{
+        const norm = {};
+        for(const k in s) norm[normKey(k)] = s[k];
+        
+        const id = String(norm['شماره تکلیف'] || norm['شماره'] || '').trim();
+        if(!id) return;
+        
+        hwStatusCache[id] = {
+          status: String(norm['وضعیت'] || '').trim(),
+          fileUrl: norm['لینک فایل'] || '',
+          fileName: norm['نام فایل'] || '',
+          grade: (norm['نمره'] !== '' && norm['نمره'] !== null && norm['نمره'] !== undefined) ? norm['نمره'] : '',
+          comment: norm['نظر دبیر'] || '',
+          note: norm['توضیحات دانش اموز'] || norm['توضیحات دانش‌آموز'] || norm['توضیحات'] || norm['یادداشت'] || ''
+        };
+      });
+    }
+    
+    if(!hwR.success||!hwR.data||hwR.data.length===0){
+      el.innerHTML='<div class="empty-state"><div class="empty-icon">📚</div><div class="empty-title">تکلیفی نیست</div></div>';
+      return;
+    }
+    
+    let summaryBtn = '<button class="submit-btn primary-blue" style="margin-bottom:12px" onclick="showStudentGradeSummary()"><span>📊</span><span>مشاهده کارنامه نمرات تکالیف</span></button>';
+    el.innerHTML = summaryBtn + hwR.data.map(hw=>renderHomeworkCardStudent(hw)).join('');
+  }catch(err){
+    console.error(err);
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">خطا</div></div>';
+  }
 }
+
 function renderHomeworkCardStudent(hw){
   const id=String(hw['شماره']||'').trim();
   const st=hwStatusCache[id]||{};
@@ -1794,33 +2165,75 @@ function renderHomeworkCardStudent(hw){
   const startTime=String(hw['ساعت شروع']||'').trim();
   const tl=getTimeLeft(endDate,endTime);
   const expired=tl.expired;
+  
   let cc='hw-card';if(isDone)cc+=' done';
   let badge=isDone?'<span class="hw-status-badge done">✅ انجام شد</span>':'<span class="hw-status-badge pending">⏳ در انتظار</span>';
+  
   let h='<div class="'+cc+'"><div class="hw-card-header"><div class="hw-card-title">📚 '+esc(hw['عنوان']||'تکلیف')+'</div>'+badge+'</div><div class="hw-card-info">';
   if(hw['دبیر'])h+='<span class="hw-info-item">👨‍🏫 '+esc(hw['دبیر'])+'</span>';
   if(startDate)h+='<span class="hw-info-item">📅 از '+esc(startDate)+(startTime?' '+esc(startTime):'')+'</span>';
   if(endDate)h+='<span class="hw-info-item">📅 تا '+esc(endDate)+(endTime?' '+esc(endTime):'')+'</span>';
   h+='</div>';
+  
   if(hw['توضیح'])h+='<div class="hw-card-desc">📝 '+esc(hw['توضیح'])+'</div>';
+  
+  // 🎯 فایل پیوست دبیر
+  if(hw['لینک فایل'] || hw['fileUrl']) {
+    const tFileUrl = hw['لینک فایل'] || hw['fileUrl'];
+    const tFileName = hw['نام فایل'] || hw['fileName'] || 'دانلود فایل';
+    h+='<div style="margin-top:10px;padding:12px;background:#e0f2fe;border-radius:10px;border-right:4px solid #0284c7">';
+    h+='<div style="font-size:12px;font-weight:800;color:#0369a1;margin-bottom:6px">📎 فایل پیوست دبیر:</div>';
+    h+=renderFilePreview(tFileUrl, tFileName);
+    h+='</div>';
+  }
+  
   if(tl.text){
     const cls=tl.expired?'expired':((tl.ms||0)<86400000?'warn':'ok');
     h+='<div class="hw-deadline-badge '+cls+'">⏱ '+esc(tl.text)+'</div>';
   }
-  // 🖼️ نمایش فایل ارسالی با پیش‌نمایش
+  
+  // فایل ارسالی دانش‌آموز
   if(st.fileUrl){
     h+='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">';
     h+='<div style="font-size:11.5px;color:var(--text-soft);margin-bottom:6px;font-weight:700">📤 فایل ارسالی شما:</div>';
     h+=renderFilePreview(st.fileUrl,st.fileName||'');
     h+='</div>';
   }
+  
   if(expired&&!isDone){
     h+='<div style="padding:10px;text-align:center;background:#ffebee;color:#c62828;border-radius:10px;font-size:12px;font-weight:700;margin-top:8px">⛔ مهلت این تکلیف به پایان رسیده</div>';
   } else {
     h+='<button class="hw-upload-btn" onclick="pickFileForHomework(\''+escAttr(id)+'\')">📎 '+(st.fileUrl?'تغییر فایل':'ارسال فایل')+'</button>';
   }
+  
   if(isDone)h+='<button class="hw-mark-btn done" onclick="toggleHomeworkStatus(\''+escAttr(id)+'\',\'در انتظار\')">✅ انجام شد (لغو)</button>';
   else if(!expired)h+='<button class="hw-mark-btn" onclick="toggleHomeworkStatus(\''+escAttr(id)+'\',\'انجام شد\')">✋ علامت‌گذاری</button>';
-  h+='</div>';return h;
+  
+  // نمره و نظر دبیر
+  if(st.grade !== '' && st.grade !== null && st.grade !== undefined){
+    h+='<div style="margin-top:10px;padding:12px;background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:10px;border-right:4px solid #f59e0b">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center">';
+    h+='<div style="font-size:13px;font-weight:800;color:#78350f">🏆 نمره شما:</div>';
+    h+='<div style="font-size:24px;font-weight:900;color:#c62828">'+toFa(st.grade)+'</div>';
+    h+='</div>';
+    if(st.comment){
+      h+='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed rgba(120,53,15,0.3);font-size:12px;color:#78350f;line-height:1.7">';
+      h+='<div style="font-weight:800;margin-bottom:4px">👨‍🏫 نظر دبیر:</div>';
+      h+='<div>'+esc(st.comment)+'</div>';
+      h+='</div>';
+    }
+    h+='</div>';
+  }
+  
+  // فرم توضیحات
+  h+='<div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">';
+  h+='<label style="font-size:11.5px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:6px">📝 توضیحات شما (اختیاری):</label>';
+  h+='<textarea id="note_'+escAttr(id)+'" placeholder="هر توضیحی که لازم است بنویسید..." style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:12px;background:var(--bg);color:var(--text);min-height:60px;resize:vertical;line-height:1.6">' + esc(st.note || '') + '</textarea>';
+  h+='<button onclick="saveStudentNote(\''+escAttr(id)+'\')" style="margin-top:6px;padding:7px 16px;background:#1565c0;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer">💾 ذخیره توضیحات</button>';
+  h+='</div>';
+  
+  h+='</div>';
+  return h;
 }
 
 // ============================================================
@@ -1834,6 +2247,7 @@ function renderFilePreview(fileUrl, fileName){
   const audioExts=['webm','m4a','mp3','wav','ogg','aac','opus'];
   const videoExts=['mp4','webm','mov','avi','mkv','m4v'];
   let h='<div class="hw-file-grid">';
+  
   if(driveId&&imageExts.indexOf(ext)>-1){
     const imgUrl='https://lh3.googleusercontent.com/d/'+driveId;
     h+='<div class="hw-file-item"><img class="hw-file-img" src="'+escAttr(imgUrl)+'" onclick="openImageViewer(\''+escAttr(imgUrl)+'\')" loading="lazy" alt=""></div>';
@@ -1841,7 +2255,11 @@ function renderFilePreview(fileUrl, fileName){
     h+='<div class="hw-file-item"><div class="hw-file-audio"><button class="voice-play-btn" onclick="playVoiceMessage(\''+escAttr(driveId)+'\',this)"><span class="vp-icon">▶️</span><span class="vp-text">پیام صوتی</span></button><audio controls preload="none" style="display:none"></audio></div></div>';
   } else if(driveId&&videoExts.indexOf(ext)>-1){
     h+='<div class="hw-file-item"><div class="hw-file-video" onclick="openVideoPlayer(\''+escAttr(driveId)+'\')"><div class="ic">▶</div><div class="lbl">🎬 ویدیو</div></div></div>';
+  } else if(driveId&&ext==='pdf'){
+    // 🎯 PDF توی خود برنامه باز میشه
+    h+='<div class="hw-file-item"><button class="hw-file-doc" style="cursor:pointer;width:100%;text-align:right;border:1px solid var(--line);background:var(--bg);" onclick="openDocViewer(\''+escAttr(driveId)+'\', \''+escAttr(fileName)+'\')">📄 '+esc(fileName||'PDF')+' (نمایش)</button></div>';
   } else {
+    // سایر فایل‌ها (Word, Zip, ...) توی تب جدید باز میشن
     h+='<div class="hw-file-item"><a class="hw-file-doc" href="'+escAttr(fileUrl)+'" target="_blank">📄 '+esc(fileName||'دانلود')+'</a></div>';
   }
   h+='</div>';
@@ -1893,6 +2311,9 @@ function renderAddHomework(){
     '<div class="form-group"><label class="form-label">عنوان *</label><input class="form-input" id="hwTitle"></div>'+
     '<div class="form-group"><label class="form-label">کلاس *</label><select class="form-select" id="hwGrade">'+co+'</select></div>'+
     '<div class="form-group"><label class="form-label">توضیحات</label><textarea class="form-textarea" id="hwDesc"></textarea></div>'+
+    '<div class="form-group"><label class="form-label">📎 پیوست صورت سوال (اختیاری)</label>'+
+'<input type="file" id="hwFile" accept="image/*,.pdf,.doc,.docx" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:12px;background:var(--bg)">'+
+'</div>'+
     '<div class="form-group"><label class="form-label">نوع مهلت *</label>'+
       '<div class="hw-mode-picker">'+
         '<button type="button" class="hw-mode-btn active" data-mode="range" onclick="setHwMode(\'range\')">📅 بازه زمانی</button>'+
@@ -1940,7 +2361,11 @@ async function submitHomework(){
   const title=document.getElementById('hwTitle').value.trim();
   const grade=document.getElementById('hwGrade').value;
   const desc=document.getElementById('hwDesc').value.trim();
+  const fileInput = document.getElementById('hwFile');
+  const file = fileInput && fileInput.files[0];
+  
   if(!title){showToast('⚠️ عنوان را وارد کن');return}
+  
   let startDate='', startTime='', endDate='', endTime='', mode='بازه';
   if(window._hwMode==='range'){
     startDate=document.getElementById('hwStartDate').value.trim();
@@ -1966,29 +2391,45 @@ async function submitHomework(){
     endTime=(ed.getHours()<10?'0':'')+ed.getHours()+':'+(ed.getMinutes()<10?'0':'')+ed.getMinutes();
     mode='مدت';
   }
+  
   btn.disabled=true;btn.textContent='...';
-  try{
-    const params=new URLSearchParams();
-    params.append('action','addHomework');
-    params.append('title',title);
-    params.append('grade',grade);
-    params.append('teacher',currentUser.name);
-    params.append('description',desc);
-    params.append('deadline',endDate);
-    params.append('startDate',startDate);
-    params.append('startTime',startTime);
-    params.append('endDate',endDate);
-    params.append('endTime',endTime);
-    params.append('mode',mode);
-    params.append('userRole',currentUser.role);
-    params.append('userClasses',currentUser.classes.join(','));
-    params.append('t',Date.now());
-    const r=await fetch(API_URL+'?'+params.toString());
-    const result=await r.json();
-    if(result.success){showToast('✅ ثبت شد');renderAddHomework();}
-    else showToast('❌ '+(result.message||'خطا'));
-  }catch(err){showToast('❌ خطا')}
-  btn.disabled=false;btn.textContent='📤 ثبت';
+
+  if(file) {
+    // آپلود با فایل
+    showToast('⏳ در حال آپلود فایل...');
+    const reader=new FileReader();
+    reader.onload=async(ev)=>{
+      const fields={
+        action:'addHomeworkWithFile',
+        title:title, grade:grade, teacher:currentUser.name, description:desc,
+        startDate:startDate, startTime:startTime, endDate:endDate, endTime:endTime, mode:mode,
+        fileName:file.name, mimeType:file.type, fileData:ev.target.result,
+        userRole:currentUser.role, userClasses:currentUser.classes.join(',')
+      };
+      const res = await uploadWithProgress(API_URL, fields, file.name, file.size);
+      if(res.success){ showToast('✅ ثبت شد'); renderAddHomework(); }
+      else { showToast('❌ خطا در آپلود'); btn.disabled=false; btn.textContent='📤 ثبت'; }
+    };
+    reader.readAsDataURL(file);
+  } else {
+    // بدون فایل
+    try{
+      const params=new URLSearchParams();
+      params.append('action','addHomework');
+      params.append('title',title); params.append('grade',grade);
+      params.append('teacher',currentUser.name); params.append('description',desc);
+      params.append('deadline',endDate); params.append('startDate',startDate);
+      params.append('startTime',startTime); params.append('endDate',endDate);
+      params.append('endTime',endTime); params.append('mode',mode);
+      params.append('userRole',currentUser.role); params.append('userClasses',currentUser.classes.join(','));
+      params.append('t',Date.now());
+      const r=await fetch(API_URL+'?'+params.toString());
+      const result=await r.json();
+      if(result.success){showToast('✅ ثبت شد');renderAddHomework();}
+      else showToast('❌ '+(result.message||'خطا'));
+    }catch(err){showToast('❌ خطا')}
+    btn.disabled=false;btn.textContent='📤 ثبت';
+  }
 }
 function gregorianToJalaliLocal(d){
   var gy=d.getFullYear(),gm=d.getMonth()+1,gd=d.getDate();
@@ -2096,17 +2537,42 @@ async function showHomeworkDetails(hwId,gradeCode){
     h+='<div class="form-card"><div class="form-card-header"><div class="icon-box">📊</div><div><div class="title">'+esc(hw.title)+'</div><div class="sub">'+esc(getGradeName(hw.classCode))+'</div></div></div>';
     h+='<div class="stat-grid"><div class="stat-box"><div class="stat-num">'+toFa(result.total)+'</div><div class="stat-label">کل</div></div><div class="stat-box"><div class="stat-num green">'+toFa(result.done)+'</div><div class="stat-label">انجام داده</div></div><div class="stat-box"><div class="stat-num red">'+toFa(result.pending)+'</div><div class="stat-label">نداده</div></div></div></div>';
     sts.sort((a,b)=>(a.status==='انجام شد'?-1:1)-(b.status==='انجام شد'?-1:1));
+    h+='<div class="filter-tabs" style="margin-top:10px">';
+h+='<button class="ft-chip active" onclick="filterHwStats(\'all\',this)">👥 همه</button>';
+h+='<button class="ft-chip" onclick="filterHwStats(\'done\',this)">✅ انجام داده</button>';
+h+='<button class="ft-chip" onclick="filterHwStats(\'pending\',this)">⏳ نداده</button>';
+h+='</div>';
+    
     sts.forEach(s=>{
-      const isDone=s.status==='انجام شد';
-      h+='<div class="student-row" style="flex-wrap:wrap"><div class="s-avatar '+(isDone?'done':'pending')+'">'+esc(String(s.name||'؟').charAt(0))+'</div><div class="s-info"><div class="s-name">'+esc(s.name)+'</div></div>';
+      const isDone = s.status === 'انجام شد';
+      const hasFile = !!s.fileUrl;
+      const hasNote = s.note && String(s.note).trim() !== '';
+      const hasGrade = s.grade !== '' && s.grade !== null && s.grade !== undefined;
+      const hasComment = s.comment && String(s.comment).trim() !== '';
+      
+      h+='<div class="student-row" style="flex-wrap:wrap; align-items:flex-start;">';
+      h+='<div class="student-row" data-status="'+(isDone?'done':'pending')+'" style="flex-wrap:wrap; align-items:flex-start;">';
+      h+='<div class="s-avatar '+(isDone?'done':'pending')+'">'+esc(String(s.name||'؟').charAt(0))+'</div>';
+      h+='<div class="s-info"><div class="s-name">'+esc(s.name)+'</div></div>';
       h+='<span class="s-badge '+(isDone?'done':'pending')+'">'+(isDone?'✅':'⏳')+'</span>';
-      if(s.fileUrl){
+      
+      // 📝 توضیحات دانش‌آموز (مستقل از فایل)
+      if(hasNote){
+        h+='<div style="width:100%;margin-top:8px;padding:10px 12px;background:#e3f2fd;border-radius:8px;border-right:3px solid #0d47a1">';
+        h+='<div style="font-size:11px;font-weight:800;color:#0d47a1;margin-bottom:4px">📝 توضیحات دانش‌آموز:</div>';
+        h+='<div style="font-size:12px;color:#1a2233;line-height:1.7;white-space:pre-wrap">'+esc(s.note)+'</div>';
+        h+='</div>';
+      }
+      
+      // 📎 پیش‌نمایش فایل (اگه فایل داره)
+      if(hasFile){
         const ext=(s.fileName||'').split('.').pop().toLowerCase();
         const driveId=(s.fileUrl.match(/[-\w]{25,}/)||[])[0]||'';
         const imageExts=['jpg','jpeg','png','gif','webp','bmp','heic','heif','jfif','avif'];
         const audioExts=['webm','m4a','mp3','wav','ogg','aac','opus'];
         const videoExts=['mp4','webm','mov','avi','mkv','m4v'];
         h+='<div style="width:100%;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)">';
+        h+='<div style="font-size:11px;color:var(--text-soft);font-weight:700;margin-bottom:6px">📎 فایل ارسالی دانش‌آموز:</div>';
         h+='<div class="hw-file-grid">';
         if(driveId&&imageExts.indexOf(ext)>-1){
           const imgUrl='https://lh3.googleusercontent.com/d/'+driveId;
@@ -2120,20 +2586,43 @@ async function showHomeworkDetails(hwId,gradeCode){
         }
         h+='</div></div>';
       }
+      
+      // 🏆 فرم نمره و نظر (برای کسایی که انجام دادن یا فایل فرستادن)
+      if(hasFile || isDone){
+        h+='<div style="width:100%;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">';
+        
+        // نمایش نمره و نظر فعلی (اگه وجود داره)
+        if(hasGrade || hasComment){
+          h+='<div style="background:#fef3c7;border-right:3px solid #f59e0b;border-radius:8px;padding:10px 12px;margin-bottom:10px">';
+          if(hasGrade){
+            h+='<div style="font-size:13px;font-weight:800;color:#78350f;margin-bottom:4px">🏆 نمره ثبت‌شده: <span style="font-size:18px;color:#c62828">'+toFa(s.grade)+'</span></div>';
+          }
+          if(hasComment){
+            h+='<div style="font-size:11.5px;color:#78350f;margin-top:6px"><b>💬 نظر شما:</b> '+esc(s.comment)+'</div>';
+          }
+          h+='</div>';
+        }
+        
+        // فرم ورود نمره و نظر
+        h+='<div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">';
+        h+='<div style="flex:0 0 90px">';
+        h+='<label style="font-size:11px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:4px">نمره (۰-۲۰)</label>';
+        h+='<input type="number" id="grade_'+escAttr(s.nationalId)+'" value="'+escAttr(hasGrade?s.grade:'')+'" min="0" max="20" step="0.25" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:14px;text-align:center;font-weight:800;background:var(--bg);color:var(--text)">';
+        h+='</div>';
+        h+='<div style="flex:1;min-width:150px">';
+        h+='<label style="font-size:11px;font-weight:700;color:var(--text-soft);display:block;margin-bottom:4px">نظر دبیر</label>';
+        h+='<input type="text" id="comment_'+escAttr(s.nationalId)+'" value="'+escAttr(s.comment||'')+'" placeholder="مثلاً: عالی بود..." style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:12px;background:var(--bg);color:var(--text)">';
+        h+='</div>';
+        h+='<button onclick="saveTeacherFeedback(\''+escAttr(hwId)+'\',\''+escAttr(s.nationalId)+'\')" style="padding:8px 16px;background:#2e7d32;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">💾 ذخیره</button>';
+        h+='</div>';
+        h+='</div>';
+      }
+      
       h+='</div>';
     });
     el.innerHTML=h;
   }catch(err){el.innerHTML='<button class="back-btn" onclick="loadMyHomework()">← بازگشت</button><div class="empty-state"><div class="empty-title">خطا</div></div>'}
 }
-async function deleteHomework(idx){
-  if(!confirm('حذف شود؟'))return;
-  try{
-    const r=await fetch(API_URL+'?action=deleteHomework&rowIndex='+idx+'&userRole='+encodeURIComponent(currentUser.role)+'&teacher='+encodeURIComponent(currentUser.name)+'&t='+Date.now());
-    const result=await r.json();
-    if(result.success){showToast('✅ حذف شد');loadMyHomework()}
-  }catch(err){showToast('❌ خطا')}
-}
-
 // ============================================================
 // اطلاعیه‌ها
 // ============================================================
@@ -4410,6 +4899,1239 @@ function closeCertFrame() {
     document.getElementById('certModalOverlay').style.display = 'none';
     document.getElementById('certFrame').src = ''; 
 }
+async function saveStudentNote(hwId){
+  const ta = document.getElementById('note_'+hwId);
+  if(!ta) return;
+  const note = ta.value.trim();
+  try {
+    const r = await fetch(API_URL+'?action=saveHomeworkNote&homeworkId='+encodeURIComponent(hwId)+'&nationalId='+encodeURIComponent(currentUser.nationalId)+'&note='+encodeURIComponent(note)+'&t='+Date.now());
+    const res = await r.json();
+    if(res.success) showToast('✅ توضیحات ذخیره شد');
+    else showToast('❌ '+(res.message||'خطا'));
+  } catch(e) { showToast('❌ خطا'); }
+}
+async function saveTeacherFeedback(hwId, nid){
+  const gradeEl = document.getElementById('grade_'+nid);
+  const commentEl = document.getElementById('comment_'+nid);
+  if(!gradeEl) return;
+  
+  const grade = gradeEl.value.trim();
+  const comment = commentEl ? commentEl.value.trim() : '';
+  
+  if(grade){
+    const g = parseFloat(grade);
+    if(isNaN(g) || g < 0 || g > 20){
+      showToast('⚠️ نمره باید بین ۰ تا ۲۰ باشد');
+      return;
+    }
+  }
+  
+  try {
+    const r = await fetch(API_URL+'?action=saveHomeworkFeedback&homeworkId='+encodeURIComponent(hwId)+'&nationalId='+encodeURIComponent(nid)+'&grade='+encodeURIComponent(grade)+'&comment='+encodeURIComponent(comment)+'&t='+Date.now());
+    const res = await r.json();
+    if(res.success) {
+      showToast('✅ نمره و نظر ذخیره شد');
+      // رفرش صفحه
+      setTimeout(() => showHomeworkDetails(hwId, ''), 300);
+    } else {
+      showToast('❌ '+(res.message||'خطا'));
+    }
+  } catch(e) { showToast('❌ خطا'); }
+}
+// ============================================================
+// 📋 سیستم دفترچه تلفن (دانش‌آموزان و دبیران)
+// ============================================================
+let dirMode = 'students';
+let dirStudentsData = [];
+let dirTeachersData = [];
+let dirFilteredData = [];
+let selectedPhotoIndex = -1;
+let pendingPhotos = []; 
+let photoAssignments = {}; 
+
+async function renderDirectoryPage() {
+    const el = document.getElementById('tab-directory');
+    if (!el) return;
+    el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+    try {
+        const [rStudents, rTeachers] = await Promise.all([
+            fetch(API_URL + '?action=getAllStudents&t=' + Date.now()).then(r => r.json()),
+            fetch(API_URL + '?action=getAllTeachers&t=' + Date.now()).then(r => r.json())
+        ]);
+
+        if (rStudents.success && rStudents.data) {
+            dirStudentsData = rStudents.data.map(s => {
+                const base = String(s['پایه'] || '').trim();
+                const field = String(s['رشته'] || '').trim();
+                
+                let code = '';
+                // 🎯 اصلاح باگ: اول یازدهم و دوازدهم رو چک می‌کنیم تا با کلمه "دهم" اشتباه نشن
+                if (base.includes('یازدهم')) code = '11';
+                else if (base.includes('دوازدهم')) code = '12';
+                else if (base.includes('دهم')) code = '10';
+
+                // 🎯 اصلاح حرف "ي" عربی در کلمه ادبيات
+                const normField = field.replace(/ي/g, 'ی').replace(/ك/g, 'ک');
+                
+                if (normField.includes('تجربی')) code += 't';
+                else if (normField.includes('انسانی') || normField.includes('ادبیات')) code += 'e';
+
+                return {
+                    name: String(s['نام'] || '').trim(),
+                    nationalId: String(s['کد ملی'] || '').trim(),
+                    classCode: code,
+                    className: base + ' ' + field,
+                    nationality: String(s['ملیت'] || 'نامشخص').trim(),
+                    birthDate: String(s['تاریخ تولد'] || '').trim(),
+                    phone: String(s['شماره تماس'] || '').trim(),
+                    parentPhone: String(s['شماره والدین'] || '').trim(),
+                    photoUrl: String(s['لینک عکس'] || '').trim()
+                };
+            });
+        }
+
+        if (rTeachers.success && rTeachers.data) {
+            dirTeachersData = rTeachers.data.map(t => ({
+                name: String(t['نام'] || '').trim(),
+                nationalId: String(t['کد ملی'] || '').trim(),
+                subject: String(t['درس'] || '').trim(),
+                phone: String(t['شماره تماس'] || '').trim()
+            }));
+        }
+
+        el.innerHTML = `
+            <div class="dir-main-tabs">
+                <button class="dir-main-tab active" id="dirTabStudents" onclick="switchDirMode('students')">👥 لیست دانش‌آموزان</button>
+                <button class="dir-main-tab" id="dirTabTeachers" onclick="switchDirMode('teachers')">👨‍🏫 لیست دبیران</button>
+            </div>
+
+            <div class="report-header" id="dirFilters">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label class="form-label">🔍 جستجو (نام یا کد ملی)</label>
+                        <input type="text" class="form-input" id="dirSearch" placeholder="تایپ کنید..." oninput="filterDirectoryData()">
+                    </div>
+                    <div style="flex: 1; min-width: 150px;" id="dirClassWrap">
+                        <label class="form-label">🎓 کلاس</label>
+                        <select class="form-select" id="dirClassFilter" onchange="filterDirectoryData()">
+                            <option value="all">همه کلاس‌ها</option>
+                            <option value="10t">دهم تجربی</option><option value="10e">دهم انسانی</option>
+                            <option value="11t">یازدهم تجربی</option><option value="11e">یازدهم انسانی</option>
+                            <option value="12t">دوازدهم تجربی</option><option value="12e">دوازدهم انسانی</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 150px;" id="dirNatWrap">
+                        <label class="form-label">🌍 ملیت</label>
+                        <select class="form-select" id="dirNatFilter" onchange="filterDirectoryData()">
+                            <option value="all">همه</option>
+                            <option value="ایرانی">ایرانی</option>
+                            <option value="افغانستانی">افغانستانی</option>
+                            <option value="نامشخص">نامشخص</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;" id="dirPhoneTargetWrap">
+                        <label class="form-label" style="color: #c62828;">📞 شماره همراه</label>
+                        <select class="form-select" id="dirPhoneTarget" onchange="filterDirectoryData()" style="border-color: #ef9a9a; background: #fff8f8;">
+                            <option value="parent">فقط والدین</option>
+                            <option value="student">فقط دانش‌آموزان</option>
+                            <option value="both" selected>هر دو (اولویت والدین)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-tabs" id="dirQuickFilters">
+                    <button class="ft-chip active" onclick="setDirQuickFilter('all', this)">👥 کل دانش‌آموزان</button>
+                    <button class="ft-chip" onclick="setDirQuickFilter('ایرانی', this)">🇮🇷 کل ایرانی‌ها</button>
+                    <button class="ft-chip" onclick="setDirQuickFilter('افغانستانی', this)">🇦🇫 کل افغانستانی‌ها</button>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; flex-wrap: wrap;">
+                    <button class="submit-btn primary-orange" id="dirBulkSmsBtn" onclick="openDirBulkSms()">📲 پیامک گروهی</button>
+                    <button class="submit-btn primary-blue" onclick="window.print()">🖨️ چاپ لیست</button>
+                    <button class="submit-btn primary-green" onclick="downloadDirExcel()">📥 دانلود Excel</button>
+                    <button class="submit-btn" id="dirPhotoBtn" style="background: #8b5cf6;" onclick="openPhotoUploadModal()">📷 مدیریت عکس‌ها</button>
+                </div>
+            </div>
+
+            <div class="dir-table-wrap">
+                <table class="dir-table" id="dirTable">
+                    <thead id="dirTableHead"></thead>
+                    <tbody id="dirTableBody"></tbody>
+                </table>
+            </div>
+        `;
+        
+        switchDirMode('students');
+    } catch (e) {
+        console.error(e);
+        el.innerHTML = '<div class="empty-state"><div class="empty-title">خطا در دریافت اطلاعات</div></div>';
+    }
+}
+
+function switchDirMode(mode) {
+    dirMode = mode;
+    document.getElementById('dirTabStudents').classList.toggle('active', mode === 'students');
+    document.getElementById('dirTabTeachers').classList.toggle('active', mode === 'teachers');
+    
+    document.getElementById('dirClassWrap').style.display = mode === 'students' ? 'block' : 'none';
+    document.getElementById('dirNatWrap').style.display = mode === 'students' ? 'block' : 'none';
+    document.getElementById('dirPhoneTargetWrap').style.display = mode === 'students' ? 'block' : 'none';
+    document.getElementById('dirQuickFilters').style.display = mode === 'students' ? 'flex' : 'none';
+    document.getElementById('dirPhotoBtn').style.display = mode === 'students' ? 'block' : 'none';
+    
+    document.getElementById('dirBulkSmsBtn').textContent = mode === 'students' ? '📲 پیامک گروهی' : '📲 پیامک به دبیران';
+    
+    filterDirectoryData();
+}
+
+function getDirTargetPhone(student) {
+    const target = document.getElementById('dirPhoneTarget').value;
+    if (target === 'parent') return student.parentPhone;
+    if (target === 'student') return student.phone;
+    return student.parentPhone || student.phone;
+}
+
+function filterDirectoryData() {
+    const search = document.getElementById('dirSearch').value.trim().toLowerCase();
+    
+    if (dirMode === 'students') {
+        const cls = document.getElementById('dirClassFilter').value;
+        const nat = document.getElementById('dirNatFilter').value;
+        
+        dirFilteredData = dirStudentsData.filter(s => {
+            if (search && !s.name.toLowerCase().includes(search) && !s.nationalId.includes(search)) return false;
+            if (cls !== 'all' && s.classCode !== cls) return false;
+            if (nat !== 'all' && s.nationality !== nat) return false;
+            return true;
+        });
+    } else {
+        dirFilteredData = dirTeachersData.filter(t => {
+            if (search && !t.name.toLowerCase().includes(search) && !t.subject.toLowerCase().includes(search)) return false;
+            return true;
+        });
+    }
+    renderDirTable();
+}
+
+function setDirQuickFilter(nat, btn) {
+    document.querySelectorAll('#dirQuickFilters .ft-chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('dirNatFilter').value = nat;
+    filterDirectoryData();
+}
+
+function renderDirTable() {
+    const thead = document.getElementById('dirTableHead');
+    const tbody = document.getElementById('dirTableBody');
+    
+    if (dirMode === 'students') {
+        thead.innerHTML = `<tr><th>#</th><th>عکس</th><th>نام دانش‌آموز</th><th>کلاس</th><th>ملیت</th><th>شماره همراه</th><th>عملیات</th></tr>`;
+        if (dirFilteredData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="padding: 30px; color: #999;">دانش‌آموزی یافت نشد.</td></tr>';
+            return;
+        }
+        let html = '';
+        dirFilteredData.forEach((s, idx) => {
+            const phone = getDirTargetPhone(s);
+            const phoneDisplay = phone ? phone : '<span style="color:#c62828; font-size:10px;">ثبت نشده</span>';
+            const natClass = s.nationality === 'ایرانی' ? 'nat-ir' : (s.nationality === 'افغانستانی' ? 'nat-af' : '');
+            
+            let avatarHtml = s.photoUrl 
+                ? `<img src="${s.photoUrl.startsWith('http') ? s.photoUrl.replace('/view', '/preview') : s.photoUrl}" class="dir-avatar" onerror="this.outerHTML='<div class=\\'dir-avatar\\'>${s.name.charAt(0)}</div>'">`
+                : `<div class="dir-avatar">${s.name.charAt(0)}</div>`;
+
+            html += `<tr>
+                <td style="color:#999;">${toFa(idx + 1)}</td>
+                <td>${avatarHtml}</td>
+                <td style="font-weight:700; text-align:right;">${esc(s.name)}</td>
+                <td>${esc(s.className)}</td>
+                <td><span class="nat-badge ${natClass}">${esc(s.nationality)}</span></td>
+                <td style="direction:ltr; font-family:monospace; font-weight:bold; color: ${phone ? '#1a237e' : '#c62828'}">
+                    ${phoneDisplay}
+                    <button class="dir-action-btn dir-edit" style="width:24px;height:24px;font-size:11px;" onclick="openEditPhone('${s.nationalId}', '${escAttr(s.name)}', 'student', '${document.getElementById('dirPhoneTarget').value}')">✏️</button>
+                </td>
+                <td>
+                    <button class="dir-action-btn dir-call" onclick="dirMakeCall('${phone}', '${escAttr(s.name)}')" ${!phone ? 'disabled style="opacity:0.3"' : ''}>📞</button>
+                    <button class="dir-action-btn dir-sms" onclick="dirSendSms('${phone}', '${escAttr(s.name)}')" ${!phone ? 'disabled style="opacity:0.3"' : ''}>📲</button>
+                    <button class="dir-action-btn dir-photo" onclick="openSinglePhoto('${s.nationalId}', '${escAttr(s.name)}')">📷</button>
+                </td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+    } else {
+        thead.innerHTML = `<tr><th>#</th><th>نام دبیر</th><th>درس</th><th>شماره تماس</th><th>عملیات</th></tr>`;
+        if (dirFilteredData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="padding: 30px; color: #999;">دبیری یافت نشد.</td></tr>';
+            return;
+        }
+        let html = '';
+        dirFilteredData.forEach((t, idx) => {
+            const phoneDisplay = t.phone ? t.phone : '<span style="color:#c62828; font-size:10px;">ثبت نشده</span>';
+            html += `<tr>
+                <td style="color:#999;">${toFa(idx + 1)}</td>
+                <td style="font-weight:700; text-align:right;">${esc(t.name)}</td>
+                <td>${esc(t.subject)}</td>
+                <td style="direction:ltr; font-family:monospace; font-weight:bold; color: ${t.phone ? '#1a237e' : '#c62828'}">
+                    ${phoneDisplay}
+                    <button class="dir-action-btn dir-edit" style="width:24px;height:24px;font-size:11px;" onclick="openEditPhone('${t.nationalId}', '${escAttr(t.name)}', 'teacher', 'student')">✏️</button>
+                </td>
+                <td>
+                    <button class="dir-action-btn dir-call" onclick="dirMakeCall('${t.phone}', '${escAttr(t.name)}')" ${!t.phone ? 'disabled style="opacity:0.3"' : ''}>📞</button>
+                    <button class="dir-action-btn dir-sms" onclick="dirSendSms('${t.phone}', '${escAttr(t.name)}')" ${!t.phone ? 'disabled style="opacity:0.3"' : ''}>📲</button>
+                </td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+    }
+}
+
+// ============================================================
+// 📞 عملیات تماس، پیامک و ویرایش شماره
+// ============================================================
+function dirMakeCall(phone, name) {
+    if (!phone) return;
+    const url = API_URL + '?action=saveContactLog&studentName=' + encodeURIComponent(name) + '&phone=' + encodeURIComponent(phone) + '&type=' + encodeURIComponent('تماس') + '&status=' + encodeURIComponent('در حال تماس') + '&adminName=' + encodeURIComponent(currentUser.name) + '&t=' + Date.now();
+    fetch(url).catch(()=>{});
+    showToast('📞 در حال برقراری تماس...');
+    window.location.href = 'tel:' + phone;
+}
+
+function dirSendSms(phone, name) {
+    if (!phone) return;
+    const text = 'سلام، این پیام از طرف دبیرستان شهید پورصابری است.';
+    const url = API_URL + '?action=saveContactLog&studentName=' + encodeURIComponent(name) + '&phone=' + encodeURIComponent(phone) + '&type=' + encodeURIComponent('پیامک') + '&status=' + encodeURIComponent('آماده ارسال') + '&adminName=' + encodeURIComponent(currentUser.name) + '&t=' + Date.now();
+    fetch(url).catch(()=>{});
+    showToast('📲 در حال باز کردن پیام‌رسان...');
+    window.location.href = `sms:${phone}?body=${encodeURIComponent(text)}`;
+}
+
+function openEditPhone(nid, name, type, target) {
+    document.getElementById('editPhoneNid').value = nid;
+    document.getElementById('editPhoneType').value = type;
+    document.getElementById('editPhoneTarget').value = target;
+    
+    const label = document.getElementById('editPhoneLabel');
+    if (type === 'teacher') label.textContent = 'شماره تماس دبیر: ' + name;
+    else label.textContent = (target === 'parent' ? 'شماره والدین ' : 'شماره دانش‌آموز ') + name;
+    
+    document.getElementById('editPhoneInput').value = '';
+    document.getElementById('editPhoneModal').classList.add('visible');
+}
+
+async function savePhoneEdit() {
+    const nid = document.getElementById('editPhoneNid').value;
+    const type = document.getElementById('editPhoneType').value;
+    const target = document.getElementById('editPhoneTarget').value;
+    const newPhone = document.getElementById('editPhoneInput').value.trim();
+    
+    if (!newPhone) { showToast('⚠️ شماره را وارد کنید'); return; }
+    
+    try {
+        const url = API_URL + '?action=updatePhone&type=' + type + '&nationalId=' + nid + '&newPhone=' + newPhone + '&phoneType=' + (type === 'teacher' ? 'student' : target) + '&t=' + Date.now();
+        const res = await fetch(url).then(r=>r.json());
+        if (res.success) {
+            showToast('✅ شماره با موفقیت ذخیره شد');
+            document.getElementById('editPhoneModal').classList.remove('visible');
+            renderDirectoryPage();
+        } else {
+            showToast('❌ ' + (res.message || 'خطا'));
+        }
+    } catch(e) { showToast('❌ خطای شبکه'); }
+}
+
+// ============================================================
+// 📸 سیستم آپلود و مدیریت عکس (تکی و گروهی)
+// ============================================================
+function openSinglePhoto(nid, name) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment'; 
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        showToast('⏳ در حال آماده‌سازی و فشرده‌سازی...');
+        try {
+            const compressedFile = await compressImage(file, 400, 0.8);
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                const base64 = ev.target.result;
+                const params = new URLSearchParams();
+                params.append('action', 'uploadStudentPhoto');
+                params.append('nationalId', nid);
+                params.append('fileData', base64);
+                params.append('mimeType', 'image/jpeg');
+                
+                showToast('⏳ در حال آپلود...');
+                const res = await fetch(API_URL + '?' + params.toString()).then(r=>r.json());
+                if (res.success) {
+                    showToast('✅ عکس ثبت شد');
+                    renderDirectoryPage();
+                } else showToast('❌ ' + res.message);
+            };
+            reader.readAsDataURL(compressedFile);
+        } catch(err) { showToast('❌ خطا در آپلود عکس'); }
+    };
+    input.click();
+}
+
+function openPhotoUploadModal() {
+    document.getElementById('photoUploadClassSelect').value = document.getElementById('dirClassFilter').value !== 'all' ? document.getElementById('dirClassFilter').value : '10t';
+    pendingPhotos = [];
+    photoAssignments = {};
+    selectedPhotoIndex = -1;
+    document.getElementById('photoThumbnails').innerHTML = '<div style="font-size: 12px; color: var(--text-muted); width: 100%; text-align: center; padding: 20px;">هنوز عکسی انتخاب نشده است.</div>';
+    document.getElementById('photoUploadModal').classList.add('visible');
+    
+    setupPhotoDropzone();
+    loadPhotoUploadClassList();
+}
+
+function loadPhotoUploadClassList() {
+    const cls = document.getElementById('photoUploadClassSelect').value;
+    const students = dirStudentsData.filter(s => s.classCode === cls);
+    const listEl = document.getElementById('photoStudentList');
+    
+    if (students.length === 0) {
+        listEl.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #999; padding: 20px;">دانش‌آموزی در این کلاس نیست</div>';
+        return;
+    }
+    
+    let html = '';
+    students.forEach(s => {
+        const assigned = photoAssignments[s.nationalId];
+        let slotHtml = assigned 
+            ? `<img src="${assigned}">` 
+            : (s.photoUrl ? `<img src="${s.photoUrl.startsWith('http') ? s.photoUrl.replace('/view', '/preview') : s.photoUrl}">` : `<span style="font-size: 18px; font-weight: 800; color: #fff; background: linear-gradient(135deg, #1a237e, #3949ab); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">${s.name.charAt(0)}</span>`);
+
+        html += `
+            <div style="background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                <div class="student-photo-slot ${assigned ? 'dropped' : ''}" data-nid="${s.nationalId}" ondrop="dropPhotoOnStudent(event, '${s.nationalId}')" ondragover="event.preventDefault()" onclick="assignSelectedPhoto('${s.nationalId}')">
+                    ${slotHtml}
+                </div>
+                <div style="font-size: 11.5px; font-weight: 700; text-align: center;">${esc(s.name)}</div>
+            </div>
+        `;
+    });
+    listEl.innerHTML = html;
+}
+
+function setupPhotoDropzone() {
+    const dz = document.getElementById('photoDropzone');
+    dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('dragover'); };
+    dz.ondragleave = (e) => { e.preventDefault(); dz.classList.remove('dragover'); };
+    dz.ondrop = (e) => {
+        e.preventDefault();
+        dz.classList.remove('dragover');
+        handlePhotoFiles(e.dataTransfer.files);
+    };
+}
+
+function handlePhotoBulkSelect(e) {
+    handlePhotoFiles(e.target.files);
+}
+
+async function handlePhotoFiles(files) {
+    if (!files || files.length === 0) return;
+    showToast('⏳ در حال پردازش عکس‌ها...');
+    const thumbContainer = document.getElementById('photoThumbnails');
+    if (pendingPhotos.length === 0) thumbContainer.innerHTML = '';
+
+    for (let i = 0; i < files.length; i++) {
+        try {
+            const compressed = await compressImage(files[i], 400, 0.8);
+            const reader = new FileReader();
+            await new Promise(resolve => {
+                reader.onload = (ev) => {
+                    pendingPhotos.push({ base64: ev.target.result, name: files[i].name });
+                    resolve();
+                };
+                reader.readAsDataURL(compressed);
+            });
+        } catch(e) { console.error(e); }
+    }
+    
+    renderPhotoThumbnails();
+    showToast(`✅ ${files.length} عکس آماده تخصیص شد`);
+}
+
+function renderPhotoThumbnails() {
+    const container = document.getElementById('photoThumbnails');
+    if (pendingPhotos.length === 0) {
+        container.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); width: 100%; text-align: center; padding: 20px;">هنوز عکسی انتخاب نشده است.</div>';
+        return;
+    }
+    
+    let html = '';
+    pendingPhotos.forEach((p, idx) => {
+        html += `<img src="${p.base64}" class="photo-thumb" draggable="true" ondragstart="dragPhoto(event, ${idx})" onclick="selectPhoto(${idx})" style="${selectedPhotoIndex === idx ? 'border-color: #2e7d32; border-width: 3px;' : ''}">`;
+    });
+    container.innerHTML = html;
+}
+
+function dragPhoto(e, idx) {
+    e.dataTransfer.setData('text/plain', idx);
+}
+
+function dropPhotoOnStudent(e, nid) {
+    e.preventDefault();
+    const idx = e.dataTransfer.getData('text/plain');
+    if (idx !== '') {
+        assignPhoto(nid, parseInt(idx));
+    }
+}
+
+function selectPhoto(idx) {
+    selectedPhotoIndex = idx;
+    renderPhotoThumbnails();
+}
+
+function assignSelectedPhoto(nid) {
+    if (selectedPhotoIndex !== -1) {
+        assignPhoto(nid, selectedPhotoIndex);
+        selectedPhotoIndex = -1;
+        renderPhotoThumbnails();
+    }
+}
+
+function assignPhoto(nid, photoIdx) {
+    const photo = pendingPhotos[photoIdx];
+    if (!photo) return;
+    photoAssignments[nid] = photo.base64;
+    loadPhotoUploadClassList(); 
+    
+    document.getElementById('savePhotosBtn').disabled = Object.keys(photoAssignments).length === 0;
+}
+
+async function saveClassPhotos() {
+    const nids = Object.keys(photoAssignments);
+    if (nids.length === 0) return;
+    
+    document.getElementById('savePhotosBtn').disabled = true;
+    document.getElementById('savePhotosBtn').textContent = '⏳ در حال ذخیره...';
+    
+    let successCount = 0;
+    for (const nid of nids) {
+        const base64 = photoAssignments[nid];
+        try {
+            const params = new URLSearchParams();
+            params.append('action', 'uploadStudentPhoto');
+            params.append('nationalId', nid);
+            params.append('fileData', base64);
+            params.append('mimeType', 'image/jpeg');
+            
+            const res = await fetch(API_URL + '?' + params.toString()).then(r=>r.json());
+            if (res.success) successCount++;
+        } catch(e) { console.error(e); }
+    }
+    
+    showToast(`✅ ${successCount} عکس با موفقیت ذخیره شد`);
+    document.getElementById('photoUploadModal').classList.remove('visible');
+    renderDirectoryPage();
+}
+
+// ============================================================
+// 📊 دانلود اکسل و پیامک گروهی دفترچه تلفن
+// ============================================================
+function downloadDirExcel() {
+    if (!dirFilteredData || dirFilteredData.length === 0) {
+        showToast('⚠️ داده‌ای برای دانلود وجود ندارد');
+        return;
+    }
+
+    try {
+        let data = [];
+        if (dirMode === 'students') {
+            data = dirFilteredData.map(s => ({
+                'نام': String(s.name || ''),
+                'کد ملی': String(s.nationalId || ''),
+                'کلاس': String(s.className || ''),
+                'ملیت': String(s.nationality || ''),
+                'تاریخ تولد': String(s.birthDate || ''),
+                'شماره دانش‌آموز': String(s.phone || ''),
+                'شماره والدین': String(s.parentPhone || '')
+            }));
+        } else {
+            data = dirFilteredData.map(t => ({
+                'نام': String(t.name || ''),
+                'کد ملی': String(t.nationalId || ''),
+                'درس': String(t.subject || ''),
+                'شماره تماس': String(t.phone || '')
+            }));
+        }
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(data);
+        
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        
+        if (dirMode === 'students') {
+            for (let R = 1; R <= range.e.r; R++) {
+                const natCell = ws[XLSX.utils.encode_cell({r: R, c: 3})];
+                if (natCell && natCell.v === 'افغانستانی') {
+                    for (let C = 0; C <= range.e.c; C++) {
+                        const cell = ws[XLSX.utils.encode_cell({r: R, c: C})];
+                        if (cell) cell.s = { fill: { fgColor: { rgb: "FFF3E0" } }, font: { color: { rgb: "EF6C00" } } };
+                    }
+                }
+            }
+        }
+
+        for (let R = 0; R <= range.e.r; R++) {
+            for (let C = 0; C <= range.e.c; C++) {
+                const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
+                if (cell) { cell.t = 's'; cell.z = '@'; if (cell.v != null) cell.v = String(cell.v); }
+            }
+        }
+
+        const sheetName = dirMode === 'students' ? 'دانش‌آموزان' : 'دبیران';
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        XLSX.writeFile(wb, 'لیست_' + sheetName + '.xlsx');
+        showToast('✅ فایل دانلود شد');
+    } catch (err) {
+        console.error(err);
+        showToast('❌ خطا در ساخت فایل');
+    }
+}
+
+let dirBulkSmsContext = 'students';
+function openDirBulkSms() {
+    dirBulkSmsContext = dirMode;
+    const isStudent = dirBulkSmsContext === 'students';
+    
+    if (dirFilteredData.length === 0) { showToast('⚠️ لیست خالی است'); return; }
+    
+    document.getElementById('bulkSmsCount').textContent = dirFilteredData.length;
+    document.getElementById('bulkSmsModalTitle').textContent = isStudent ? '📲 پیامک گروهی به دانش‌آموزان' : '📲 پیامک گروهی به دبیران';
+    
+    const textarea = document.getElementById('bulkSmsText');
+    const varsContainer = document.getElementById('bulkSmsVars');
+    
+    if (isStudent) {
+        textarea.value = 'اولیای گرامی [نام]، برای کلاس [کلاس] در تاریخ [تاریخ] پیامی داریم.';
+        varsContainer.innerHTML = `
+            <span style="font-size: 11px; color: var(--text-soft);">درج متغیر:</span>
+            <button class="var-btn" onclick="insertDirSmsVar('[نام]')">[نام]</button>
+            <button class="var-btn" onclick="insertDirSmsVar('[کلاس]')">[کلاس]</button>
+            <button class="var-btn" onclick="insertDirSmsVar('[تاریخ]')">[تاریخ]</button>
+        `;
+    } else {
+        textarea.value = 'استاد گرامی [نام]، در تاریخ [تاریخ] جلسه شورای دبیران برگزار می‌شود.';
+        varsContainer.innerHTML = `
+            <span style="font-size: 11px; color: var(--text-soft);">درج متغیر:</span>
+            <button class="var-btn" onclick="insertDirSmsVar('[نام]')">[نام]</button>
+            <button class="var-btn" onclick="insertDirSmsVar('[درس]')">[درس]</button>
+            <button class="var-btn" onclick="insertDirSmsVar('[تاریخ]')">[تاریخ]</button>
+        `;
+    }
+    
+    document.getElementById('bulkSmsModal').classList.add('visible');
+}
+
+function insertDirSmsVar(v) {
+    const ta = document.getElementById('bulkSmsText');
+    ta.value += ' ' + v + ' ';
+    ta.focus();
+}
+
+async function processDirBulkSms() {
+    let template = document.getElementById('bulkSmsText').value;
+    const today = new Date().toLocaleDateString('fa-IR');
+    let successCount = 0;
+    
+    document.getElementById('bulkSmsModal').classList.remove('visible');
+    showToast('⏳ در حال ثبت لاگ و آماده‌سازی...');
+
+    if (dirBulkSmsContext === 'students') {
+        for (const s of dirFilteredData) {
+            const phone = getDirTargetPhone(s);
+            if (!phone) continue;
+            
+            let text = template.replace(/\[نام\]/g, s.name).replace(/\[کلاس\]/g, s.className).replace(/\[تاریخ\]/g, today);
+            
+            const url = API_URL + '?action=saveContactLog&studentName=' + encodeURIComponent(s.name) + '&phone=' + encodeURIComponent(phone) + '&type=' + encodeURIComponent('پیامک') + '&status=' + encodeURIComponent('آماده ارسال') + '&adminName=' + encodeURIComponent(currentUser.name) + '&t=' + Date.now();
+            await fetch(url).catch(()=>{});
+            
+            if (successCount === 0) {
+                setTimeout(() => { window.location.href = `sms:${phone}?body=${encodeURIComponent(text)}`; }, 1000);
+            }
+            successCount++;
+        }
+    } else {
+        for (const t of dirFilteredData) {
+            if (!t.phone) continue;
+            
+            let text = template.replace(/\[نام\]/g, t.name).replace(/\[درس\]/g, t.subject).replace(/\[تاریخ\]/g, today);
+            
+            const url = API_URL + '?action=saveContactLog&studentName=' + encodeURIComponent(t.name) + '&phone=' + encodeURIComponent(t.phone) + '&type=' + encodeURIComponent('پیامک') + '&status=' + encodeURIComponent('آماده ارسال') + '&adminName=' + encodeURIComponent(currentUser.name) + '&t=' + Date.now();
+            await fetch(url).catch(()=>{});
+            
+            if (successCount === 0) {
+                setTimeout(() => { window.location.href = `sms:${t.phone}?body=${encodeURIComponent(text)}`; }, 1000);
+            }
+            successCount++;
+        }
+    }
+    
+    showToast(`✅ لاگ ${successCount} نفر ثبت شد. (پیام‌رسان برای نفر اول باز می‌شود)`);
+}
+// ============================================================
+// 👨‍👩‍👧 توابع پنل والدین
+// ============================================================
+
+// ۱. صفحه حضور و غیاب
+async function renderParentAttendancePage() {
+    const el = document.getElementById('tab-parentAttendance');
+    if (!el) return;
+    el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+    
+    try {
+        const url = API_URL + '?action=getParentAttendanceStats&nationalId=' + encodeURIComponent(currentUser.nationalId) + '&t=' + Date.now();
+        const res = await fetch(url).then(r => r.json());
+        
+        if (!res.success) {
+            el.innerHTML = '<div class="empty-state"><div class="empty-title">خطا در دریافت اطلاعات</div></div>';
+            return;
+        }
+        
+        const records = res.data || [];
+        const summary = res.summary || { present: 0, absent: 0, late: 0, leave: 0 };
+        const total = summary.present + summary.absent + summary.late + summary.leave;
+        
+        let h = '<div class="report-header" style="margin-bottom:12px; padding:14px;">';
+const studentName = currentUser.name.replace('اولیاء محترم ', '').replace('اولیای ', '').trim();
+        h += '<div style="font-size:14px; font-weight:800; color:var(--header-2); margin-bottom:12px;">✅ حضور و غیاب دانش‌آموز ' + esc(studentName) + '</div>';        
+        // خلاصه آماری
+        h += '<div class="stat-grid" style="grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:14px;">';
+        h += '<div class="stat-box"><div class="stat-num green">' + toFa(summary.present) + '</div><div class="stat-label">حاضر</div></div>';
+        h += '<div class="stat-box"><div class="stat-num red">' + toFa(summary.absent) + '</div><div class="stat-label">غایب</div></div>';
+        h += '<div class="stat-box"><div class="stat-num orange">' + toFa(summary.late) + '</div><div class="stat-label">تاخیر</div></div>';
+        h += '<div class="stat-box"><div class="stat-num blue">' + toFa(summary.leave) + '</div><div class="stat-label">مرخصی</div></div>';
+        h += '</div>';
+        
+        if (total > 0) {
+            const presentPercent = Math.round((summary.present / total) * 100);
+            h += '<div style="background:var(--bg); border-radius:10px; padding:12px; margin-bottom:14px; text-align:center;">';
+            h += '<div style="font-size:13px; font-weight:700; color:var(--text);">📊 درصد حضور: <span style="color:#2e7d32; font-size:16px;">' + toFa(presentPercent) + '٪</span></div>';
+            h += '</div>';
+        }
+        h += '</div>';
+        
+        // جدول رنگی
+        if (records.length === 0) {
+            h += '<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-title">هنوز حضور و غیابی ثبت نشده است</div></div>';
+        } else {
+            h += '<div style="font-size:12px; font-weight:700; color:var(--text-soft); margin-bottom:8px; padding:0 4px;">📋 تاریخچه روزانه</div>';
+            h += '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(85px, 1fr)); gap:8px;">';
+            records.forEach(r => {
+                let color = '#f5f5f5', textColor = '#666', icon = '❓';
+                if (r.status === 'حاضر') { color = '#e8f5e9'; textColor = '#2e7d32'; icon = '✅'; }
+                else if (r.status === 'غایب') { color = '#ffebee'; textColor = '#c62828'; icon = '❌'; }
+                else if (r.status === 'تاخیر') { color = '#fff3e0'; textColor = '#ef6c00'; icon = '⏰'; }
+                else if (r.status === 'مرخصی') { color = '#e3f2fd'; textColor = '#1565c0'; icon = '🏥'; }
+                
+                h += '<div style="background:' + color + '; border-radius:10px; padding:10px 6px; text-align:center; border:1px solid ' + textColor + '33;">';
+                h += '<div style="font-size:16px;">' + icon + '</div>';
+                h += '<div style="font-size:10.5px; font-weight:700; color:' + textColor + '; margin-top:4px; direction:ltr;">' + esc(r.date) + '</div>';
+                h += '<div style="font-size:9.5px; color:' + textColor + ';">' + esc(r.status) + '</div>';
+                h += '</div>';
+            });
+            h += '</div>';
+        }
+        
+        el.innerHTML = h;
+    } catch(e) {
+        console.error(e);
+        el.innerHTML = '<div class="empty-state"><div class="empty-title">خطای شبکه</div></div>';
+    }
+}
+
+// ۲. صفحه نمرات
+async function renderParentGradesPage() {
+    const el = document.getElementById('tab-parentGrades');
+    if (!el) return;
+    el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+    
+    try {
+        const url = API_URL + '?action=getStudentReportData&nationalId=' + encodeURIComponent(currentUser.nationalId) + '&t=' + Date.now();
+        const res = await fetch(url).then(r => r.json());
+        
+        if (!res.success) {
+            el.innerHTML = '<div class="empty-state"><div class="empty-title">خطا در دریافت نمرات</div></div>';
+            return;
+        }
+        
+        const grades = res.grades || [];
+        const student = res.student || {};
+        
+        let h = '<div class="report-header" style="margin-bottom:12px; padding:14px;">';
+        h += '<div style="font-size:14px; font-weight:800; color:var(--header-2); margin-bottom:4px;">📊 نمرات ' + esc(student.name || '') + '</div>';
+        h += '<div style="font-size:11.5px; color:var(--text-muted);">' + esc(student.gradeName || '') + '</div>';
+        h += '</div>';
+        
+        if (grades.length === 0) {
+            h += '<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">هنوز نمره‌ای ثبت نشده است</div></div>';
+        } else {
+            h += '<div class="grade-scroll"><table class="grade-table"><thead><tr>';
+            h += '<th class="grade-name">درس</th><th>مهر</th><th>آبان</th><th>آذر</th><th>دی</th><th>بهمن</th><th>اسفند</th><th>خرداد</th>';
+            h += '</tr></thead><tbody>';
+            
+            grades.forEach(g => {
+                h += '<tr>';
+                h += '<td class="grade-name">' + esc(g.subject) + '</td>';
+                ['m','aban','azar','dey','bahman','esfand','khordad'].forEach(k => {
+                    let v = g[k];
+                    let disp = (v === undefined || v === null || v === '') ? '—' : v;
+                    if (v === 'غیبت موجه') disp = 'م';
+                    if (v === 'غیبت غیرموجه') disp = 'غ';
+                    h += '<td>' + esc(disp) + '</td>';
+                });
+                h += '</tr>';
+            });
+            h += '</tbody></table></div>';
+        }
+        
+        el.innerHTML = h;
+    } catch(e) {
+        console.error(e);
+        el.innerHTML = '<div class="empty-state"><div class="empty-title">خطای شبکه</div></div>';
+    }
+}
+
+// ۳. صفحه تکالیف و نمرات تکالیف
+async function renderParentHomeworkPage() {
+    const el = document.getElementById('tab-parentHomework');
+    if (!el) return;
+    el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+    
+    try {
+        const studentGradeCode = localStorage.getItem('student_gradeCode');
+        const [hwR, stR] = await Promise.all([
+            fetch(API_URL + '?action=getHomework&grade=' + studentGradeCode + '&t=' + Date.now()).then(r => r.json()),
+            fetch(API_URL + '?action=getHomeworkStatus&nationalId=' + currentUser.nationalId + '&t=' + Date.now()).then(r => r.json())
+        ]);
+        
+        if (!hwR.success || !hwR.data || hwR.data.length === 0) {
+            el.innerHTML = '<div class="empty-state"><div class="empty-icon">📚</div><div class="empty-title">تکلیفی ثبت نشده است</div></div>';
+            return;
+        }
+        
+        // ساخت کش نمرات
+        const hwCache = {};
+        if (stR.success && stR.data) {
+            stR.data.forEach(s => {
+                const id = String(s['شماره تکلیف'] || '').trim();
+                const norm = {};
+                for (const k in s) {
+                    const nk = String(k).trim().replace(/\u200c/g,' ').replace(/[آأإ]/g,'ا').replace(/ي/g,'ی').replace(/ك/g,'ک').replace(/\s+/g,' ');
+                    norm[nk] = s[k];
+                }
+                hwCache[id] = {
+                    status: String(norm['وضعیت'] || '').trim(),
+                    grade: (norm['نمره'] !== '' && norm['نمره'] !== null && norm['نمره'] !== undefined) ? norm['نمره'] : '',
+                    comment: norm['نظر دبیر'] || ''
+                };
+            });
+        }
+        
+        let h = '<div class="report-header" style="margin-bottom:12px; padding:14px;">';
+const studentName = currentUser.name.replace('اولیاء محترم ', '').replace('اولیای ', '').trim();
+            h += '<div style="font-size:14px; font-weight:800; color:var(--header-2);">📚 تکالیف دانش‌آموز ' + esc(studentName) + '</div>';        h += '</div>';
+        
+        hwR.data.forEach(hw => {
+            const id = String(hw['شماره'] || '').trim();
+            const st = hwCache[id] || {};
+            const isDone = st.status === 'انجام شد';
+            const hasGrade = st.grade !== '' && st.grade !== null && st.grade !== undefined;
+            
+            h += '<div class="hw-card" style="margin-bottom:10px;">';
+            h += '<div class="hw-card-header"><div class="hw-card-title">📚 ' + esc(hw['عنوان'] || 'تکلیف') + '</div>';
+            h += isDone ? '<span class="hw-status-badge done">✅ انجام شد</span>' : '<span class="hw-status-badge pending">⏳ انجام نشده</span>';
+            h += '</div>';
+            h += '<div class="hw-card-info">';
+            if (hw['دبیر']) h += '<span class="hw-info-item">👨‍🏫 ' + esc(hw['دبیر']) + '</span>';
+            if (hw['تاریخ پایان']) h += '<span class="hw-info-item">📅 تا ' + esc(hw['تاریخ پایان']) + '</span>';
+            h += '</div>';
+            
+            if (hw['توضیح']) h += '<div class="hw-card-desc">📝 ' + esc(hw['توضیح']) + '</div>';
+            
+            if (hasGrade) {
+                h += '<div style="margin-top:10px; padding:12px; background:linear-gradient(135deg,#fef3c7,#fde68a); border-radius:10px; border-right:4px solid #f59e0b;">';
+                h += '<div style="display:flex; justify-content:space-between; align-items:center;">';
+                h += '<div style="font-size:12px; font-weight:800; color:#78350f;">🏆 نمره:</div>';
+                h += '<div style="font-size:22px; font-weight:900; color:#c62828;">' + toFa(st.grade) + '</div>';
+                h += '</div>';
+                if (st.comment) {
+                    h += '<div style="margin-top:8px; padding-top:8px; border-top:1px dashed rgba(120,53,15,0.3); font-size:11.5px; color:#78350f;">';
+                    h += '<div style="font-weight:800; margin-bottom:4px;">👨‍🏫 نظر دبیر:</div>';
+                    h += '<div>' + esc(st.comment) + '</div>';
+                    h += '</div>';
+                }
+                h += '</div>';
+            }
+            h += '</div>';
+        });
+        
+        el.innerHTML = h;
+    } catch(e) {
+        console.error(e);
+        el.innerHTML = '<div class="empty-state"><div class="empty-title">خطای شبکه</div></div>';
+    }
+}
+
+// ۴. صفحه امتحانات والدین
+async function renderParentExamsPage() {
+    const el = document.getElementById('tab-parentExams');
+    if (!el) return;
+    el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+    
+    try {
+        const studentGradeCode = currentUser.gradeCode || localStorage.getItem('student_gradeCode');
+        
+        // گرفتن امتحانات ترم و کلاسی به صورت همزمان
+        const [rTerm, rClass] = await Promise.all([
+            fetch(API_URL + '?action=getExams&type=' + encodeURIComponent('ترم') + '&grade=' + studentGradeCode + '&t=' + Date.now()).then(r => r.json()),
+            fetch(API_URL + '?action=getExams&type=' + encodeURIComponent('کلاسی') + '&grade=' + studentGradeCode + '&t=' + Date.now()).then(r => r.json())
+        ]);
+        
+        let allExams = [];
+        if (rTerm.success && rTerm.data) allExams = allExams.concat(rTerm.data);
+        if (rClass.success && rClass.data) allExams = allExams.concat(rClass.data);
+        
+        // مرتب‌سازی بر اساس تاریخ
+        allExams.sort((a, b) => String(a['تاریخ'] || '').localeCompare(String(b['تاریخ'] || '')));
+        
+        const studentName = currentUser.name.replace('اولیاء محترم ', '').replace('اولیای ', '').trim();
+        
+        let h = '<div class="report-header" style="margin-bottom:12px; padding:14px;">';
+        h += '<div style="font-size:14px; font-weight:800; color:var(--header-2);">📝 امتحانات دانش‌آموز ' + esc(studentName) + '</div>';
+        h += '</div>';
+        
+        if (allExams.length === 0) {
+            h += '<div class="empty-state"><div class="empty-icon">📝</div><div class="empty-title">هنوز امتحانی ثبت نشده است</div></div>';
+            el.innerHTML = h;
+            return;
+        }
+        
+        allExams.forEach(exam => {
+            const type = exam['نوع'] || 'کلاسی';
+            const tc = type === 'ترم' ? 'term' : 'class-exam';
+            const tl = type === 'ترم' ? '📋 ترم' : '📝 کلاسی';
+            
+            h += '<div class="exam-card ' + tc + '">';
+            h += '<div class="exam-card-header">';
+            h += '<div class="exam-card-title">' + esc(exam['عنوان'] || exam['درس'] || 'امتحان') + '</div>';
+            h += '<span class="exam-card-type ' + tc + '">' + tl + '</span>';
+            h += '</div>';
+            h += '<div class="exam-card-info">';
+            if (exam['درس']) h += '<span class="exam-info-item">📚 ' + esc(exam['درس']) + '</span>';
+            if (exam['تاریخ']) h += '<span class="exam-info-item">📅 ' + esc(exam['تاریخ']) + '</span>';
+            if (exam['ساعت']) h += '<span class="exam-info-item">🕐 ' + esc(toFa(exam['ساعت'])) + '</span>';
+            if (exam['محل']) h += '<span class="exam-info-item">📍 ' + esc(exam['محل']) + '</span>';
+            h += '</div>';
+            if (exam['توضیحات']) h += '<div class="exam-card-desc">📝 ' + esc(exam['توضیحات']) + '</div>';
+            h += '</div>';
+        });
+        
+        el.innerHTML = h;
+    } catch(e) {
+        console.error(e);
+        el.innerHTML = '<div class="empty-state"><div class="empty-title">خطای شبکه</div></div>';
+    }
+}
+// ============================================================
+// 📅 تقویم یکپارچه شمسی
+// ============================================================
+let calCurrentYear = 0;
+let calCurrentMonth = 0;
+let calAllEvents = []; // { date, type, icon, title, desc }
+
+async function renderCalendarPage() {
+    const el = document.getElementById('tab-calendar');
+    if (!el) return;
+    
+    // تنظیم ماه جاری (شمسی)
+    if (calCurrentYear === 0) {
+        const today = getTodayPersian().split('/');
+        calCurrentYear = parseInt(today[0]);
+        calCurrentMonth = parseInt(today[1]);
+    }
+
+    el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+    try {
+        const role = currentUser.role;
+        const gradeCode = role === 'دانش‌آموز' || role === 'والدین' ? (currentUser.gradeCode || localStorage.getItem('student_gradeCode')) : '';
+        
+        // ۱. دریافت امتحانات
+        const rExams = await fetch(API_URL + '?action=getExams&grade=' + encodeURIComponent(gradeCode) + '&t=' + Date.now()).then(r => r.json());
+        
+        // ۲. دریافت تکالیف
+        const hwUrl = role === 'دبیر' ? API_URL + '?action=getAllHomework&t=' + Date.now() : API_URL + '?action=getHomework&grade=' + encodeURIComponent(gradeCode) + '&t=' + Date.now();
+        const rHw = await fetch(hwUrl).then(r => r.json());
+        
+        // ۳. دریافت اطلاعیه‌ها
+        const rNews = await fetch(API_URL + '?action=getAnnouncements&t=' + Date.now()).then(r => r.json());
+
+        calAllEvents = [];
+
+        // پردازش امتحانات
+        if (rExams.success && rExams.data) {
+            rExams.data.forEach(e => {
+                if (e['تاریخ']) {
+                    calAllEvents.push({
+                        date: normalizeNumbersLocal(e['تاریخ']),
+                        type: 'exam',
+                        icon: '📝',
+                        title: 'امتحان ' + (e['درس'] || e['عنوان'] || ''),
+                        desc: 'ساعت: ' + (e['ساعت'] || '—') + ' | محل: ' + (e['محل'] || '—')
+                    });
+                }
+            });
+        }
+
+        // پردازش تکالیف (بر اساس تاریخ پایان)
+        if (rHw.success && rHw.data) {
+            rHw.data.forEach(hw => {
+                const endDate = hw['تاریخ پایان'] || hw['مهلت'];
+                if (endDate) {
+                    calAllEvents.push({
+                        date: normalizeNumbersLocal(endDate),
+                        type: 'hw',
+                        icon: '📚',
+                        title: 'مهلت تکلیف ' + (hw['عنوان'] || ''),
+                        desc: 'دبیر: ' + (hw['دبیر'] || '—') + ' | کلاس: ' + (getGradeName(hw['کلاس']) || '—')
+                    });
+                }
+            });
+        }
+
+        // پردازش اطلاعیه‌ها (بر اساس تاریخ ثبت)
+        if (rNews.success && rNews.data) {
+            rNews.data.forEach(n => {
+                if (n['تاریخ']) {
+                    calAllEvents.push({
+                        date: normalizeNumbersLocal(n['تاریخ']),
+                        type: 'news',
+                        icon: '📢',
+                        title: n['عنوان'] || 'اطلاعیه',
+                        desc: 'نویسنده: ' + (n['نویسنده'] || 'مدیریت')
+                    });
+                }
+            });
+        }
+
+        renderCalendarMonth();
+
+    } catch(e) {
+        console.error(e);
+        el.innerHTML = '<div class="empty-state"><div class="empty-title">خطا در دریافت اطلاعات تقویم</div></div>';
+    }
+}
+
+function renderCalendarMonth() {
+    const el = document.getElementById('tab-calendar');
+    const monthNames = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+    const daysInMonth = getJalaliMonthDays(calCurrentYear, calCurrentMonth);
+    const startCol = jalaliWeekdayCol(calCurrentYear, calCurrentMonth, 1);
+    const todayStr = getTodayPersian();
+    
+    let h = '<div class="cal-wrapper">';
+    
+    // هدر (تغییر ماه و سال)
+    h += '<div class="cal-header">';
+    h += '<div class="cal-title">' + monthNames[calCurrentMonth - 1] + ' ' + toFa(calCurrentYear) + '</div>';
+    h += '<div class="cal-nav">';
+    h += '<button onclick="calPrevMonth()">‹</button>';
+    h += '<button onclick="calNextMonth()">›</button>';
+    h += '</div></div>';
+    
+    // 🎯 راهنمای رنگ‌ها (بالا)
+    h += '<div class="cal-legend">';
+    h += '<div class="cal-legend-item"><div class="cal-legend-swatch exam"></div> امتحان</div>';
+    h += '<div class="cal-legend-item"><div class="cal-legend-swatch hw"></div> تکلیف</div>';
+    h += '<div class="cal-legend-item"><div class="cal-legend-swatch news"></div> اطلاعیه</div>';
+    h += '</div>';
+    
+    // بدنه تقویم
+    h += '<div class="cal-body"><div class="cal-grid">';
+    
+    ['ش','ی','د','س','چ','پ','ج'].forEach(d => { h += '<div class="cal-day-head">' + d + '</div>'; });
+    
+    for (let i = 0; i < startCol; i++) h += '<div class="cal-day empty"></div>';
+    
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = calCurrentYear + '/' + (calCurrentMonth < 10 ? '0' : '') + calCurrentMonth + '/' + (d < 10 ? '0' : '') + d;
+        const isToday = (dateStr === todayStr);
+        const dayEvents = calAllEvents.filter(e => e.date === dateStr);
+        
+        // 🎯 تعیین رنگ کل سلول بر اساس اولویت (امتحان > تکلیف > اطلاعیه)
+        let cellClasses = 'cal-day';
+        if (isToday) cellClasses += ' today';
+        
+        if (dayEvents.length > 0) {
+            if (dayEvents.some(e => e.type === 'exam')) cellClasses += ' exam';
+            else if (dayEvents.some(e => e.type === 'hw')) cellClasses += ' hw';
+            else if (dayEvents.some(e => e.type === 'news')) cellClasses += ' news';
+        }
+        
+        h += '<div class="' + cellClasses + '" onclick="showCalendarDay(\'' + dateStr + '\')">';
+        h += '<div class="cal-day-num">' + toFa(d) + '</div>';
+        h += '</div>';
+    }
+    
+    h += '</div></div></div>';
+    
+    el.innerHTML = h;
+}
+
+function calPrevMonth() {
+    calCurrentMonth--;
+    if (calCurrentMonth < 1) { calCurrentMonth = 12; calCurrentYear--; }
+    renderCalendarMonth();
+}
+
+function calNextMonth() {
+    calCurrentMonth++;
+    if (calCurrentMonth > 12) { calCurrentMonth = 1; calCurrentYear++; }
+    renderCalendarMonth();
+}
+
+function showCalendarDay(dateStr) {
+    const dayEvents = calAllEvents.filter(e => e.date === dateStr);
+    if (dayEvents.length === 0) return; // اگر رویدادی نیست، کاری نکن
+    
+    const modal = document.getElementById('calendarDayModal');
+    const body = document.getElementById('calendarDayBody');
+    document.getElementById('calendarDayTitle').textContent = '📅 رویدادهای ' + dateStr;
+    
+    let h = '';
+    dayEvents.forEach(e => {
+        h += '<div class="cal-event-item ' + e.type + '">';
+        h += '<div class="cal-event-icon">' + e.icon + '</div>';
+        h += '<div class="cal-event-info">';
+        h += '<div class="cal-event-title">' + esc(e.title) + '</div>';
+        h += '<div class="cal-event-desc">' + esc(e.desc) + '</div>';
+        h += '</div></div>';
+    });
+    
+    body.innerHTML = h;
+    modal.classList.add('visible');
+}
+
+// ============================================================
+// ⭐ نظرسنجی دبیران (پنل دانش‌آموز)
+// ============================================================
+let currentEvalScores = {};
+
+async function renderTeacherEvalPage() {
+    const el = document.getElementById('tab-teacherEval');
+    if (!el) return;
+    el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+    try {
+        // ۱. گرفتن لیست دبیران دانش‌آموز
+        const rTeachers = await fetch(API_URL + '?action=getMyTeachers&gradeCode=' + currentUser.gradeCode + '&t=' + Date.now()).then(r => r.json());
+        
+        // ۲. گرفتن نظرات قبلی این دانش‌آموز (برای نمایش نمره قبلی)
+        const rEvals = await fetch(API_URL + '?action=getEvaluations&t=' + Date.now()).then(r => r.json());
+        const prevEvals = {};
+        if (rEvals.success && rEvals.data) {
+            rEvals.data.forEach(e => {
+                if (e.studentNid === currentUser.nationalId) {
+                    prevEvals[e.teacherNid] = e;
+                }
+            });
+        }
+
+        if (!rTeachers.success || !rTeachers.data || rTeachers.data.length === 0) {
+            el.innerHTML = '<div class="empty-state"><div class="empty-icon">👨‍🏫</div><div class="empty-title">دبیری برای نظرسنجی یافت نشد</div></div>';
+            return;
+        }
+
+        let h = '<div class="report-header" style="margin-bottom:12px; padding:14px; text-align:center;">';
+        h += '<div style="font-size:14px; font-weight:800; color:var(--header-2); margin-bottom:6px;">⭐ نظرسنجی از دبیران</div>';
+        h += '<div style="font-size:11.5px; color:var(--text-muted); line-height:1.6;">نظر شما کاملاً ناشناس است. لطفاً با صداقت امتیاز دهید.</div>';
+        h += '</div>';
+
+        rTeachers.data.forEach(t => {
+            const prev = prevEvals[t.nationalId];
+            const prevScore = prev ? parseInt(prev.score) : 0;
+            currentEvalScores[t.nationalId] = prevScore;
+
+            h += '<div class="eval-card">';
+            h += '<div class="eval-header">';
+            h += '<div class="eval-avatar">' + esc(t.name.charAt(0)) + '</div>';
+            h += '<div class="eval-info"><div class="eval-name">' + esc(t.name) + '</div><div class="eval-subject">' + esc(t.subject) + '</div></div>';
+            h += '</div>';
+
+            // ستاره‌ها
+            h += '<div class="star-rating" id="stars-' + t.nationalId + '">';
+            for (let i = 1; i <= 5; i++) {
+                const activeClass = i <= prevScore ? ' active' : '';
+                h += '<button class="star-btn' + activeClass + '" onclick="setEvalStar(\'' + t.nationalId + '\', ' + i + ')">★</button>';
+            }
+            h += '</div>';
+
+            // کادر نظر
+            h += '<textarea class="eval-textarea" id="comment-' + t.nationalId + '" placeholder="نظر خود را بنویسید (اختیاری)...">' + (prev ? esc(prev.comment) : '') + '</textarea>';
+
+            h += '<button class="submit-btn primary-blue" onclick="submitTeacherEval(\'' + t.nationalId + '\', \'' + escAttr(t.name) + '\', \'' + escAttr(t.subject) + '\')" style="padding:10px; font-size:12px;">📤 ثبت نظر</button>';
+            h += '</div>';
+        });
+
+        el.innerHTML = h;
+    } catch(e) {
+        console.error(e);
+        el.innerHTML = '<div class="empty-state"><div class="empty-title">خطای شبکه</div></div>';
+    }
+}
+
+function setEvalStar(teacherNid, score) {
+    currentEvalScores[teacherNid] = score;
+    const container = document.getElementById('stars-' + teacherNid);
+    if (!container) return;
+    const buttons = container.querySelectorAll('.star-btn');
+    buttons.forEach((btn, idx) => {
+        if (idx < score) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+}
+
+async function submitTeacherEval(teacherNid, teacherName, subject) {
+    const score = currentEvalScores[teacherNid] || 0;
+    if (score === 0) {
+        showToast('⚠️ لطفاً ابتدا ستاره بدهید');
+        return;
+    }
+
+    const comment = document.getElementById('comment-' + teacherNid).value.trim();
+
+    const url = API_URL + '?action=submitEvaluation'
+        + '&studentNid=' + encodeURIComponent(currentUser.nationalId)
+        + '&studentName=' + encodeURIComponent(currentUser.name)
+        + '&teacherNid=' + encodeURIComponent(teacherNid)
+        + '&teacherName=' + encodeURIComponent(teacherName)
+        + '&subject=' + encodeURIComponent(subject)
+        + '&score=' + score
+        + '&comment=' + encodeURIComponent(comment)
+        + '&t=' + Date.now();
+
+    try {
+        showToast('⏳ در حال ثبت...');
+        const res = await fetch(url).then(r => r.json());
+        if (res.success) {
+            showToast('✅ نظر شما ثبت شد. متشکریم!');
+        } else {
+            showToast('❌ ' + (res.message || 'خطا'));
+        }
+    } catch(e) {
+        showToast('❌ خطای شبکه');
+    }
+}
+
 // ============================================================
 // راه‌اندازی
 // ============================================================
@@ -4993,6 +6715,87 @@ async function changeLogStatus(rowIndex, currentStatus) {
     else showToast('❌ ' + (res.message || 'خطا'));
   } catch(e) { showToast('❌ خطا در ارتباط'); }
 }
+function filterHwStats(type, btn){
+  document.querySelectorAll('#tab-myHomework .ft-chip').forEach(c => c.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.querySelectorAll('#tab-myHomework .student-row[data-status]').forEach(row => {
+    if(type === 'all' || row.getAttribute('data-status') === type) {
+      row.style.display = 'flex';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+}
+function showStudentGradeSummary() {
+  const el = document.getElementById('tab-homework');
+  let gradesList = [];
+  
+  for (const id in hwStatusCache) {
+    const st = hwStatusCache[id];
+    if (st.grade !== '' && st.grade !== null && st.grade !== undefined) {
+      const realTitle = (window._hwTitles && window._hwTitles[id]) ? window._hwTitles[id] : 'تکلیف بدون عنوان';
+      gradesList.push({ id, grade: parseFloat(st.grade), comment: st.comment, title: realTitle });
+    }
+  }
+  
+  if (gradesList.length === 0) {
+    showToast('⚠️ هنوز نمره‌ای برای تکالیف شما ثبت نشده است');
+    return;
+  }
+  
+  let h = '<button class="back-btn" onclick="loadStudentHomework()">← بازگشت به تکالیف</button>';
+  h += '<div class="form-card"><div class="form-card-header"><div class="icon-box">📊</div><div><div class="title">کارنامه تکالیف</div><div class="sub">تعداد نمرات ثبت شده: ' + toFa(gradesList.length) + '</div></div></div>';
+  
+  let sum = 0;
+  gradesList.forEach(g => { sum += g.grade; });
+  const avg = (sum / gradesList.length).toFixed(2);
+  
+  h += '<div class="stat-grid" style="margin-bottom:12px">';
+  h += '<div class="stat-box"><div class="stat-num green">' + toFa(avg) + '</div><div class="stat-label">میانگین</div></div>';
+  h += '<div class="stat-box"><div class="stat-num">' + toFa(gradesList.length) + '</div><div class="stat-label">تعداد نمره</div></div>';
+  h += '</div>';
+  
+  gradesList.forEach(g => {
+    h += '<div class="student-row" style="flex-wrap:wrap; margin-bottom:8px">';
+    h += '<div style="flex:1"><div style="font-weight:700;font-size:13px">📚 ' + esc(g.title) + '</div>';
+    if(g.comment) h += '<div style="font-size:11.5px;color:var(--text-muted);margin-top:4px">💬 ' + esc(g.comment) + '</div>';
+    h += '</div>';
+    h += '<div style="font-size:20px;font-weight:900;color:#c62828">' + toFa(g.grade) + '</div>';
+    h += '</div>';
+  });
+  
+  h += '</div>';
+  el.innerHTML = h;
+}
+function openDocViewer(driveId, fileName) {
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;display:flex;align-items:center;justify-content:center;padding:15px;flex-direction:column;';
+  ov.onclick = (e) => { if(e.target === ov) document.body.removeChild(ov); };
+  
+  const title = document.createElement('div');
+  title.textContent = fileName;
+  title.style.cssText = 'color:#fff;margin-bottom:15px;font-size:16px;font-weight:700;text-align:center;';
+  
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'width:100%;max-width:900px;height:85vh;background:#fff;border-radius:12px;overflow:hidden;position:relative;';
+  
+  const iframe = document.createElement('iframe');
+  iframe.src = 'https://drive.google.com/file/d/' + driveId + '/preview';
+  iframe.allow = 'autoplay';
+  iframe.style.cssText = 'width:100%;height:100%;border:none;display:block';
+  
+  wrap.appendChild(iframe);
+  ov.appendChild(title);
+  ov.appendChild(wrap);
+  
+  const close = document.createElement('button');
+  close.textContent = '✕';
+  close.style.cssText = 'position:absolute;top:20px;right:20px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:22px;cursor:pointer;font-family:inherit;z-index:2';
+  close.onclick = (e) => { e.stopPropagation(); document.body.removeChild(ov); };
+  ov.appendChild(close);
+  
+  document.body.appendChild(ov);
+}
 
 // چک کردن ۳ ثانیه بعد از باز شدن اپ
 window.addEventListener('load', () => {
@@ -5007,6 +6810,406 @@ document.addEventListener('visibilitychange', () => {
     checkForUpdate();
   }
 });
+
+// ============================================================
+// 📊 نتایج نظرسنجی (پنل مدیر)
+// ============================================================
+async function renderEvalResultsPage() {
+    const el = document.getElementById('tab-evalResults');
+    if (!el) return;
+    el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+    try {
+        const res = await fetch(API_URL + '?action=getTeacherStats&t=' + Date.now()).then(r => r.json());
+        if (!res.success || !res.data || res.data.length === 0) {
+            el.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">هنوز هیچ نظری ثبت نشده است</div></div>';
+            return;
+        }
+
+        const stats = res.data;
+
+        let h = '<div class="report-header" style="margin-bottom:12px; padding:14px; text-align:center;">';
+        h += '<div style="font-size:15px; font-weight:800; color:var(--header-2); margin-bottom:6px;">📊 نتایج نظرسنجی دبیران</div>';
+        h += '<div style="font-size:11.5px; color:var(--text-muted);">مجموع دبیران: ' + stats.length + ' | مجموع آرا: ' + stats.reduce((s, x) => s + x.voteCount, 0) + '</div>';
+        h += '</div>';
+
+        h += '<div style="display:flex; gap:8px; margin-bottom:14px;">';
+        h += '<button class="submit-btn" onclick="downloadEvalPDF()" style="flex:1; padding:10px; font-size:12px; background:#2e7d32; color:#fff;">🖨️ دانلود PDF</button>';
+        h += '</div>';
+
+        stats.forEach(t => {
+            const rankClass = t.rank === 1 ? 'rank-1' : t.rank === 2 ? 'rank-2' : t.rank === 3 ? 'rank-3' : 'rank-other';
+            const medal = t.rank === 1 ? '🥇' : t.rank === 2 ? '🥈' : t.rank === 3 ? '🥉' : '';
+
+            h += '<div class="eval-result-card">';
+            h += '<div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">';
+            h += '<div class="eval-rank-badge ' + rankClass + '">' + (medal || t.rank) + '</div>';
+            h += '<div style="flex:1;"><div style="font-size:14px; font-weight:800; color:var(--text);">' + esc(t.teacherName) + ' ' + medal + '</div>';
+            h += '<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">' + esc(t.subjects || '—') + '</div></div>';
+            h += '</div>';
+
+            h += '<div class="eval-stat-row">';
+            h += '<div class="eval-stat-pill">⭐ میانگین: <b>' + t.average.toFixed(2) + '</b> از ۵</div>';
+            h += '<div class="eval-stat-pill">👥 تعداد رأی: <b>' + t.voteCount + '</b></div>';
+            h += '<div class="eval-stat-pill">🏅 رتبه: <b>' + t.rank + '</b></div>';
+            h += '</div>';
+
+            if (t.comments && t.comments.length > 0) {
+                h += '<div style="margin-top:8px; font-size:11.5px; font-weight:700; color:var(--header-2);">💬 نظرات (' + t.comments.length + '):</div>';
+                t.comments.slice(0, 5).forEach(c => {
+                    h += '<div class="eval-comment-item">' + esc(c) + '</div>';
+                });
+                if (t.comments.length > 5) {
+                    h += '<div style="font-size:10.5px; color:var(--text-muted); margin-top:4px;">و ' + (t.comments.length - 5) + ' نظر دیگر...</div>';
+                }
+            }
+
+            if (t.rank === 1) {
+                h += '<button class="submit-btn" onclick="openTeacherCertificate(\'' + escAttr(t.teacherName) + '\', \'' + escAttr(t.subjects || '') + '\', ' + t.average.toFixed(2) + ')" style="margin-top:10px; padding:10px; font-size:12px; background:linear-gradient(135deg,#ffb300,#ff8f00); color:#fff; width:100%;">🏆 صدور تقدیرنامه برای بهترین دبیر</button>';
+            }
+
+            h += '</div>';
+        });
+
+        el.innerHTML = h;
+    } catch(e) {
+        console.error(e);
+        el.innerHTML = '<div class="empty-state"><div class="empty-title">خطای شبکه</div></div>';
+    }
+}
+
+function openTeacherCertificate(teacherName, subject, average) {
+    const frame = document.getElementById('certFrame');
+    if (!frame) { showToast('❌ خطا: فریم تقدیرنامه پیدا نشد'); return; }
+    frame.src = 'certificate.html?mode=teacher'
+        + '&name=' + encodeURIComponent(teacherName)
+        + '&subject=' + encodeURIComponent(subject)
+        + '&avg=' + encodeURIComponent(average)
+        + '&t=' + Date.now();
+    document.getElementById('certModalOverlay').style.display = 'flex';
+}
+
+function downloadEvalPDF() {
+    showToast('⏳ در حال آماده‌سازی PDF...');
+    
+    fetch(API_URL + '?action=getTeacherStats&t=' + Date.now())
+        .then(r => r.json())
+        .then(res => {
+            if (!res.success || !res.data || res.data.length === 0) {
+                showToast('⚠️ داده‌ای برای دانلود نیست');
+                return;
+            }
+            
+            const stats = res.data;
+            const totalVotes = stats.reduce((s, x) => s + x.voteCount, 0);
+            
+            let innerHtml = '';
+            
+            // هدر
+            innerHtml += '<div style="text-align:center; margin-bottom:20px; padding-bottom:12px; border-bottom:2px solid #1a237e;">';
+            innerHtml += '<h1 style="font-size:20px; color:#1a237e; margin-bottom:6px; font-weight:800;">📊 نتایج نظرسنجی دبیران</h1>';
+            innerHtml += '<div style="font-size:12px; color:#6b7890;">دبیرستان شهید پورصابری &nbsp;|&nbsp; مجموع دبیران: ' + stats.length + ' &nbsp;|&nbsp; مجموع آرا: ' + totalVotes + ' &nbsp;|&nbsp; تاریخ: ' + new Date().toLocaleDateString('fa-IR') + '</div>';
+            innerHtml += '</div>';
+            
+            // کارت هر دبیر
+            stats.forEach(t => {
+                const medal = t.rank === 1 ? '🥇' : t.rank === 2 ? '🥈' : t.rank === 3 ? '🥉' : '';
+                const rankColor = t.rank === 1 ? '#ffb300' : t.rank === 2 ? '#90a4ae' : t.rank === 3 ? '#a1887f' : '#1a237e';
+                
+                innerHtml += '<div style="background:#fff; border:1px solid #cbd5e0; border-radius:10px; padding:12px; margin-bottom:10px;">';
+                innerHtml += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:8px; border-bottom:1px dashed #cbd5e0;">';
+                innerHtml += '<div><div style="font-size:14px; font-weight:800;">' + esc(t.teacherName) + ' ' + medal + '</div>';
+                innerHtml += '<div style="font-size:11px; color:#6b7890; margin-top:2px;">' + esc(t.subjects || '—') + '</div></div>';
+                innerHtml += '<div style="background:' + rankColor + '; color:#fff; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:800; white-space:nowrap;">' + medal + ' رتبه ' + t.rank + '</div>';
+                innerHtml += '</div>';
+                innerHtml += '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px;">';
+                innerHtml += '<div style="background:#f0f3f9; padding:6px 10px; border-radius:8px; font-size:11.5px;">⭐ میانگین: <b>' + t.average.toFixed(2) + '</b> از ۵</div>';
+                innerHtml += '<div style="background:#f0f3f9; padding:6px 10px; border-radius:8px; font-size:11.5px;">👥 تعداد رأی: <b>' + t.voteCount + '</b></div>';
+                innerHtml += '</div>';
+                if (t.comments && t.comments.length > 0) {
+                    innerHtml += '<div style="margin-top:8px;">';
+                    t.comments.forEach(c => {
+                        innerHtml += '<div style="background:#f8fafc; border-right:3px solid #3949ab; padding:6px 10px; border-radius:6px; margin-bottom:4px; font-size:11px;">' + esc(c) + '</div>';
+                    });
+                    innerHtml += '</div>';
+                }
+                innerHtml += '</div>';
+            });
+            
+            innerHtml += '<div style="margin-top:20px; padding-top:12px; border-top:1px solid #cbd5e0; text-align:center; font-size:10px; color:#97a2b5;">این گزارش به صورت خودکار توسط سامانه دبیرستان شهید پورصابری تولید شده است.</div>';
+            
+            // 🎯 استفاده از مودال چاپ موجود (بدون تب جدید)
+            showPrintModal(innerHtml);
+            showToast('✅ آماده - دکمه «🖨️ دانلود PDF» بالای صفحه رو بزن');
+        })
+        .catch(e => {
+            console.error(e);
+            showToast('❌ خطا در دریافت داده');
+        });
+}
+// ============================================================
+// 📸 برنامه امتحانات (پنل مدیر)
+// ============================================================
+async function renderExamSchedulesPage() {
+  const el = document.getElementById('tab-examSchedules');
+  if (!el) return;
+
+  let h = `
+    <div class="form-card">
+      <div class="form-card-header">
+        <div class="icon-box">📸</div>
+        <div><div class="title">آپلود برنامه امتحانات (تصویری)</div><div class="sub">عکس برنامه رو آپلود کن تا به دانش‌آموزها نشون داده بشه</div></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">عنوان *</label>
+        <input class="form-input" id="examSchTitle" placeholder="مثلاً: برنامه امتحانات ترم اول">
+      </div>
+      <div class="form-group">
+        <label class="form-label">نوع *</label>
+        <select class="form-select" id="examSchType">
+          <option value="ترم">📋 ترم</option>
+          <option value="میان‌ترم">📝 میان‌ترم</option>
+          <option value="کلاسی">📖 کلاسی</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">📷 عکس برنامه *</label>
+        <input type="file" id="examSchFile" accept="image/*" capture="environment" style="width:100%;padding:10px;border:1.5px dashed var(--accent);border-radius:10px;font-family:inherit;font-size:12px;background:var(--bg);cursor:pointer">
+        <div id="examSchPreview" style="margin-top:10px;display:none">
+          <img id="examSchPreviewImg" style="width:100%;max-height:300px;object-fit:contain;border-radius:10px;border:1px solid var(--line;background:#f8fafc">
+        </div>
+      </div>
+      <button class="submit-btn primary-blue" id="examSchUploadBtn" onclick="uploadExamScheduleImage()">
+        <span>📤</span><span>آپلود و ذخیره</span>
+      </button>
+    </div>
+    <div id="examSchedulesList" style="margin-top:14px;">
+      <div class="loading-spinner"><div class="spinner"></div></div>
+    </div>
+  `;
+  el.innerHTML = h;
+
+  // پیش‌نمایش فایل
+  document.getElementById('examSchFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = document.getElementById('examSchPreviewImg');
+      img.src = ev.target.result;
+      document.getElementById('examSchPreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  loadExamSchedulesList();
+}
+
+async function loadExamSchedulesList() {
+  const el = document.getElementById('examSchedulesList');
+  if (!el) return;
+  el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+  try {
+    const res = await fetch(API_URL + '?action=getExamSchedules&t=' + Date.now()).then(r => r.json());
+    if (!res.success || !res.data || res.data.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">📸</div><div class="empty-title">هنوز برنامه‌ای آپلود نشده</div><div class="empty-desc">از فرم بالا اولین تصویر رو آپلود کن</div></div>';
+      return;
+    }
+
+    let h = '<div style="font-size:13px;font-weight:800;color:var(--header-2);margin-bottom:10px;">📋 برنامه‌های آپلود شده (' + res.data.length + ')</div>';
+
+    res.data.forEach(item => {
+      const typeClass = item.type === 'میان‌ترم' ? 'midterm' : (item.type === 'کلاسی' ? 'class-exam' : '');
+      h += '<div style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 2px 10px var(--shadow)">';
+      h += '<div style="display:flex;gap:12px;margin-bottom:10px;align-items:flex-start">';
+      h += '<img src="' + escAttr(item.imageUrl) + '" style="width:100px;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--line);flex-shrink:0;cursor:pointer" onclick="openImageViewer(\'' + escAttr(item.imageUrl) + '\')">';
+      h += '<div style="flex:1;min-width:0">';
+      h += '<div style="font-size:13.5px;font-weight:800;margin-bottom:6px">' + esc(item.title) + '</div>';
+      h += '<span class="exam-schedule-card" style="display:none"></span>'; // placeholder
+      h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">';
+      h += '<span class="esc-type ' + typeClass + '" style="background:' + (item.type === 'میان‌ترم' ? '#fff3e0' : (item.type === 'کلاسی' ? '#f3e5f5' : '#e3f2fd')) + ';color:' + (item.type === 'میان‌ترم' ? '#e65100' : (item.type === 'کلاسی' ? '#7b1fa2' : '#0d47a1')) + ';padding:2px 8px;border-radius:10px;font-weight:700;font-size:10.5px">' + esc(item.type) + '</span>';
+      h += '<span style="background:' + (item.active ? '#e8f5e9' : '#ffebee') + ';color:' + (item.active ? '#2e7d32' : '#c62828') + ';padding:2px 8px;border-radius:10px;font-weight:700;font-size:10.5px">' + (item.active ? '✅ فعال' : '❌ غیرفعال') + '</span>';
+      h += '</div>';
+      h += '<div style="font-size:10.5px;color:var(--text-muted)">📅 ' + esc(item.date) + ' · 👤 ' + esc(item.uploadedBy) + '</div>';
+      h += '</div></div>';
+
+      h += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+      h += '<button onclick="toggleExamScheduleActive(' + item.rowIndex + ', ' + (!item.active) + ')" style="flex:1;min-width:90px;padding:8px;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;border:none;cursor:pointer;background:' + (item.active ? '#fff3e0' : '#e8f5e9') + ';color:' + (item.active ? '#e65100' : '#2e7d32') + '">' + (item.active ? '🔒 غیرفعال کن' : '🔓 فعال کن') + '</button>';
+      h += '<button onclick="sendExamScheduleToAll(' + item.rowIndex + ', \'' + escAttr(item.imageUrl) + '\', \'' + escAttr(item.title) + '\', \'' + escAttr(item.type) + '\')" style="flex:1;min-width:90px;padding:8px;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;border:none;cursor:pointer;background:#e3f2fd;color:#0d47a1">📤 ارسال به همه</button>';
+      h += '<button onclick="deleteExamScheduleItem(' + item.rowIndex + ')" style="padding:8px 12px;border-radius:8px;font-family:inherit;font-size:11px;font-weight:700;border:none;cursor:pointer;background:#ffebee;color:#c62828">🗑️</button>';
+      h += '</div>';
+      h += '</div>';
+    });
+
+    el.innerHTML = h;
+  } catch (e) {
+    console.error(e);
+    el.innerHTML = '<div class="empty-state"><div class="empty-title">خطا در دریافت لیست</div></div>';
+  }
+}
+
+async function uploadExamScheduleImage() {
+  const btn = document.getElementById('examSchUploadBtn');
+  const title = document.getElementById('examSchTitle').value.trim();
+  const type = document.getElementById('examSchType').value;
+  const fileInput = document.getElementById('examSchFile');
+  const file = fileInput.files[0];
+
+  if (!title) { showToast('⚠️ عنوان را وارد کنید'); return; }
+  if (!file) { showToast('⚠️ عکس را انتخاب کنید'); return; }
+  if (file.size > 15 * 1024 * 1024) { showToast('⚠️ حداکثر ۱۵ مگابایت'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span><span>در حال فشرده‌سازی...</span>';
+
+  try {
+    const compressed = await compressImage(file, 1600, 0.85);
+    const reader = new FileReader();
+
+    reader.onload = async (ev) => {
+      btn.innerHTML = '<span>⏳</span><span>در حال آپلود...</span>';
+      try {
+        const p = new URLSearchParams();
+        p.append('action', 'uploadExamSchedule');
+        p.append('title', title);
+        p.append('type', type);
+        p.append('uploadedBy', currentUser.name);
+        p.append('imageBase64', ev.target.result);
+        p.append('mimeType', compressed.type || 'image/jpeg');
+
+        const res = await fetch(API_URL, { method: 'POST', body: p }).then(r => r.json());
+        if (res.success) {
+          showToast('✅ آپلود شد');
+          document.getElementById('examSchTitle').value = '';
+          document.getElementById('examSchFile').value = '';
+          document.getElementById('examSchPreview').style.display = 'none';
+          loadExamSchedulesList();
+        } else {
+          showToast('❌ ' + (res.message || 'خطا'));
+        }
+      } catch (e) {
+        console.error(e);
+        showToast('❌ خطا در آپلود');
+      }
+      btn.disabled = false;
+      btn.innerHTML = '<span>📤</span><span>آپلود و ذخیره</span>';
+    };
+    reader.onerror = () => {
+      showToast('❌ خطا در خواندن فایل');
+      btn.disabled = false;
+      btn.innerHTML = '<span>📤</span><span>آپلود و ذخیره</span>';
+    };
+    reader.readAsDataURL(compressed);
+  } catch (e) {
+    console.error(e);
+    showToast('❌ خطا');
+    btn.disabled = false;
+    btn.innerHTML = '<span>📤</span><span>آپلود و ذخیره</span>';
+  }
+}
+
+async function toggleExamScheduleActive(rowIndex, newActive) {
+  try {
+    const res = await fetch(API_URL + '?action=toggleExamSchedule&rowIndex=' + rowIndex + '&active=' + newActive + '&t=' + Date.now()).then(r => r.json());
+    if (res.success) {
+      showToast(newActive ? '✅ فعال شد' : '🔒 غیرفعال شد');
+      loadExamSchedulesList();
+    }
+  } catch (e) { showToast('❌ خطا'); }
+}
+
+async function deleteExamScheduleItem(rowIndex) {
+  if (!confirm('این برنامه حذف شود؟ (فایل هم از Drive حذف میشه)')) return;
+  try {
+    const res = await fetch(API_URL + '?action=deleteExamSchedule&rowIndex=' + rowIndex + '&t=' + Date.now()).then(r => r.json());
+    if (res.success) {
+      showToast('✅ حذف شد');
+      loadExamSchedulesList();
+    }
+  } catch (e) { showToast('❌ خطا'); }
+}
+
+async function sendExamScheduleToAll(rowIndex, imageUrl, title, type) {
+  if (!confirm('این برنامه به همه دانش‌آموزها (در چت کلاس‌شون) ارسال بشه؟')) return;
+
+  showToast('⏳ در حال ارسال...');
+  try {
+    const p = new URLSearchParams();
+    p.append('action', 'sendExamScheduleToStudents');
+    p.append('imageUrl', imageUrl);
+    p.append('title', title);
+    p.append('type', type);
+    p.append('sender', currentUser.name);
+    p.append('senderNid', currentUser.nationalId);
+    p.append('target', 'all');
+
+    const res = await fetch(API_URL, { method: 'POST', body: p }).then(r => r.json());
+    if (res.success) {
+      showToast('✅ به ' + res.sentTo + ' کلاس ارسال شد');
+    } else {
+      showToast('❌ ' + (res.message || 'خطا'));
+    }
+  } catch (e) {
+    console.error(e);
+    showToast('❌ خطا در ارسال');
+  }
+
+  async function loadHomeExamSchedules() {
+  const el = document.getElementById('homeExamSchedules');
+  if (!el) {
+    console.warn('❌ loadHomeExamSchedules: المان #homeExamSchedules پیدا نشد');
+    return;
+  }
+  
+  console.log('✅ loadHomeExamSchedules: شروع', 'role=', currentUser.role);
+
+  if (currentUser.role !== 'دانش‌آموز' && currentUser.role !== 'والدین') {
+    console.log('⏭️ رد شد: نقش کاربر پشتیبانی نمی‌شه (' + currentUser.role + ')');
+    return;
+  }
+
+  try {
+    const res = await fetch(API_URL + '?action=getExamSchedules&t=' + Date.now()).then(r => r.json());
+    console.log('📥 پاسخ API:', res);
+
+    if (!res.success || !res.data) {
+      console.warn('⚠️ پاسخ نامعتبر');
+      return;
+    }
+
+    const activeSchedules = res.data.filter(x => x.active);
+    console.log('🖼️ تعداد فعال:', activeSchedules.length, 'از', res.data.length);
+
+    if (activeSchedules.length === 0) {
+      console.warn('⚠️ هیچ برنامه فعالی وجود نداره');
+      return;
+    }
+
+    let h = '<div style="font-size:12.5px;font-weight:700;color:var(--text-soft);margin-bottom:8px;padding:0 4px;margin-top:14px;">📸 برنامه امتحانات</div>';
+
+    activeSchedules.slice(0, 3).forEach(item => {
+      h += '<div class="exam-schedule-card" onclick="openImageViewer(\'' + escAttr(item.imageUrl) + '\')">';
+      h += '<img src="' + escAttr(item.imageUrl) + '" loading="lazy" alt="' + escAttr(item.title) + '">';
+      h += '<div class="esc-info">';
+      h += '<div class="esc-title">' + esc(item.title) + '</div>';
+      h += '<div class="esc-meta">';
+      h += '<span class="esc-type">' + esc(item.type) + '</span>';
+      h += '<span>📅 ' + esc(item.date) + '</span>';
+      h += '</div></div>';
+      h += '<div class="esc-hint">👆 برای بزرگ‌نمایی کلیک کنید</div>';
+      h += '</div>';
+    });
+
+    el.innerHTML = h;
+    console.log('✅ تصاویر درج شدند');
+  } catch (e) {
+    console.error('❌ خطا در loadHomeExamSchedules:', e);
+  }
+}
+
+}
+
 </script>
 
 <!-- 🎯 پنجره شناور برای نمایش تقدیرنامه (بدون باز شدن تب جدید) -->
@@ -5016,6 +7219,102 @@ document.addEventListener('visibilitychange', () => {
         <button onclick="closeCertFrame()" style="background:#c62828; color:#fff; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-family:inherit; font-weight:bold;">✕ بستن و بازگشت</button>
     </div>
     <iframe id="certFrame" style="flex:1; width:100%; border:none; background:#2d3748;"></iframe>
+</div>
+<!-- 🎯 پنجره ویرایش شماره -->
+<div class="sms-modal" id="editPhoneModal">
+  <div class="sms-card" style="max-width: 400px;">
+    <div class="sms-header">
+      <div class="sms-title">✏️ ویرایش شماره تماس</div>
+      <button class="sms-close" onclick="document.getElementById('editPhoneModal').classList.remove('visible')">✕</button>
+    </div>
+    <div style="padding: 15px;">
+      <input type="hidden" id="editPhoneNid">
+      <input type="hidden" id="editPhoneType">
+      <input type="hidden" id="editPhoneTarget">
+      <div class="form-group">
+        <label class="form-label" id="editPhoneLabel">شماره جدید</label>
+        <input type="text" class="form-input" id="editPhoneInput" placeholder="مثلاً 09121234567" style="direction: ltr; text-align: center; font-size: 16px; letter-spacing: 1px;">
+      </div>
+      <button class="submit-btn primary-blue" onclick="savePhoneEdit()" style="margin-top: 10px;">💾 ذخیره شماره</button>
+    </div>
+  </div>
+</div>
+
+<!-- 🎯 پنجره آپلود عکس کلاسی (Drag & Drop) -->
+<div class="sms-modal" id="photoUploadModal">
+  <div class="sms-card" style="max-width: 800px; width: 95%; max-height: 90vh;">
+    <div class="sms-header">
+      <div class="sms-title">📸 آپلود و تخصیص عکس</div>
+      <button class="sms-close" onclick="document.getElementById('photoUploadModal').classList.remove('visible')">✕</button>
+    </div>
+    <div style="padding: 15px; overflow-y: auto; flex: 1;">
+      <div style="margin-bottom: 10px;">
+        <label class="form-label">🎓 انتخاب کلاس:</label>
+        <select class="form-select" id="photoUploadClassSelect" onchange="loadPhotoUploadClassList()">
+          <option value="10t">دهم تجربی</option>
+          <option value="10e">دهم انسانی</option>
+          <option value="11t">یازدهم تجربی</option>
+          <option value="11e">یازدهم انسانی</option>
+          <option value="12t">دوازدهم تجربی</option>
+          <option value="12e">دوازدهم انسانی</option>
+        </select>
+      </div>
+      
+      <div class="photo-dropzone" id="photoDropzone" onclick="document.getElementById('photoBulkInput').click()">
+        <div style="font-size: 24px; margin-bottom: 5px;">📁</div>
+        <div style="font-weight: 700; font-size: 14px;">عکس‌ها را اینجا بکشید و رها کنید</div>
+        <div style="font-size: 11px; margin-top: 5px;">یا کلیک کنید تا از گالری انتخاب کنید</div>
+      </div>
+      <input type="file" id="photoBulkInput" accept="image/*" multiple style="display: none;" onchange="handlePhotoBulkSelect(event)">
+      
+      <div style="font-size: 12px; font-weight: 700; color: var(--text-soft); margin-bottom: 5px;">📸 عکس‌های آماده تخصیص:</div>
+      <div class="photo-thumbnails" id="photoThumbnails">
+        <div style="font-size: 12px; color: var(--text-muted); width: 100%; text-align: center; padding: 20px;">هنوز عکسی انتخاب نشده است.</div>
+      </div>
+      
+      <div style="font-size: 12px; font-weight: 700; color: var(--text-soft); margin-bottom: 5px;">👥 دانش‌آموزان کلاس (عکس را روی اسم بکشید):</div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;" id="photoStudentList">
+        <!-- لیست دانش‌آموزان -->
+      </div>
+    </div>
+    <div style="padding: 15px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 10px;">
+      <button onclick="document.getElementById('photoUploadModal').classList.remove('visible')" style="padding: 10px 15px; border-radius: 8px; border: 1px solid #ccc; cursor: pointer; font-family: inherit;">لغو</button>
+      <button class="submit-btn primary-green" id="savePhotosBtn" onclick="saveClassPhotos()" disabled>💾 ذخیره عکس‌ها</button>
+    </div>
+  </div>
+</div>
+<!-- 🎯 پنجره پیامک گروهی دفترچه تلفن -->
+<div class="sms-modal" id="bulkSmsModal">
+    <div class="sms-card" style="max-width: 500px;">
+        <div class="sms-header">
+            <div class="sms-title" id="bulkSmsModalTitle">📲 ارسال پیامک گروهی</div>
+            <button class="sms-close" onclick="document.getElementById('bulkSmsModal').classList.remove('visible')">✕</button>
+        </div>
+        <div style="padding: 15px;">
+            <div style="margin-bottom: 10px;">
+                <label class="form-label">متن پیام:</label>
+                <textarea id="bulkSmsText" style="width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 10px; font-family: inherit; font-size: 13px; min-height: 120px; resize: vertical;"></textarea>
+                <div style="margin-top: 8px;" id="bulkSmsVars"></div>
+            </div>
+            <div style="font-size: 12px; font-weight: 700; margin-bottom: 10px; color: var(--text-soft);">
+                تعداد افراد در این لیست: <span id="bulkSmsCount" style="color: #c62828;"></span>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button onclick="document.getElementById('bulkSmsModal').classList.remove('visible')" style="padding: 8px 15px; border-radius: 8px; border: 1px solid #ccc; cursor: pointer; font-family: inherit;">لغو</button>
+                <button class="submit-btn primary-green" onclick="processDirBulkSms()">✓ پردازش و ارسال</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 🎯 پنجره رویدادهای روز تقویم -->
+<div class="cal-modal" id="calendarDayModal">
+    <div class="cal-modal-card">
+        <div class="cal-modal-header">
+            <div class="cal-modal-title" id="calendarDayTitle">📅 رویدادها</div>
+            <button onclick="document.getElementById('calendarDayModal').classList.remove('visible')" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+        </div>
+        <div class="cal-modal-body" id="calendarDayBody"></div>
+    </div>
 </div>
 </body>
 </html>
