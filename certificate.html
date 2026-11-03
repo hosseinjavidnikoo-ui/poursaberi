@@ -107,73 +107,125 @@
         .toolbar { display: none !important; }
         .cert-page { box-shadow: none; margin: 0 !important; }
     }
+
+   /* 🎯 نوار ابزار قابل جمع‌شدن در موبایل */
+.toolbar-toggle-row { display: none; gap: 8px; align-items: center; margin-bottom: 8px; width: 100%; flex-wrap: wrap; }
+.toolbar .toolbar-toggle-btn { flex: 1; min-width: 140px; padding: 10px 14px; background: #1a237e !important; color: #fff !important; border: none !important; border-radius: 8px; font-family: 'Vazirmatn', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.toolbar .toolbar-toggle-btn:hover { background: #283593 !important; }
+.toolbar-content { display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap; width: 100%; }
+@media (max-width: 768px) {
+    .toolbar { padding: 8px 10px; }
+    .toolbar-toggle-row { display: flex; }
+    .toolbar-content { display: none; }
+    .toolbar.expanded .toolbar-content { display: flex; max-height: 70vh; overflow-y: auto; padding-top: 8px; }
+    .toolbar .divider { display: none; }
+}
 </style>
 </head>
 <body>
 
 <!-- 🎛️ نوار ابزار -->
-<div class="toolbar">
-    <select id="bgThemeSelect" onchange="changeBgTheme(this.value)" style="background: #e3f2fd; border-color: #64b5f6; color: #1565c0;">
-        <option value="theme-none" selected>طرح: بدون طرح</option>
-        <option value="theme-classic">طرح ۱: لاجوردی</option>
-        <option value="theme-emerald">طرح ۲: زمردی</option>
-        <option value="theme-crimson">طرح ۳: اناری</option>
-        <option value="theme-golbolbol">طرح ۴: تذهیب</option>
-    </select>
-    <input type="file" id="bgUploadInput" accept="image/*" style="display: none;" onchange="handleBgUpload(event)">
-    <button onclick="document.getElementById('bgUploadInput').click()" style="background: #e0f2fe; color: #0284c7; border-color: #38bdf8;">🖼️ آپلود طرح</button>
-    
-    <select id="rankTemplateSelect" onchange="loadRankTemplate(this.value)" style="background: #fff3e0; border-color: #ffb74d; color: #e65100;">
-        <option value="1" selected>متن: رتبه اول</option>
-        <option value="2">متن: رتبه دوم</option>
-        <option value="3">متن: رتبه سوم</option>
-    </select>
-    <div class="divider"></div>
-    
-    <button onclick="formatDoc('undo')" title="برگشت">↩️</button>
-    <button onclick="formatDoc('redo')" title="جلو">↪️</button>
-    <button onclick="formatDoc('bold')" style="font-weight:900;" title="بولد">B</button>
-    <button onclick="formatDoc('italic')" style="font-style:italic;" title="ایتالیک">I</button>
-    <button onclick="formatDoc('justifyRight')" title="راست‌چین">⬅️</button>
-    <button onclick="formatDoc('justifyCenter')" title="وسط‌چین">↔️</button>
-    <button onclick="formatDoc('justifyLeft')" title="چپ‌چین">➡️</button>
-    
-    <button onclick="formatDoc('foreColor', '#c62828')" style="background:#ffebee; color:#c62828; font-weight:900;" title="قرمز">🔴 قرمز</button>
-    <button onclick="formatDoc('foreColor', '#0d1440')" style="background:#e8eaf6; color:#0d1440; font-weight:900;" title="سرمه‌ای">⚫ سرمه</button>
-    <button onclick="formatDoc('foreColor', '#2e7d32')" style="background:#e8f5e9; color:#2e7d32; font-weight:900;" title="سبز">🟢 سبز</button>
-    
-    <select onchange="formatDoc('fontName', this.value)">
-        <option value="'IranNastaliq', serif">نستعلیق</option>
-        <option value="'Vazirmatn', sans-serif" selected>وزیرمتن</option>
-        <option value="'Shabnam', sans-serif">شبنم</option>
-        <option value="'Sahel', sans-serif">ساحل</option>
-        <option value="'Samim', sans-serif">صمیم</option>
-        <option value="'Gandom', sans-serif">گندم</option>
-    </select>
-    <button onclick="changeFontSize(1)" title="بزرگ‌تر">A+</button>
-    <button onclick="changeFontSize(-1)" title="کوچک‌تر">A-</button>
-    <button onclick="changeLineHeight(0.2)" title="فاصله خطوط +">↕️+</button>
-    <button onclick="changeLineHeight(-0.2)" title="فاصله خطوط -">↕️-</button>
-    <div class="divider"></div>
-    
-    <button class="btn-var" onclick="insertVar('[نام دانش‌آموز]')">[نام]</button>
-    <button class="btn-var" onclick="insertVar('[کلاس]')">[کلاس]</button>
-    <button class="btn-var" onclick="insertVar('[رتبه]')">[رتبه]</button>
-    <div class="divider"></div>
-    
-    <div class="padding-controls">
-        <span>پدینگ (mm):</span>
-        <input type="number" id="padVert" value="20" min="5" max="100" onchange="applyPadding()" title="بالا/پایین">
-        <span>↕️</span>
-        <input type="number" id="padHoriz" value="30" min="5" max="100" onchange="applyPadding()" title="چپ/راست">
-        <span>↔️</span>
+<div class="toolbar" id="mainToolbar">
+    <!-- ردیف دکمه‌های همیشه قابل مشاهده در موبایل -->
+    <div class="toolbar-toggle-row">
+        <button class="toolbar-toggle-btn" onclick="toggleToolbar()" id="toolbarToggleBtn" type="button">
+            <span id="toolbarToggleIcon">🛠️</span>
+            <span id="toolbarToggleText">نمایش ابزارها</span>
+        </button>
+        <button class="btn-print" onclick="printCertificate()" type="button">🖨️ پرینت / PDF</button>
     </div>
-    <div class="divider"></div>
     
-    <button class="btn-special" onclick="document.getElementById('stampInput').click()">🖋️ مهر</button>
-    <button class="btn-special" onclick="openQRModal()">🔳 QR</button>
-    <button class="btn-bulk" onclick="openBulkModal()">📦 گروهی</button>
-    <button class="btn-print" onclick="printCertificate()">🖨️ پرینت / PDF</button>
+    <!-- محتوای ابزارها (در موبایل قابل جمع‌شدن) -->
+    <div class="toolbar-content" id="toolbarContent">
+        <select id="bgThemeSelect" onchange="changeBgTheme(this.value)" style="background: #e3f2fd; border-color: #64b5f6; color: #1565c0;">
+            <option value="theme-none" selected>طرح: بدون طرح</option>
+            <option value="theme-classic">طرح ۱: لاجوردی</option>
+            <option value="theme-emerald">طرح ۲: زمردی</option>
+            <option value="theme-crimson">طرح ۳: اناری</option>
+            <option value="theme-golbolbol">طرح ۴: تذهیب</option>
+        </select>
+        <input type="file" id="bgUploadInput" accept="image/*" style="display: none;" onchange="handleBgUpload(event)">
+        <button onclick="document.getElementById('bgUploadInput').click()" style="background: #e0f2fe; color: #0284c7; border-color: #38bdf8;">🖼️ آپلود طرح</button>
+        
+        <select id="rankTemplateSelect" onchange="loadRankTemplate(this.value)" style="background: #fff3e0; border-color: #ffb74d; color: #e65100;">
+            <option value="1" selected>متن: رتبه اول</option>
+            <option value="2">متن: رتبه دوم</option>
+            <option value="3">متن: رتبه سوم</option>
+        </select>
+        <div class="divider"></div>
+        
+        <button onclick="formatDoc('undo')" title="برگشت">↩️</button>
+        <button onclick="formatDoc('redo')" title="جلو">↪️</button>
+        <button onclick="formatDoc('bold')" style="font-weight:900;" title="بولد">B</button>
+        <button onclick="formatDoc('italic')" style="font-style:italic;" title="ایتالیک">I</button>
+        <button onclick="formatDoc('justifyRight')" title="راست‌چین">⬅️</button>
+        <button onclick="formatDoc('justifyCenter')" title="وسط‌چین">↔️</button>
+        <button onclick="formatDoc('justifyLeft')" title="چپ‌چین">➡️</button>
+        
+        <button onclick="formatDoc('foreColor', '#c62828')" style="background:#ffebee; color:#c62828; font-weight:900;" title="قرمز">🔴 قرمز</button>
+        <button onclick="formatDoc('foreColor', '#0d1440')" style="background:#e8eaf6; color:#0d1440; font-weight:900;" title="سرمه‌ای">⚫ سرمه</button>
+        <button onclick="formatDoc('foreColor', '#2e7d32')" style="background:#e8f5e9; color:#2e7d32; font-weight:900;" title="سبز">🟢 سبز</button>
+        
+        <select onchange="formatDoc('fontName', this.value)">
+            <option value="'IranNastaliq', serif">نستعلیق</option>
+            <option value="'Vazirmatn', sans-serif" selected>وزیرمتن</option>
+            <option value="'Shabnam', sans-serif">شبنم</option>
+            <option value="'Sahel', sans-serif">ساحل</option>
+            <option value="'Samim', sans-serif">صمیم</option>
+            <option value="'Gandom', sans-serif">گندم</option>
+        </select>
+            <!-- 🎯 سایز فونت انتخاب شده -->
+    <div style="display:flex; align-items:center; gap:4px; background:#f7fafc; padding:4px 8px; border-radius:6px; border:1px solid #e2e8f0;">
+        <span style="font-size:11px; color:#4a5568; font-weight:700;">سایز:</span>
+        <button onclick="changeFontSize(-1)" title="کوچک‌تر" style="padding:2px 8px; font-weight:900; min-width:28px;">−</button>
+        <input type="number" id="fontSizeDisplay" value="26" min="8" max="200" style="width:52px; padding:3px 2px; text-align:center; border:1px solid #cbd5e0; border-radius:4px; font-size:13px; font-weight:800; font-family:'Vazirmatn',sans-serif;" onchange="applyFontSizeToSelection(parseFloat(this.value))">
+        <button onclick="changeFontSize(1)" title="بزرگ‌تر" style="padding:2px 8px; font-weight:900; min-width:28px;">+</button>
+        <span style="font-size:10px; color:#718096;">px</span>
+    </div>
+
+    <!-- 🎯 فاصله خطوط انتخاب شده -->
+    <div style="display:flex; align-items:center; gap:4px; background:#f7fafc; padding:4px 8px; border-radius:6px; border:1px solid #e2e8f0;">
+        <span style="font-size:11px; color:#4a5568; font-weight:700;">فاصله:</span>
+        <button onclick="changeLineHeight(-0.1)" title="کمتر" style="padding:2px 8px; font-weight:900; min-width:28px;">−</button>
+        <input type="number" id="lineHeightDisplay" value="1.8" min="0.5" max="4" step="0.1" style="width:52px; padding:3px 2px; text-align:center; border:1px solid #cbd5e0; border-radius:4px; font-size:13px; font-weight:800; font-family:'Vazirmatn',sans-serif;" onchange="applyLineHeightToSelection(parseFloat(this.value))">
+        <button onclick="changeLineHeight(0.1)" title="بیشتر" style="padding:2px 8px; font-weight:900; min-width:28px;">+</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 🎯 پدینگ اختصاصی هر خط -->
+    <div style="display:flex; align-items:center; gap:4px; background:#f0fdf4; padding:4px 8px; border-radius:6px; border:1px solid #86efac;">
+        <span style="font-size:11px; color:#166534; font-weight:700;">پدینگ خط:</span>
+        <input type="number" id="linePadVert" value="0" min="0" max="100" placeholder="↕" style="width:44px; padding:3px 2px; text-align:center; border:1px solid #86efac; border-radius:4px; font-size:12px;" title="بالا/پایین">
+        <input type="number" id="linePadHoriz" value="0" min="0" max="100" placeholder="↔" style="width:44px; padding:3px 2px; text-align:center; border:1px solid #86efac; border-radius:4px; font-size:12px;" title="چپ/راست">
+        <button onclick="applyPaddingToSelection()" style="padding:3px 10px; background:#166534; color:#fff; border:none; border-radius:4px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap;">اعمال</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 🎯 درج خط جدید بدون بزرگ شدن -->
+    <button onclick="insertControlledLineBreak()" title="درج خط جدید با فونت نرمال" style="background:#fef3c7; color:#92400e; border-color:#fbbf24; font-weight:700;">↵ خط جدید</button>
+    <div class="divider"></div>
+        
+        <button class="btn-var" onclick="insertVar('[نام دانش‌آموز]')">[نام]</button>
+        <button class="btn-var" onclick="insertVar('[کلاس]')">[کلاس]</button>
+        <button class="btn-var" onclick="insertVar('[رتبه]')">[رتبه]</button>
+        <div class="divider"></div>
+        
+        <div class="padding-controls">
+            <span>پدینگ (mm):</span>
+            <input type="number" id="padVert" value="20" min="5" max="100" onchange="applyPadding()" title="بالا/پایین">
+            <span>↕️</span>
+            <input type="number" id="padHoriz" value="30" min="5" max="100" onchange="applyPadding()" title="چپ/راست">
+            <span>↔️</span>
+        </div>
+        <div class="divider"></div>
+        
+        <button class="btn-special" onclick="document.getElementById('stampInput').click()">🖋️ مهر</button>
+        <button class="btn-special" onclick="openQRModal()">🔳 QR</button>
+        <button class="btn-bulk" onclick="openBulkModal()">📦 گروهی</button>
+        <!-- دکمه پرینت به بالای نوار ابزار منتقل شد -->
+    </div>
 </div>
 
 <input type="file" id="stampInput" accept="image/png, image/jpeg" style="display: none;" onchange="handleStampUpload(event)">
@@ -296,16 +348,233 @@ function formatDoc(cmd, value = null) {
     document.getElementById('editor').focus();
 }
 
-function changeFontSize(change) {
-    currentZoom = Math.max(0.6, Math.min(2, currentZoom + (change * 0.1)));
-    document.getElementById('editor').style.zoom = currentZoom;
+
+// ============================================================
+// 🎯 انتخاب هوشمند: سایز فونت، فاصله خطوط، پدینگ هر خط
+// ============================================================
+
+// گرفتن بلوک فعلی (پاراگراف/خط) که مکان‌نما داخلشه
+function getCurrentBlockElement() {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return null;
+    let node = sel.getRangeAt(0).startContainer;
+    const editor = document.getElementById('editor');
+    if (!node || !editor || !editor.contains(node)) return null;
+    while (node && node !== editor && node.nodeType !== 1) {
+        node = node.parentNode;
+    }
+    if (!node || node === editor) return null;
+    const blocks = ['DIV','P','H1','H2','H3','H4','H5','H6','LI','BLOCKQUOTE'];
+    while (node && node !== editor && blocks.indexOf(node.tagName) === -1) {
+        node = node.parentNode;
+    }
+    return (node && node !== editor) ? node : null;
 }
 
-function changeLineHeight(change) {
+// گرفتن سایز فونت فعلی مکان‌نما
+function getCurrentFontSize() {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return 26;
+    let node = sel.getRangeAt(0).startContainer;
+    if (node.nodeType === 3) node = node.parentNode;
+    if (!node) return 26;
+    const cs = window.getComputedStyle(node);
+    return parseFloat(cs.fontSize) || 26;
+}
+
+// نمایش خودکار سایز فونت و فاصله خطوط با حرکت مکان‌نما
+document.addEventListener('selectionchange', function() {
     const editor = document.getElementById('editor');
-    let current = parseFloat(editor.style.lineHeight) || 1.8;
-    current = Math.max(1.2, Math.min(3, current + change));
-    editor.style.lineHeight = current;
+    if (!editor) return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    if (!editor.contains(sel.anchorNode)) return;
+
+    const fsDisplay = document.getElementById('fontSizeDisplay');
+    if (fsDisplay) {
+        fsDisplay.value = Math.round(getCurrentFontSize());
+    }
+
+    const lhDisplay = document.getElementById('lineHeightDisplay');
+    if (lhDisplay) {
+        let node = sel.getRangeAt(0).startContainer;
+        if (node.nodeType === 3) node = node.parentNode;
+        if (node) {
+            const cs = window.getComputedStyle(node);
+            const fontSize = parseFloat(cs.fontSize) || 16;
+            let lh = cs.lineHeight;
+            if (lh === 'normal') lh = fontSize * 1.2;
+            else lh = parseFloat(lh);
+            lhDisplay.value = (lh / fontSize).toFixed(1);
+        }
+    }
+});
+
+// اعمال سایز فونت به متن انتخاب‌شده (یا کل خط اگر انتخابی نیست)
+function applyFontSizeToSelection(sizePx) {
+    sizePx = parseFloat(sizePx);
+    if (isNaN(sizePx) || sizePx < 8) sizePx = 8;
+    if (sizePx > 200) sizePx = 200;
+
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+
+    if (sel.isCollapsed) {
+        // بدون انتخاب → روی کل خط فعلی اعمال کن
+        const block = getCurrentBlockElement();
+        if (block) block.style.fontSize = sizePx + 'px';
+        return;
+    }
+
+    // انتخاب شده → wrap در span
+    const range = sel.getRangeAt(0);
+    const span = document.createElement('span');
+    span.style.fontSize = sizePx + 'px';
+    try {
+        const frag = range.extractContents();
+        span.appendChild(frag);
+        range.insertNode(span);
+        // انتخاب مجدد داخل span
+        sel.removeAllRanges();
+        const newRange = document.createRange();
+        newRange.selectNodeContents(span);
+        sel.addRange(newRange);
+    } catch(e) {
+        console.error('خطا در اعمال سایز:', e);
+    }
+}
+
+// اعمال فاصله خطوط به خط فعلی
+function applyLineHeightToSelection(ratio) {
+    ratio = parseFloat(ratio);
+    if (isNaN(ratio) || ratio < 0.5) ratio = 0.5;
+    if (ratio > 4) ratio = 4;
+    const block = getCurrentBlockElement();
+    if (block) block.style.lineHeight = ratio;
+}
+
+// اعمال پدینگ اختصاصی به خط انتخاب‌شده
+function applyPaddingToSelection() {
+    const vert = parseInt(document.getElementById('linePadVert').value) || 0;
+    const horiz = parseInt(document.getElementById('linePadHoriz').value) || 0;
+    const block = getCurrentBlockElement();
+    if (!block) {
+        alert('لطفاً مکان‌نما را روی یک خط/پاراگراف قرار بدهید');
+        return;
+    }
+    block.style.padding = vert + 'px ' + horiz + 'px';
+}
+
+// درج خط جدید با فونت کنترل‌شده (برای جلوگیری از بزرگ شدن)
+function insertControlledLineBreak() {
+    const editor = document.getElementById('editor');
+    if (!editor) return;
+    editor.focus();
+
+    const newDiv = document.createElement('div');
+    newDiv.style.fontSize = '26px';
+    newDiv.style.lineHeight = '1.8';
+    newDiv.style.minHeight = '1em';
+    newDiv.innerHTML = '<br>';
+
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        range.collapse(false);
+        // اگه داخل یک بلوک هستیم، بعد از بلوک درج کن
+        const block = getCurrentBlockElement();
+        if (block) {
+            const afterRange = document.createRange();
+            afterRange.setStartAfter(block);
+            afterRange.collapse(true);
+            afterRange.insertNode(newDiv);
+        } else {
+            range.insertNode(newDiv);
+        }
+        // مکان‌نما بره داخل div جدید
+        const newRange = document.createRange();
+        newRange.setStart(newDiv, 0);
+        newRange.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+    } else {
+        editor.appendChild(newDiv);
+    }
+}
+
+// جلوگیری از بزرگ شدن خط جدید وقتی بعد از عنوان بزرگ Enter می‌زنیم
+document.addEventListener('DOMContentLoaded', function() {
+    const editor = document.getElementById('editor');
+    if (!editor) return;
+    editor.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter') return;
+        const block = getCurrentBlockElement();
+        if (!block) return;
+        const fs = parseFloat(window.getComputedStyle(block).fontSize);
+        if (fs > 40) {
+            // بلوک فعلی فونت بزرگی داره → Enter رو دخالت بده
+            e.preventDefault();
+            const newDiv = document.createElement('div');
+            newDiv.style.fontSize = '26px';
+            newDiv.style.lineHeight = '1.8';
+            newDiv.style.minHeight = '1em';
+            newDiv.innerHTML = '<br>';
+
+            const afterRange = document.createRange();
+            afterRange.setStartAfter(block);
+            afterRange.collapse(true);
+            afterRange.insertNode(newDiv);
+
+            const sel = window.getSelection();
+            const newRange = document.createRange();
+            newRange.setStart(newDiv, 0);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+        }
+    });
+});
+
+// تغییر سایز فونت (اگه متن انتخاب شده → روی انتخاب؛ وگرنه کل خط)
+function changeFontSize(direction) {
+    const sel = window.getSelection();
+    if (sel && !sel.isCollapsed && sel.rangeCount > 0) {
+        // متن انتخاب شده → تغییر سایز انتخاب
+        const currentSize = getCurrentFontSize();
+        let newSize = currentSize + (direction > 0 ? 2 : -2);
+        newSize = Math.max(8, Math.min(200, newSize));
+        applyFontSizeToSelection(newSize);
+        const display = document.getElementById('fontSizeDisplay');
+        if (display) display.value = Math.round(newSize);
+    } else {
+        // بدون انتخاب → کل خط فعلی
+        const block = getCurrentBlockElement();
+        if (block) {
+            const currentSize = parseFloat(window.getComputedStyle(block).fontSize) || 26;
+            let newSize = currentSize + (direction > 0 ? 2 : -2);
+            newSize = Math.max(8, Math.min(200, newSize));
+            block.style.fontSize = newSize + 'px';
+            const display = document.getElementById('fontSizeDisplay');
+            if (display) display.value = Math.round(newSize);
+        }
+    }
+}
+
+// تغییر فاصله خطوط (روی خط فعلی)
+function changeLineHeight(change) {
+    const block = getCurrentBlockElement();
+    if (block) {
+        const cs = window.getComputedStyle(block);
+        const fontSize = parseFloat(cs.fontSize) || 16;
+        let lh = cs.lineHeight;
+        if (lh === 'normal') lh = fontSize * 1.2;
+        else lh = parseFloat(lh);
+        let currentRatio = lh / fontSize;
+        let newRatio = Math.max(0.5, Math.min(4, currentRatio + change));
+        block.style.lineHeight = newRatio;
+        const display = document.getElementById('lineHeightDisplay');
+        if (display) display.value = newRatio.toFixed(1);
+    }
 }
 
 function insertVar(variableText) {
@@ -334,6 +603,21 @@ function changeBgTheme(theme) {
     }
 }
 
+// 🎯 باز/بسته کردن نوار ابزار در موبایل
+function toggleToolbar() {
+    const tb = document.getElementById('mainToolbar');
+    const icon = document.getElementById('toolbarToggleIcon');
+    const text = document.getElementById('toolbarToggleText');
+    if (!tb) return;
+    tb.classList.toggle('expanded');
+    if (tb.classList.contains('expanded')) {
+        if (icon) icon.textContent = '✕';
+        if (text) text.textContent = 'بستن ابزارها';
+    } else {
+        if (icon) icon.textContent = '🛠️';
+        if (text) text.textContent = 'نمایش ابزارها';
+    }
+}
 function applyPadding() {
     const theme = document.getElementById('bgThemeSelect').value;
     if (theme === 'theme-none' || theme === 'theme-custom') {
@@ -707,12 +991,79 @@ const paramName = urlParams.get('name');
 const paramClass = urlParams.get('class');
 const paramRank = urlParams.get('rank');
 const paramBulk = urlParams.get('bulk');
+// 🎯 حالت دبیر
+const mode = urlParams.get('mode');
+if (mode === 'teacher') {
+    const teacherName = urlParams.get('name') || 'دبیر گرامی';
+    const subject = urlParams.get('subject') || '';
+    const avg = urlParams.get('avg') || '';
+
+    // تغییر متن تقدیرنامه
+    document.addEventListener('DOMContentLoaded', function() {
+        // تغییر نام
+        const nameEl = document.getElementById('studentNameText');
+        if (nameEl) nameEl.textContent = 'جناب آقای / سرکار خانم ' + teacherName;
+
+        // تغییر عنوان
+        const titleEl = document.querySelector('.cert-title');
+        if (titleEl) titleEl.textContent = 'تقدیرنامه دبیر برتر';
+
+        // تغییر متن اصلی
+        const bodyEl = document.getElementById('mainText');
+        if (bodyEl) {
+            bodyEl.innerHTML = 'بدینوسیله از تلاش‌های ارزشمند شما در امر آموزش' +
+                (subject ? ' درس <b>' + subject + '</b>' : '') +
+                ' و کسب میانگین امتیاز <b>' + avg + '</b> از ۵ در نظرسنجی دانش‌آموزان، صمیمانه تقدیر و تشکر می‌شود.';
+        }
+
+        // مخفی کردن بخش کلاس (اگه وجود داشت)
+        const studentLine = document.querySelector('.student-line');
+        if (studentLine) {
+            // می‌تونیم متن رو تغییر بدیم
+            studentLine.innerHTML = 'استاد گرامی، جناب آقای / سرکار خانم <span class="student-name" id="studentNameText">' + teacherName + '</span>';
+        }
+    });
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('certDate').textContent = getTodayPersian();
     makeDraggable(document.getElementById('stampContainer'));
     makeDraggable(document.getElementById('qrContainer'));
 
+    // 🎯 حالت دبیر
+    const certMode = urlParams.get('mode');
+    if (certMode === 'teacher') {
+        const teacherName = urlParams.get('name') || 'دبیر گرامی';
+        const subject = urlParams.get('subject') || '';
+        const avg = urlParams.get('avg') || '';
+
+        // ۱. عنوان
+        document.querySelector('.cert-title').textContent = 'تقدیرنامه دبیر برتر';
+
+        // ۲. خط نام (به جای «دانش‌آموز گرامی» → «استاد گرامی»)
+        document.querySelector('.student-line').innerHTML =
+            'استاد گرامی، جناب آقای / سرکار خانم <span class="student-name" id="studentNameText"></span>';
+        document.getElementById('studentNameText').textContent = teacherName;
+
+        // ۳. متن اصلی مخصوص دبیر
+        document.getElementById('mainText').innerHTML =
+            'بدین‌وسیله از تلاش‌ها، زحمات و دلسوزی‌های ارزشمند شما در امر آموزش' +
+            (subject ? ' درس <b style="color:#c62828;">' + subject + '</b>' : '') +
+            ' و کسب میانگین امتیاز <b style="color:#c62828;">' + avg + '</b> از ۵ در نظرسنجی دانش‌آموزان، صمیمانه تقدیر و تشکر می‌گردد.<br><br>' +
+            'امید است با استعانت از درگاه خداوند متعال، همواره در مسیر تعلیم و تربیت نسل آینده‌ساز موفق، مؤید و سربلند باشید.';
+
+        // ۴. مخفی کردن انتخابگر رتبه (چون برای دبیر معنی نداره)
+        const rankSel = document.getElementById('rankTemplateSelect');
+        if (rankSel) rankSel.style.display = 'none';
+
+        // ۵. تغییر متن فوتر
+        const footerRight = document.querySelector('.cert-footer div:last-child');
+        if (footerRight) footerRight.textContent = 'مدیر دبیرستان';
+
+        return; // از ادامه جلوگیری کن
+    }
+
+    // 🎯 حالت دانش‌آموز (همون قبلی)
     if (paramBulk === 'true') {
         setTimeout(openBulkModal, 300);
     } else if (paramName) {
