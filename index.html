@@ -1303,8 +1303,35 @@ async function loadHome(){
   }
   
   h+='</div><div id="homeRecentNews"></div>';
-  h+='<div class="school-info"><div class="info-title">🏫 اطلاعات مدرسه</div><div class="info-row"><span class="info-icon">📞</span><div><div class="info-label">شماره تلفن</div><div class="info-value"><a href="tel:02136212217">۰۲۱-۳۶۲۱۲۲۱۷</a></div></div></div><div class="info-row"><span class="info-icon">📍</span><div><div class="info-label">آدرس</div><div class="info-value fa">شهر جوادآباد، میدان معلم، خیابان معلم غربی، پلاک ۲</div></div></div></div>';
-  el.innerHTML=h;
+h+='<div class="school-info"><div class="info-title">🏫 اطلاعات مدرسه</div>';
+h+='<div class="info-row"><span class="info-icon">📞</span><div><div class="info-label">شماره تلفن</div><div class="info-value"><a href="tel:02136212217">۰۲۱-۳۶۲۱۲۲۱۷</a></div></div></div>';
+h+='<div class="info-row"><span class="info-icon">📍</span><div style="flex:1;min-width:0"><div class="info-label">آدرس</div><div class="info-value fa">شهر جوادآباد، میدان معلم، خیابان معلم غربی، پلاک ۲</div></div></div>';
+
+/* 🏦 شماره حساب مدرسه */
+h+='<div class="info-row"><span class="info-icon">🏦</span><div style="flex:1;min-width:0">';
+h+='<div class="info-label">شماره حساب مدرسه</div>';
+h+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px">';
+h+='<span class="info-value" style="direction:ltr;font-family:monospace;font-weight:800;font-size:13px;letter-spacing:1px;word-break:break-all">۴۱۵۰۰۸۲۴۸۸۰۰۴</span>';
+h+='<button onclick="copyToClipboard(\'4150082488004\')" style="padding:4px 10px;background:#e3f2fd;color:#0d47a1;border:none;border-radius:6px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer">📋 کپی</button>';
+h+='</div></div></div>';
+
+/* 💳 شماره کارت مدرسه */
+h+='<div class="info-row"><span class="info-icon">💳</span><div style="flex:1;min-width:0">';
+h+='<div class="info-label">شماره کارت مدرسه</div>';
+h+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px">';
+h+='<span class="info-value" style="direction:ltr;font-family:monospace;font-weight:800;font-size:13px;letter-spacing:1px;word-break:break-all">۶۰۳۷-۹۹۷۵-۹۹۷۵-۵۳۹۵</span>';
+h+='<button onclick="copyToClipboard(\'6037997599755395\')" style="padding:4px 10px;background:#e8f5e9;color:#2e7d32;border:none;border-radius:6px;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer">📋 کپی</button>';
+h+='</div></div></div>';
+
+/* 🗺️ مسیریابی به مدرسه */
+h+='<div class="info-row"><span class="info-icon">🗺️</span><div style="flex:1;min-width:0">';
+h+='<div class="info-label">مسیریابی به مدرسه</div>';
+h+='<button onclick="openMapPicker()" style="margin-top:8px;padding:9px 16px;background:linear-gradient(135deg,#1565c0,#1976d2);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;box-shadow:0 3px 8px rgba(21,101,192,.3)">🧭 مشاهده روی نقشه</button>';
+h+='</div></div>';
+
+h+='</div>';
+
+el.innerHTML=h;
   loadHomeRecentNews();
   loadHomeExamSchedules();
 }
@@ -3619,6 +3646,79 @@ function showToast(msg){
   t.classList.add('visible');
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>t.classList.remove('visible'),3500);
+}
+// ============================================================
+// 🏦 کپی به کلیپ‌بورد (سازگار با مرورگرهای قدیمی)
+// ============================================================
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      showToast('✅ کپی شد');
+    }).catch(function() {
+      fallbackCopy(text);
+    });
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  ta.style.top = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try {
+    document.execCommand('copy');
+    showToast('✅ کپی شد');
+  } catch(e) {
+    showToast('❌ کپی نشد');
+  }
+  document.body.removeChild(ta);
+}
+
+// ============================================================
+// 🗺️ انتخاب اپ نقشه برای مسیریابی
+// ============================================================
+function openMapPicker() {
+  // حذف پنل قبلی اگر باز است
+  document.querySelectorAll('.map-picker-sheet').forEach(function(el) { el.remove(); });
+
+  // 🎯 مختصات دقیق مدرسه (از گوگل مپ گرفته شده)
+  var lat = '35.21658256453583';
+  var lng = '51.667079457539884';
+  var schoolName = 'دبیرستان شهید پورصابری';
+
+  // آدرس‌های هر اپ با مختصات دقیق
+  var googleUrl = 'https://www.google.com/maps/search/?api=1&query=' + lat + ',' + lng;
+  var neshanUrl = 'https://nshn.app/?ll=' + lng + ',' + lat + '&n=' + encodeURIComponent(schoolName);
+  var baladUrl  = 'https://balad.ir/location?latitude=' + lat + '&longitude=' + lng + '&title=' + encodeURIComponent(schoolName);
+
+  var ov = document.createElement('div');
+  ov.className = 'msg-menu-backdrop visible map-picker-sheet';
+  ov.onclick = function(e) { if (e.target === ov) ov.remove(); };
+  ov.innerHTML =
+    '<div class="msg-menu" style="padding-bottom:24px" onclick="event.stopPropagation()">' +
+      '<div class="mm-title">📍 مسیریابی به ' + schoolName + '</div>' +
+      '<div class="mm-actions">' +
+        '<button class="mm-btn" onclick="window.open(\'' + googleUrl + '\', \'_blank\'); this.closest(\'.map-picker-sheet\').remove()">' +
+          '<span class="mm-icon">🗺️</span><span>گوگل مپ (Google Maps)</span>' +
+        '</button>' +
+        '<button class="mm-btn" onclick="window.open(\'' + neshanUrl + '\', \'_blank\'); this.closest(\'.map-picker-sheet\').remove()">' +
+          '<span class="mm-icon">🧭</span><span>نشان (Neshan)</span>' +
+        '</button>' +
+        '<button class="mm-btn" onclick="window.open(\'' + baladUrl + '\', \'_blank\'); this.closest(\'.map-picker-sheet\').remove()">' +
+          '<span class="mm-icon">🗺️</span><span>بلد (Balad)</span>' +
+        '</button>' +
+        '<button class="mm-btn" onclick="this.closest(\'.map-picker-sheet\').remove()">' +
+          '<span class="mm-icon">✖️</span><span>لغو</span>' +
+        '</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(ov);
 }
 
 function toggleTheme(){
