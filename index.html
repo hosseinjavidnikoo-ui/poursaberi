@@ -1365,9 +1365,12 @@ async function loadHomeExamSchedules() {
 
   console.log('✅ loadHomeExamSchedules - نقش:', currentUser.role);
 
-  if (currentUser.role !== 'دانش‌آموز' && currentUser.role !== 'والدین') {
+  // 🎯 نرمال‌سازی نقش (تبدیل حروف عربی به فارسی)
+const normalizedRole = String(currentUser.role || '').trim().replace(/ي/g, 'ی').replace(/ك/g, 'ک');
+if (normalizedRole !== 'دانش‌آموز' && normalizedRole !== 'والدین' && normalizedRole !== 'دبیر') {
+    console.log('⏭️ نقش پشتیبانی نمی‌شه:', currentUser.role);
     return;
-  }
+}
 
   try {
     const res = await fetch(API_URL + '?action=getExamSchedules&t=' + Date.now()).then(r => r.json());
@@ -7264,10 +7267,10 @@ async function sendExamScheduleToAll(rowIndex, imageUrl, title, type) {
   
   console.log('✅ loadHomeExamSchedules: شروع', 'role=', currentUser.role);
 
-  if (currentUser.role !== 'دانش‌آموز' && currentUser.role !== 'والدین') {
-    console.log('⏭️ رد شد: نقش کاربر پشتیبانی نمی‌شه (' + currentUser.role + ')');
+  if (currentUser.role !== 'دانش‌آموز' && currentUser.role !== 'والدین' && currentUser.role !== 'دبیر') {
+    console.warn('⏭️ رد شد: نقش پشتیبانی نمی‌شه (' + currentUser.role + ')');
     return;
-  }
+}
 
   try {
     const res = await fetch(API_URL + '?action=getExamSchedules&t=' + Date.now()).then(r => r.json());
