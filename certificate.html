@@ -27,7 +27,7 @@
     .padding-controls input { width: 50px; padding: 4px; text-align: center; border: 1px solid #cbd5e0; border-radius: 4px; font-weight: bold; }
 
     /* 📜 کادر A4 */
-    .cert-page { width: 210mm; height: 296mm; margin: 20px 0; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); background-color: #fff; transition: all 0.3s ease; -webkit-print-color-adjust: exact; print-color-adjust: exact; overflow: hidden; }
+    .cert-page { width: 210mm; height: 296mm; margin: 20px auto; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); background-color: #fff; transition: all 0.3s ease; -webkit-print-color-adjust: exact; print-color-adjust: exact; overflow: hidden; }
     .cert-inner { width: 100%; height: 100%; position: relative; display: flex; flex-direction: column; z-index: 2; background-color: #fff; transition: all 0.3s ease; }
 
     /* 🎨 طرح‌ها */
@@ -101,11 +101,29 @@
         background: transparent;
     }
 
-    @media print {
+       @media print {
         @page { size: A4 portrait; margin: 0; }
-        body { background: #fff; }
-        .toolbar { display: none !important; }
-        .cert-page { box-shadow: none; margin: 0 !important; }
+        html, body {
+            background: #fff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: auto !important;
+            height: auto !important;
+        }
+        /* هر چیزی که فرزند مستقیم body است و خود کادر تقدیرنامه نیست، مخفی شود */
+        body > *:not(#certPage) {
+            display: none !important;
+        }
+        /* اجزای داخلی کادر که مخفی می‌شوند */
+        .toolbar, .zoom-bar, .print-fab { display: none !important; }
+        #certPage {
+            zoom: 1 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            page-break-inside: avoid !important;
+            page-break-after: avoid !important;
+        }
+        #certPage .cert-inner { box-shadow: none !important; }
     }
 
    /* 🎯 نوار ابزار قابل جمع‌شدن در موبایل */
@@ -120,6 +138,60 @@
     .toolbar.expanded .toolbar-content { display: flex; max-height: 70vh; overflow-y: auto; padding-top: 8px; }
     .toolbar .divider { display: none; }
 }
+
+/* 🎯 زوم و پنچ */
+body {
+  align-items: flex-start !important;
+  touch-action: pan-x pan-y;
+  padding-bottom: 72px;
+}
+
+.zoom-bar {
+  position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+  background: rgba(13,20,64,0.94); color: #fff; border-radius: 26px;
+  padding: 6px 10px; display: flex; align-items: center; gap: 6px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.45); z-index: 600;
+  font-family: 'Vazirmatn', sans-serif; direction: rtl;
+  border: 1px solid rgba(212,175,55,0.5);
+}
+.zoom-bar button {
+  background: rgba(255,255,255,0.18); border: none; color: #fff;
+  width: 34px; height: 34px; border-radius: 50%; font-size: 18px;
+  cursor: pointer; font-family: inherit; display: flex;
+  align-items: center; justify-content: center; line-height: 1;
+}
+.zoom-bar button:active { background: rgba(255,255,255,0.35); }
+.zoom-bar .zoom-percent { font-size: 12px; font-weight: 800; min-width: 50px; text-align: center; }
+.zoom-bar .zoom-fit { width: auto; padding: 0 12px; border-radius: 18px; font-size: 11px; font-weight: 700; }
+
+@media print {
+  .zoom-bar { display: none !important; }
+}
+
+/* 🎯 دکمه شناور پرینت */
+.print-fab {
+    position: fixed;
+    bottom: 80px;
+    left: 20px;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2e7d32, #43a047);
+    color: #fff;
+    border: none;
+    font-size: 26px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(46,125,50,0.5);
+    z-index: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s;
+    font-family: inherit;
+}
+.print-fab:active { transform: scale(0.92); }
+@media print { .print-fab { display: none !important; } }
+
 </style>
 </head>
 <body>
@@ -224,6 +296,7 @@
         <button class="btn-special" onclick="document.getElementById('stampInput').click()">🖋️ مهر</button>
         <button class="btn-special" onclick="openQRModal()">🔳 QR</button>
         <button class="btn-bulk" onclick="openBulkModal()">📦 گروهی</button>
+        <button class="btn-print" onclick="printCertificate()" type="button">🖨️ پرینت / PDF</button>
         <!-- دکمه پرینت به بالای نوار ابزار منتقل شد -->
     </div>
 </div>
@@ -319,6 +392,16 @@
     </div>
 </div>
 
+<!-- 🎯 نوار زوم تقدیرنامه -->
+<div class="zoom-bar" id="zoomBar">
+  <button type="button" onclick="setCertZoom(currentZoom - 0.1)" title="کوچک‌تر">−</button>
+  <span class="zoom-percent" id="zoomPercent">۱۰۰٪</span>
+  <button type="button" onclick="setCertZoom(currentZoom + 0.1)" title="بزرگ‌تر">+</button>
+  <button type="button" class="zoom-fit" onclick="fitCertToScreen()" title="نمایش کل صفحه">⤢ کل صفحه</button>
+</div>
+<!-- 🎯 دکمه‌ی شناور پرینت (همیشه دیده می‌شود) -->
+<button class="print-fab" onclick="printCertificate()" title="پرینت / PDF" type="button">🖨️</button>
+
 <script>
 // ============================================================
 // 📌 متغیرها
@@ -326,6 +409,65 @@
 const studentData = { name: '', className: '', rank: 'رتبه اول' };
 let currentZoom = 1;
 let customBgData = null;
+
+// ============================================================
+// 🔍 زوم پیش‌نمایش (پنچ + دکمه‌ها)
+// ============================================================
+function setCertZoom(z) {
+  z = Math.max(0.25, Math.min(2.5, z));
+  currentZoom = z;
+  const page = document.getElementById('certPage');
+  if (page) page.style.zoom = z;
+  const pct = document.getElementById('zoomPercent');
+  if (pct) pct.textContent = Math.round(z * 100).toLocaleString('fa-IR') + '٪';
+}
+
+function fitCertToScreen() {
+  const page = document.getElementById('certPage');
+  if (!page) return;
+  page.style.zoom = 1;
+  const rect = page.getBoundingClientRect();
+  const naturalW = rect.width  || 794;
+  const naturalH = rect.height || 1123;
+  const availW = (window.innerWidth  || document.documentElement.clientWidth)  - 20;
+  const availH = (window.innerHeight || document.documentElement.clientHeight) - 150;
+  const scale = Math.min(availW / naturalW, availH / naturalH);
+  setCertZoom(scale);
+}
+
+// پنچ دو انگشتی → زوم
+(function initPinchZoom() {
+  let pinch = { active: false, startDist: 0, startZoom: 1 };
+  function tdist(t) {
+    const dx = t[0].clientX - t[1].clientX;
+    const dy = t[0].clientY - t[1].clientY;
+    return Math.hypot(dx, dy) || 1;
+  }
+  document.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 2) {
+      pinch.active = true;
+      pinch.startDist = tdist(e.touches);
+      pinch.startZoom = currentZoom;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (pinch.active && e.touches.length === 2) {
+      if (e.cancelable) e.preventDefault();
+      const d = tdist(e.touches);
+      setCertZoom(pinch.startZoom * (d / pinch.startDist));
+    }
+  }, { passive: false });
+
+  document.addEventListener('touchend', function(e) {
+    if (e.touches.length < 2) pinch.active = false;
+  }, { passive: true });
+  document.addEventListener('touchcancel', function() { pinch.active = false; }, { passive: true });
+})();
+
+window.addEventListener('load', function() {
+  setTimeout(fitCertToScreen, 350);
+});
 
 const rankTemplates = {
     '1': 'با افتخار و احترام، کسب <b style="color:#c62828;">رتبه اول</b> در میان دانش‌آموزان کلاس <b style="color:#c62828;">[کلاس]</b>، نشان از تلاش، پشتکار و تعهد ارزشمند شما به علم و دانش دارد.<br><br>این موفقیت ارزشمند را به شما، دانش‌آموز عزیز و خانواده محترم‌تان تبریک گفته و از زحمات و کوشش‌های بی‌وقفه‌تان صمیمانه قدردانی می‌کنیم. با آرزوی موفقیت‌های روزافزون در مسیر آینده.',
@@ -799,9 +941,10 @@ function getTodayPersian() {
 function getPosition(container) {
     const rect = container.getBoundingClientRect();
     const pageRect = document.getElementById('certPage').getBoundingClientRect();
+    const z = currentZoom || 1;
     return {
-        x: rect.left - pageRect.left,
-        y: rect.top - pageRect.top
+        x: (rect.left - pageRect.left) / z,
+        y: (rect.top  - pageRect.top)  / z
     };
 }
 
@@ -851,7 +994,7 @@ function buildPrintHTML(forBulk, bulkNames, bulkClass) {
             const bodyText = rankTemplates[rankNum].replace(/\[کلاس\]/g, bulkClass);
             pagesContent += '<div class="cert-page ' + activeTheme + '" style="' + bgStyle + 'page-break-after:always;">' +
                 '<div class="cert-inner" ' + (innerPadding && (activeTheme === 'theme-none' || activeTheme === 'theme-custom') ? 'style="padding:' + innerPadding + '"' : '') + '>' +
-                '<div class="editable-area" style="font-family:' + currentFont + ';font-size:' + currentFontSize + ';line-height:' + currentLineHeight + ';zoom:' + currentZoom + ';">' +
+                '<div class="editable-area" style="font-family:' + currentFont + ';font-size:' + currentFontSize + ';line-height:' + currentLineHeight + ';">' +
                 '<div class="bismillah">باسمه تعالی</div>' +
                 '<div class="school-name">دبیرستان شهید پور صابری</div>' +
                 '<div class="cert-title">تقدیرنامه</div>' +
@@ -863,7 +1006,7 @@ function buildPrintHTML(forBulk, bulkNames, bulkClass) {
     } else {
         pagesContent = '<div class="cert-page ' + activeTheme + '" style="' + bgStyle + '">' +
             '<div class="cert-inner" ' + (innerPadding && (activeTheme === 'theme-none' || activeTheme === 'theme-custom') ? 'style="padding:' + innerPadding + '"' : '') + '>' +
-            '<div class="editable-area" style="font-family:' + currentFont + ';font-size:' + currentFontSize + ';line-height:' + currentLineHeight + ';zoom:' + currentZoom + ';">' +
+            '<div class="editable-area" style="font-family:' + currentFont + ';font-size:' + currentFontSize + ';line-height:' + currentLineHeight + ';">' +
             editor.innerHTML +
             '</div>' +
             stampHTML + qrHTML +
@@ -900,7 +1043,7 @@ function buildPrintHTML(forBulk, bulkNames, bulkClass) {
     css += '.theme-custom{padding:0}';
     css += '.theme-custom .cert-inner{background:transparent;border:none;box-shadow:none}';
     
-    css += '@page{size:A4 portrait;margin:0}';
+    css += '@page{size:A4 portrait;margin:0;}';
 
     return '<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>پرینت تقدیرنامه</title>' +
         '<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">' +
@@ -908,51 +1051,90 @@ function buildPrintHTML(forBulk, bulkNames, bulkClass) {
 }
 
 // ============================================================
-// 🖨️ پرینت با iframe مخفی
+// 🖨️ پرینت: پنجره جدید + فالبک iframe
 // ============================================================
 function printWithFrame(html) {
+    // ۱) روش اصلی: Blob URL با MIME type صریح (مطمئن‌ترین روش)
+    try {
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const win = window.open(url, '_blank');
+
+        if (win && !win.closed) {
+            setTimeout(function () {
+                try {
+                    win.focus();
+                    win.print();
+                } catch (e) {
+                    console.error('خطا در print:', e);
+                }
+            }, 1500);
+            // آزادسازی حافظهٔ Blob بعد از یک دقیقه
+            setTimeout(function () {
+                try { URL.revokeObjectURL(url); } catch (e) {}
+            }, 60000);
+            return;
+        }
+    } catch (e) {
+        console.error('خطا در ساخت Blob URL:', e);
+    }
+
+    // ۲) فالبک: iframe با ابعاد واقعی (نه ۱ پیکسل)
     const old = document.getElementById('printHelperFrame');
-    if (old) old.remove();
-    
+    if (old) { try { old.remove(); } catch (e) {} }
+
     const frame = document.createElement('iframe');
     frame.id = 'printHelperFrame';
-    frame.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none;';
+    frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:900px;height:1200px;border:0;';
     document.body.appendChild(frame);
-    
+
     const doc = frame.contentWindow.document;
     doc.open();
     doc.write(html);
     doc.close();
-    
-    const waitForFonts = () => {
-        if (doc.fonts && doc.fonts.ready) {
-            return doc.fonts.ready;
+
+    setTimeout(function () {
+        try {
+            frame.contentWindow.focus();
+            frame.contentWindow.print();
+        } catch (e) {
+            alert('برای چاپ، از منوی مرورگر گزینه Print را انتخاب کنید.');
         }
-        return Promise.resolve();
-    };
-    
-    waitForFonts().then(() => {
-        setTimeout(() => {
-            try {
-                frame.contentWindow.focus();
-                frame.contentWindow.print();
-            } catch(e) {
-                alert('خطا در پرینت. لطفاً از Ctrl+P استفاده کنید.');
-            }
-            setTimeout(() => { 
-                try { frame.remove(); } catch(e) {} 
-            }, 5000);
-        }, 1500);
-    }).catch(() => {
-        setTimeout(() => {
-            try { frame.contentWindow.print(); } catch(e) {}
-        }, 2000);
-    });
+        setTimeout(function () { try { frame.remove(); } catch (e) {} }, 4000);
+    }, 1500);
 }
 
 function printCertificate() {
-    const html = buildPrintHTML(false, null, null);
-    printWithFrame(html);
+    const page = document.getElementById('certPage');
+    if (!page) { alert('خطا: تقدیرنامه پیدا نشد'); return; }
+    
+    // ذخیره zoom فعلی
+    const savedZoom = currentZoom;
+    
+    // اجبار به ۱۰۰٪ برای چاپ درست
+    page.style.zoom = 1;
+    currentZoom = 1;
+    const pct = document.getElementById('zoomPercent');
+    if (pct) pct.textContent = '۱۰۰٪';
+    
+    // بازگردانی بعد از بسته شدن پنجره چاپ
+    const restore = function () {
+        page.style.zoom = savedZoom;
+        currentZoom = savedZoom;
+        if (pct) pct.textContent = Math.round(savedZoom * 100).toLocaleString('fa-IR') + '٪';
+    };
+    window.addEventListener('afterprint', restore, { once: true });
+    
+    // کمی تاخیر برای اعمال zoom=1 در layout
+    setTimeout(function () {
+        try {
+            window.print();
+        } catch (e) {
+            console.error('خطا در print:', e);
+        }
+        // فالبک: اگر afterprint پشتیبانی نشد
+        setTimeout(restore, 3000);
+    }, 150);
 }
 
 // ============================================================
