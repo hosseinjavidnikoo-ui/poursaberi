@@ -2091,6 +2091,26 @@ async function deleteExam(idx){
     if(result.success){showToast('✅ حذف شد');loadMyExams()}
   }catch(err){showToast('❌ خطا')}
 }
+async function deleteHomework(rowIndex){
+  if(!confirm('این تکلیف حذف شود؟')) return;
+  try {
+    const url = API_URL + '?action=deleteHomework'
+      + '&rowIndex=' + rowIndex
+      + '&userRole=' + encodeURIComponent(currentUser.role)
+      + '&teacher=' + encodeURIComponent(currentUser.name)
+      + '&t=' + Date.now();
+    const result = await fetch(url).then(r => r.json());
+    if(result.success){
+      showToast('✅ تکلیف حذف شد');
+      loadMyHomework();
+    } else {
+      showToast('❌ ' + (result.message || 'خطا در حذف'));
+    }
+  } catch(e) {
+    console.error(e);
+    showToast('❌ خطای شبکه');
+  }
+}
 function renderAddExam(){
   const el=document.getElementById('tab-addExam');if(!el)return;
   const isT=currentUser.role==='دبیر';
@@ -6135,11 +6155,26 @@ async function renderTeacherEvalPage() {
     el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
 
     try {
-        // ۱. گرفتن لیست دبیران دانش‌آموز
+        // 🎯 ۱. چک باز بودن نظرسنجی
+        const settingsRes = await fetch(API_URL + '?action=getEvaluationSettings&t=' + Date.now()).then(r => r.json());
+        const settings = settingsRes.success ? settingsRes.data : { active: false, period: '', periodName: '' };
+
+        if (!settings.active) {
+            el.innerHTML = `
+                <div class="empty-state" style="padding:60px 20px;">
+                    <div class="empty-icon" style="font-size:64px;">🔒</div>
+                    <div class="empty-title" style="font-size:16px; margin-bottom:10px;">نظرسنجی فعلاً بسته است</div>
+                    <div class="empty-desc">منتظر دوره بعدی باشید. مدیر مدرسه در زمان مناسب، نظرسنجی جدیدی باز می‌کند.</div>
+                </div>
+            `;
+            return;
+        }
+
+        // 🎯 ۲. گرفتن لیست دبیران
         const rTeachers = await fetch(API_URL + '?action=getMyTeachers&gradeCode=' + currentUser.gradeCode + '&t=' + Date.now()).then(r => r.json());
         
-        // ۲. گرفتن نظرات قبلی این دانش‌آموز (برای نمایش نمره قبلی)
-        const rEvals = await fetch(API_URL + '?action=getEvaluations&t=' + Date.now()).then(r => r.json());
+        // 🎯 ۳. گرفتن رأی‌های قبلی این دانش‌آموز در دوره فعلی
+        const rEvals = await fetch(API_URL + '?action=getEvaluations&period=' + encodeURIComponent(settings.period) + '&t=' + Date.now()).then(r => r.json());
         const prevEvals = {};
         if (rEvals.success && rEvals.data) {
             rEvals.data.forEach(e => {
@@ -6154,20 +6189,30 @@ async function renderTeacherEvalPage() {
             return;
         }
 
-        let h = '<div class="report-header" style="margin-bottom:12px; padding:14px; text-align:center;">';
-        h += '<div style="font-size:14px; font-weight:800; color:var(--header-2); margin-bottom:6px;">⭐ نظرسنجی از دبیران</div>';
-        h += '<div style="font-size:11.5px; color:var(--text-muted); line-height:1.6;">نظر شما کاملاً ناشناس است. لطفاً با صداقت امتیاز دهید.</div>';
+        // 🎯 ذخیره اطلاعات دبیران برای استفاده در submit
+        window._evalTeachers = rTeachers.data;
+
+        // 🎯 ۴. بنر بالای صفحه
+        let h = '<div class="report-header" style="margin-bottom:12px; padding:14px; text-align:center; background:linear-gradient(135deg,#e8f5e9,#c8e6c9); border:2px solid #2e7d32;">';
+        h += '<div style="font-size:14px; font-weight:800; color:#2e7d32; margin-bottom:6px;">🟢 نظرسنجی باز است</div>';
+        h += '<div style="font-size:12px; color:#1b5e20; font-weight:700; margin-bottom:4px;">دوره: ' + esc(settings.periodName || settings.period) + '</div>';
+        h += '<div style="font-size:11.5px; color:#4a5568; line-height:1.6;">نظر شما کاملاً ناشناس است. لطفاً با صداقت امتیاز دهید.</div>';
         h += '</div>';
 
+        // 🎯 ۵. نوار پیشرفت
+        h += '<div id="evalProgressBar" style="background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:14px;"></div>';
+
+        // 🎯 ۶. کارت هر دبیر (بدون دکمه ثبت جدا)
         rTeachers.data.forEach(t => {
             const prev = prevEvals[t.nationalId];
             const prevScore = prev ? parseInt(prev.score) : 0;
             currentEvalScores[t.nationalId] = prevScore;
 
-            h += '<div class="eval-card">';
+            h += '<div class="eval-card" id="eval-card-' + t.nationalId + '">';
             h += '<div class="eval-header">';
             h += '<div class="eval-avatar">' + esc(t.name.charAt(0)) + '</div>';
             h += '<div class="eval-info"><div class="eval-name">' + esc(t.name) + '</div><div class="eval-subject">' + esc(t.subject) + '</div></div>';
+            if (prev) h += '<span style="font-size:10px; background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:10px; font-weight:700;">✅ قبلاً رأی داده‌اید</span>';
             h += '</div>';
 
             // ستاره‌ها
@@ -6180,12 +6225,19 @@ async function renderTeacherEvalPage() {
 
             // کادر نظر
             h += '<textarea class="eval-textarea" id="comment-' + t.nationalId + '" placeholder="نظر خود را بنویسید (اختیاری)...">' + (prev ? esc(prev.comment) : '') + '</textarea>';
-
-            h += '<button class="submit-btn primary-blue" onclick="submitTeacherEval(\'' + t.nationalId + '\', \'' + escAttr(t.name) + '\', \'' + escAttr(t.subject) + '\')" style="padding:10px; font-size:12px;">📤 ثبت نظر</button>';
             h += '</div>';
         });
 
+        // 🎯 ۷. دکمه ثبت همه
+        h += '<button class="submit-btn primary-blue" id="submitAllBtn" onclick="submitAllEvaluations()" style="padding:14px; font-size:14px; margin-top:8px; position:sticky; bottom:10px; z-index:10; box-shadow:0 6px 20px rgba(26,35,126,0.3);">';
+        h += '<span>📤</span><span>ثبت همه نظرات</span>';
+        h += '</button>';
+
         el.innerHTML = h;
+
+        // 🎯 به‌روزرسانی شمارنده
+        updateEvalProgress();
+
     } catch(e) {
         console.error(e);
         el.innerHTML = '<div class="empty-state"><div class="empty-title">خطای شبکه</div></div>';
@@ -6201,6 +6253,111 @@ function setEvalStar(teacherNid, score) {
         if (idx < score) btn.classList.add('active');
         else btn.classList.remove('active');
     });
+    // 🎯 به‌روزرسانی نوار پیشرفت
+    updateEvalProgress();
+}
+
+
+
+// 🎯 به‌روزرسانی نوار پیشرفت
+function updateEvalProgress() {
+    const el = document.getElementById('evalProgressBar');
+    if (!el) return;
+    const teachers = window._evalTeachers || [];
+    const total = teachers.length;
+    let rated = 0;
+    teachers.forEach(t => {
+        if ((currentEvalScores[t.nationalId] || 0) > 0) rated++;
+    });
+    const percent = total > 0 ? Math.round((rated / total) * 100) : 0;
+    el.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:12px; font-weight:700; color:var(--header-2);">📊 پیشرفت: ${toFa(rated)} از ${toFa(total)} دبیر</span>
+            <span style="font-size:12px; font-weight:700; color:${percent === 100 ? '#2e7d32' : '#ef6c00'};">${toFa(percent)}٪</span>
+        </div>
+        <div style="height:8px; background:#e3e9f2; border-radius:4px; overflow:hidden;">
+            <div style="height:100%; width:${percent}%; background:linear-gradient(90deg,#2e7d32,#43a047); transition:width 0.3s;"></div>
+        </div>
+    `;
+}
+
+// 🎯 ثبت همه نظرات به صورت گروهی
+async function submitAllEvaluations() {
+    const teachers = window._evalTeachers || [];
+    if (teachers.length === 0) return;
+
+    const btn = document.getElementById('submitAllBtn');
+    
+    // جمع‌آوری همه رأی‌ها (فقط اونایی که امتیاز دارن)
+    const toSubmit = [];
+    teachers.forEach(t => {
+        const score = currentEvalScores[t.nationalId] || 0;
+        if (score > 0) {
+            const comment = document.getElementById('comment-' + t.nationalId)?.value.trim() || '';
+            toSubmit.push({
+                teacherNid: t.nationalId,
+                teacherName: t.name,
+                subject: t.subject,
+                score: score,
+                comment: comment
+            });
+        }
+    });
+
+    if (toSubmit.length === 0) {
+        showToast('⚠️ لطفاً به حداقل یک دبیر امتیاز بدهید');
+        return;
+    }
+
+    // تأیید
+    if (!confirm(`می‌خواهید به ${toFa(toSubmit.length)} دبیر امتیاز ثبت کنید؟`)) {
+        return;
+    }
+
+    btn.disabled = true;
+    let successCount = 0;
+    let errorCount = 0;
+
+    // 🎯 ارسال یکی‌یکی (چون بک‌اند submitEvaluation یکی‌یکی قبول می‌کنه)
+    for (let i = 0; i < toSubmit.length; i++) {
+        const item = toSubmit[i];
+        btn.innerHTML = `<span>⏳</span><span>در حال ثبت (${toFa(i + 1)}/${toFa(toSubmit.length)})...</span>`;
+
+        try {
+            const url = API_URL + '?action=submitEvaluation'
+                + '&studentNid=' + encodeURIComponent(currentUser.nationalId)
+                + '&studentName=' + encodeURIComponent(currentUser.name)
+                + '&teacherNid=' + encodeURIComponent(item.teacherNid)
+                + '&teacherName=' + encodeURIComponent(item.teacherName)
+                + '&subject=' + encodeURIComponent(item.subject)
+                + '&score=' + item.score
+                + '&comment=' + encodeURIComponent(item.comment)
+                + '&t=' + Date.now();
+
+            const res = await fetch(url).then(r => r.json());
+            if (res.success) {
+                successCount++;
+            } else {
+                errorCount++;
+                console.error('خطا در ثبت', item.teacherName, res.message);
+            }
+        } catch(e) {
+            errorCount++;
+            console.error('خطای شبکه', item.teacherName, e);
+        }
+    }
+
+    // نتیجه نهایی
+    if (errorCount === 0) {
+        showToast(`✅ ${toFa(successCount)} رأی با موفقیت ثبت شد`);
+    } else {
+        showToast(`⚠️ ${toFa(successCount)} موفق، ${toFa(errorCount)} خطا`);
+    }
+
+    btn.disabled = false;
+    
+    // 🎯 بعد از ۱ ثانیه، صفحه رفرش بشه تا وضعیت جدید (✅ رأی داده‌اید) نشون داده بشه
+    setTimeout(() => renderTeacherEvalPage(), 1000);
 }
 
 async function submitTeacherEval(teacherNid, teacherName, subject) {
@@ -6222,13 +6379,20 @@ async function submitTeacherEval(teacherNid, teacherName, subject) {
         + '&comment=' + encodeURIComponent(comment)
         + '&t=' + Date.now();
 
-    try {
+        try {
         showToast('⏳ در حال ثبت...');
         const res = await fetch(url).then(r => r.json());
         if (res.success) {
-            showToast('✅ نظر شما ثبت شد. متشکریم!');
+            showToast('✅ رأی شما ثبت شد. متشکریم!');
+            // 🎯 رفرش برای نمایش دکمه «ویرایش»
+            setTimeout(() => renderTeacherEvalPage(), 800);
         } else {
-            showToast('❌ ' + (res.message || 'خطا'));
+            if ((res.message || '').includes('بسته')) {
+                showToast('🔒 نظرسنجی بسته شده است');
+                setTimeout(() => renderTeacherEvalPage(), 1000);
+            } else {
+                showToast('❌ ' + (res.message || 'خطا'));
+            }
         }
     } catch(e) {
         showToast('❌ خطای شبکه');
@@ -6923,18 +7087,71 @@ async function renderEvalResultsPage() {
     el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
 
     try {
-        const res = await fetch(API_URL + '?action=getTeacherStats&t=' + Date.now()).then(r => r.json());
+        // 🎯 ۱. خواندن تنظیمات + دوره‌ها
+        const [settingsRes, periodsRes] = await Promise.all([
+            fetch(API_URL + '?action=getEvaluationSettings&t=' + Date.now()).then(r => r.json()),
+            fetch(API_URL + '?action=getEvaluationPeriods&t=' + Date.now()).then(r => r.json())
+        ]);
+
+        const settings = settingsRes.success ? settingsRes.data : { active: false, period: '', periodName: '' };
+        const periods = (periodsRes.success && periodsRes.data) ? periodsRes.data : [];
+        const currentPeriod = (periodsRes.current || {}).period || '';
+
+        // 🎯 ۲. انتخاب دوره برای نمایش (پیش‌فرض: دوره فعلی)
+        if (!window._evalViewPeriod) window._evalViewPeriod = currentPeriod || 'all';
+
+        // 🎯 ۳. خواندن آمار با فیلتر دوره
+        const statsUrl = API_URL + '?action=getTeacherStats&period=' + encodeURIComponent(window._evalViewPeriod) + '&t=' + Date.now();
+        const res = await fetch(statsUrl).then(r => r.json());
+
+        // 🎯 ۴. خواندن نظرات برای دکمه حذف
+        const evalsUrl = API_URL + '?action=getEvaluations&period=' + encodeURIComponent(window._evalViewPeriod) + '&t=' + Date.now();
+        const evalsRes = await fetch(evalsUrl).then(r => r.json());
+        const allEvals = (evalsRes.success && evalsRes.data) ? evalsRes.data : [];
+
+        // 🎯 ۵. ساخت HTML
+        let h = '<div class="report-header" style="margin-bottom:12px; padding:14px;">';
+
+        // بنر وضعیت
+        if (settings.active) {
+            h += '<div style="background:#e8f5e9; border-right:4px solid #2e7d32; border-radius:10px; padding:12px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">';
+            h += '<div><div style="font-size:13px; font-weight:800; color:#2e7d32;">🟢 نظرسنجی باز است</div>';
+            h += '<div style="font-size:11px; color:#4a5568; margin-top:4px;">دوره فعلی: <b>' + esc(settings.periodName || settings.period || '—') + '</b></div></div>';
+            h += '<button onclick="closeEvalPeriod()" style="padding:8px 16px; background:#c62828; color:#fff; border:none; border-radius:8px; font-family:inherit; font-weight:700; font-size:12px; cursor:pointer;">🔒 بستن نظرسنجی</button>';
+            h += '</div>';
+        } else {
+            h += '<div style="background:#fff3e0; border-right:4px solid #ef6c00; border-radius:10px; padding:12px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">';
+            h += '<div><div style="font-size:13px; font-weight:800; color:#e65100;">🔒 نظرسنجی بسته است</div>';
+            h += '<div style="font-size:11px; color:#4a5568; margin-top:4px;">دانش‌آموزان نمی‌توانند رأی بدهند</div></div>';
+            h += '<button onclick="openNewEvalPeriod()" style="padding:8px 16px; background:#2e7d32; color:#fff; border:none; border-radius:8px; font-family:inherit; font-weight:700; font-size:12px; cursor:pointer;">🔓 باز کردن دوره جدید</button>';
+            h += '</div>';
+        }
+
+        // 🎯 فیلتر دوره
+        h += '<div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px;">';
+        h += '<div style="flex:1; min-width:180px;"><label class="form-label">📅 فیلتر دوره</label>';
+        h += '<select class="form-select" onchange="changeEvalViewPeriod(this.value)">';
+        h += '<option value="all"' + (window._evalViewPeriod === 'all' ? ' selected' : '') + '>همه دوره‌ها</option>';
+        periods.forEach(p => {
+            const label = p.name + (p.isCurrent ? ' (جاری)' : '');
+            h += '<option value="' + escAttr(p.period) + '"' + (p.period === window._evalViewPeriod ? ' selected' : '') + '>' + esc(label) + '</option>';
+        });
+        h += '</select></div>';
+        if (window._evalViewPeriod !== 'all' && window._evalViewPeriod) {
+            h += '<button onclick="deleteEvalPeriod(\'' + escAttr(window._evalViewPeriod) + '\')" style="margin-top:18px; padding:10px 16px; background:#c62828; color:#fff; border:none; border-radius:8px; font-family:inherit; font-weight:700; font-size:12px; cursor:pointer;">🗑️ حذف کل دوره</button>';
+        }
+        h += '</div>';
+
+        h += '</div>';
+
+        // 🎯 ۶. آمار دبیران
         if (!res.success || !res.data || res.data.length === 0) {
-            el.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">هنوز هیچ نظری ثبت نشده است</div></div>';
+            h += '<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">در این دوره هنوز نظری ثبت نشده</div></div>';
+            el.innerHTML = h;
             return;
         }
 
         const stats = res.data;
-
-        let h = '<div class="report-header" style="margin-bottom:12px; padding:14px; text-align:center;">';
-        h += '<div style="font-size:15px; font-weight:800; color:var(--header-2); margin-bottom:6px;">📊 نتایج نظرسنجی دبیران</div>';
-        h += '<div style="font-size:11.5px; color:var(--text-muted);">مجموع دبیران: ' + stats.length + ' | مجموع آرا: ' + stats.reduce((s, x) => s + x.voteCount, 0) + '</div>';
-        h += '</div>';
 
         h += '<div style="display:flex; gap:8px; margin-bottom:14px;">';
         h += '<button class="submit-btn" onclick="downloadEvalPDF()" style="flex:1; padding:10px; font-size:12px; background:#2e7d32; color:#fff;">🖨️ دانلود PDF</button>';
@@ -6943,6 +7160,9 @@ async function renderEvalResultsPage() {
         stats.forEach(t => {
             const rankClass = t.rank === 1 ? 'rank-1' : t.rank === 2 ? 'rank-2' : t.rank === 3 ? 'rank-3' : 'rank-other';
             const medal = t.rank === 1 ? '🥇' : t.rank === 2 ? '🥈' : t.rank === 3 ? '🥉' : '';
+
+            // 🎯 پیدا کردن نظرات این دبیر از allEvals
+            const teacherEvals = allEvals.filter(e => e.teacherNid === t.teacherNid);
 
             h += '<div class="eval-result-card">';
             h += '<div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">';
@@ -6957,14 +7177,17 @@ async function renderEvalResultsPage() {
             h += '<div class="eval-stat-pill">🏅 رتبه: <b>' + t.rank + '</b></div>';
             h += '</div>';
 
-            if (t.comments && t.comments.length > 0) {
-                h += '<div style="margin-top:8px; font-size:11.5px; font-weight:700; color:var(--header-2);">💬 نظرات (' + t.comments.length + '):</div>';
-                t.comments.slice(0, 5).forEach(c => {
-                    h += '<div class="eval-comment-item">' + esc(c) + '</div>';
+            // 🎯 نظرات با دکمه حذف
+            if (teacherEvals.length > 0) {
+                h += '<div style="margin-top:8px; font-size:11.5px; font-weight:700; color:var(--header-2);">💬 نظرات (' + teacherEvals.length + '):</div>';
+                teacherEvals.forEach(e => {
+                    if (e.comment && e.comment.trim()) {
+                        h += '<div class="eval-comment-item" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">';
+                        h += '<span style="flex:1;">' + esc(e.comment) + '</span>';
+                        h += '<button onclick="deleteEvalItem(' + e.rowIndex + ')" title="حذف این نظر" style="background:transparent; border:none; color:#c62828; cursor:pointer; font-size:16px; padding:2px 6px;">🗑️</button>';
+                        h += '</div>';
+                    }
                 });
-                if (t.comments.length > 5) {
-                    h += '<div style="font-size:10.5px; color:var(--text-muted); margin-top:4px;">و ' + (t.comments.length - 5) + ' نظر دیگر...</div>';
-                }
             }
 
             if (t.rank === 1) {
@@ -6975,10 +7198,121 @@ async function renderEvalResultsPage() {
         });
 
         el.innerHTML = h;
+
     } catch(e) {
         console.error(e);
         el.innerHTML = '<div class="empty-state"><div class="empty-title">خطای شبکه</div></div>';
     }
+}
+// 🎯 تغییر دوره نمایش
+function changeEvalViewPeriod(period) {
+    window._evalViewPeriod = period;
+    renderEvalResultsPage();
+}
+
+// 🎯 باز کردن مودال دوره جدید
+function openNewEvalPeriod() {
+    const now = new Date();
+    const faDate = now.toLocaleDateString('fa-IR');
+    
+    const overlay = document.createElement('div');
+    overlay.id = 'newEvalPeriodModal';
+    overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px;';
+    overlay.innerHTML = `
+        <div style="background:var(--card); border-radius:16px; padding:20px; max-width:400px; width:100%;">
+            <div style="font-size:15px; font-weight:800; color:var(--header-2); margin-bottom:14px;">🔓 باز کردن دوره نظرسنجی جدید</div>
+            
+            <label class="form-label">نام دوره (نمایشی) *</label>
+            <input type="text" id="newEvalPeriodName" class="form-input" placeholder="مثلاً: آذر ۱۴۰۴" style="margin-bottom:12px;">
+            
+            <label class="form-label">کد دوره (یکتا) *</label>
+            <input type="text" id="newEvalPeriodCode" class="form-input" placeholder="مثلاً: 1404-09" style="margin-bottom:12px; direction:ltr; text-align:left;">
+            
+            <div style="font-size:11px; color:var(--text-muted); background:#fff3e0; padding:10px; border-radius:8px; margin-bottom:14px; line-height:1.6;">
+                ⚠️ با باز کردن دوره جدید:
+                <br>• دوره فعلی بسته می‌شه
+                <br>• دانش‌آموزان باید دوباره رأی بدن
+                <br>• آراء قبلی محفوظ می‌مونن (توی آرشیو)
+            </div>
+            
+            <div style="display:flex; gap:8px;">
+                <button onclick="document.getElementById('newEvalPeriodModal').remove()" style="flex:1; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); font-family:inherit; font-weight:700; font-size:12px; cursor:pointer;">انصراف</button>
+                <button onclick="submitNewEvalPeriod()" style="flex:1; padding:10px; border:none; border-radius:8px; background:linear-gradient(135deg,#2e7d32,#43a047); color:#fff; font-family:inherit; font-weight:700; font-size:12px; cursor:pointer;">✓ باز کن</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+// 🎯 ارسال دوره جدید
+async function submitNewEvalPeriod() {
+    const name = document.getElementById('newEvalPeriodName').value.trim();
+    const code = document.getElementById('newEvalPeriodCode').value.trim();
+    
+    if (!name || !code) { showToast('⚠️ همه فیلدها الزامی است'); return; }
+    
+    try {
+        showToast('⏳ در حال باز کردن دوره...');
+        const url = API_URL + '?action=openEvaluationPeriod'
+            + '&role=' + encodeURIComponent(currentUser.role)
+            + '&periodName=' + encodeURIComponent(name)
+            + '&period=' + encodeURIComponent(code)
+            + '&t=' + Date.now();
+        const res = await fetch(url).then(r => r.json());
+        if (res.success) {
+            showToast('✅ دوره جدید باز شد');
+            document.getElementById('newEvalPeriodModal').remove();
+            window._evalViewPeriod = code;
+            renderEvalResultsPage();
+        } else {
+            showToast('❌ ' + (res.message || 'خطا'));
+        }
+    } catch (e) {
+        console.error(e);
+        showToast('❌ خطای شبکه');
+    }
+}
+
+// 🎯 بستن دوره
+async function closeEvalPeriod() {
+    if (!confirm('نظرسنجی بسته شود؟ بعد از بستن، دانش‌آموزان نمی‌تونن رأی بدن.')) return;
+    try {
+        showToast('⏳ در حال بستن...');
+        const url = API_URL + '?action=closeEvaluationPeriod&role=' + encodeURIComponent(currentUser.role) + '&t=' + Date.now();
+        const res = await fetch(url).then(r => r.json());
+        if (res.success) {
+            showToast('🔒 نظرسنجی بسته شد');
+            renderEvalResultsPage();
+        }
+    } catch (e) { showToast('❌ خطا'); }
+}
+
+// 🎯 حذف یه رأی
+async function deleteEvalItem(rowIndex) {
+    if (!confirm('این نظر حذف شود؟')) return;
+    try {
+        const url = API_URL + '?action=deleteEvaluation&role=' + encodeURIComponent(currentUser.role) + '&rowIndex=' + rowIndex + '&t=' + Date.now();
+        const res = await fetch(url).then(r => r.json());
+        if (res.success) {
+            showToast('✅ حذف شد');
+            renderEvalResultsPage();
+        }
+    } catch (e) { showToast('❌ خطا'); }
+}
+
+// 🎯 حذف کل دوره
+async function deleteEvalPeriod(period) {
+    if (!confirm('⚠️ حذف همه آراء دوره «' + period + '»؟\n\nاین عمل قابل بازگشت نیست!')) return;
+    if (!confirm('آیا مطمئنید؟ دوباره تأیید کنید.')) return;
+    try {
+        showToast('⏳ در حال حذف...');
+        const url = API_URL + '?action=deleteEvaluationPeriod&role=' + encodeURIComponent(currentUser.role) + '&period=' + encodeURIComponent(period) + '&t=' + Date.now();
+        const res = await fetch(url).then(r => r.json());
+        if (res.success) {
+            showToast('✅ ' + (res.deletedCount || 0) + ' رأی حذف شد');
+            renderEvalResultsPage();
+        }
+    } catch (e) { showToast('❌ خطا'); }
 }
 
 function openTeacherCertificate(teacherName, subject, average) {

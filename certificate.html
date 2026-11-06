@@ -10,8 +10,14 @@
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/samim-font@v4.0.5/dist/font-face.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/gandom-font@v2.0.1/dist/font-face.css" rel="stylesheet">
 <style>
-    @font-face { font-family: 'IranNastaliq'; src: url('https://cdn.jsdelivr.net/gh/mostafaebrahimi/nastaliq-font@main/IranNastaliq.ttf') format('truetype'); }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+        @font-face {
+        font-family: 'IranNastaliq';
+        src: url('IranNastaliq.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+    }
     body { font-family: 'Vazirmatn', sans-serif; background: #2d3748; display: flex; flex-direction: column; align-items: center; }
     
     /* 🎛️ نوار ابزار */
@@ -239,7 +245,7 @@ body {
         <button onclick="formatDoc('foreColor', '#2e7d32')" style="background:#e8f5e9; color:#2e7d32; font-weight:900;" title="سبز">🟢 سبز</button>
         
         <select onchange="formatDoc('fontName', this.value)">
-            <option value="'IranNastaliq', serif">نستعلیق</option>
+           <option value="'IranNastaliq', serif">نستعلیق (ایران)</option>
             <option value="'Vazirmatn', sans-serif" selected>وزیرمتن</option>
             <option value="'Shabnam', sans-serif">شبنم</option>
             <option value="'Sahel', sans-serif">ساحل</option>
@@ -1015,7 +1021,8 @@ function buildPrintHTML(forBulk, bulkNames, bulkClass) {
 
     // CSS پرینت - با box-sizing درست
     let css = '*{box-sizing:border-box;margin:0;padding:0}';
-    css += '@font-face{font-family:IranNastaliq;src:url(https://cdn.jsdelivr.net/gh/mostafaebrahimi/nastaliq-font@main/IranNastaliq.ttf)}';
+        const _fontBaseUrl = new URL('.', window.location.href).href;
+    css += '@font-face{font-family:IranNastaliq;src:url(' + _fontBaseUrl + 'IranNastaliq.ttf) format("truetype");font-display:swap}';
     css += 'html,body{margin:0;padding:0;background:#fff;font-family:Vazirmatn,sans-serif;width:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}';
     css += '.cert-page{width:210mm;height:297mm;position:relative;margin:0;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact}';
     css += '.cert-inner{width:100%;height:100%;position:relative;display:flex;flex-direction:column;z-index:2}';
