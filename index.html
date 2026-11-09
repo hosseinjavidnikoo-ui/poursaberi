@@ -7,6 +7,7 @@
 <title>مدرسه پورصابری</title>
 <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{--bg:#f0f3f9;--card:#fff;--text:#1a2233;--text-soft:#6b7890;--text-muted:#97a2b5;--line:#e3e9f2;--header-1:#0d1440;--header-2:#1a237e;--header-3:#3949ab;--accent:#3949ab;--shadow:rgba(26,35,126,.08);--shadow-strong:rgba(26,35,126,.15);--chat-bg:#e7ebf2;--chat-my:#d9fdd3;--chat-other:#fff}
@@ -775,6 +776,7 @@ html.dark .dp-month-year{color:#9fa8da}
 .exam-schedule-card .esc-type.midterm{background:#fff3e0;color:#e65100}
 .exam-schedule-card .esc-type.class-exam{background:#f3e5f5;color:#7b1fa2}
 .exam-schedule-card .esc-hint{font-size:10.5px;color:var(--text-muted);text-align:center;padding:6px;background:var(--bg);border-top:1px solid var(--line)}
+.eval-score-btn:hover { transform: scale(1.05); }
 </style>
 </head>
 <body>
@@ -1089,6 +1091,7 @@ async function buildTabs(){
       {id:'parentGrades',icon:'📊',label:'نمرات'},
       {id:'parentHomework',icon:'📚',label:'تکالیف'},
       {id:'parentExams',icon:'📝',label:'امتحانات'},
+      {id:'parentEvalReport',icon:'📜',label:'کارنامه شایستگی'},
       {id:'parentSchedule',icon:'📅',label:'برنامه'},
       {id:'news',icon:'📢',label:'اطلاعیه'}
     ];
@@ -1101,6 +1104,7 @@ async function buildTabs(){
       {id:'schedule',icon:'📅',label:'برنامه'},
       {id:'exams',icon:'📝',label:'امتحانات'},
       {id:'homework',icon:'📚',label:'تکالیف'},
+      {id:'myEvalReport',icon:'📜',label:'کارنامه شایستگی'},
       {id:'chat',icon:'💬',label:'چت'},
       {id:'news',icon:'📢',label:'اطلاعیه'},
       {id:'feedback',icon:'✍️',label:'انتقادات'},
@@ -1115,7 +1119,9 @@ async function buildTabs(){
     tabs=[
       {id:'home',icon:'🏠',label:'خانه'},
       {id:'calendar',icon:'🗓️',label:'تقویم'},
+      {id:'mySchedule',icon:'📅',label:'برنامه من'},
       {id:'myClasses',icon:'🎓',label:'کلاس‌ها'},
+      {id:'evalCartable',icon:'📋',label:'کارتابل ارزیابی'},
       {id:'attendance',icon:'✅',label:'حضور و غیاب'},
       {id:'grades',icon:'📝',label:'ثبت نمرات'},
       {id:'addExam',icon:'➕',label:'ثبت امتحان'},
@@ -1137,6 +1143,7 @@ async function buildTabs(){
       {id:'directory',icon:'📋',label:'دفترچه تلفن'},
       {id:'manageGrades',icon:'📈',label:'مدیریت نمرات'},
       {id:'adminGradeEntry',icon:'✏️',label:'ورود نمرات'},
+      {id:'evalManager',icon:'📊',label:'ارزیابی شایستگی'},
       {id:'sendNews',icon:'📢',label:'اطلاعیه'},
       {id:'manageNews',icon:'📰',label:'مدیریت'},
       {id:'manageFeedback',icon:'✍️',label:'انتقادات'},
@@ -1207,6 +1214,7 @@ function switchTab(tabId,btn){
   window.scrollTo({top:0,behavior:'smooth'});
   if(tabId==='home')loadHome();
   if(tabId==='schedule') loadSchedule('tab-schedule');
+  if(tabId==='mySchedule') loadTeacherSchedule();
   if(tabId==='exams')loadStudentExams();
   if(tabId==='homework')loadStudentHomework();
   if(tabId==='news')loadAnnouncements();
@@ -1238,6 +1246,10 @@ function switchTab(tabId,btn){
   if(tabId==='teacherEval') renderTeacherEvalPage();
   if(tabId==='evalResults') renderEvalResultsPage();
   if(tabId==='examSchedules') renderExamSchedulesPage();
+  if(tabId==='evalCartable') renderTeacherEvalCartable();
+  if(tabId==='evalManager') renderEvalManagerPage();
+  if(tabId==='myEvalReport') renderStudentEvalReport();
+  if(tabId==='parentEvalReport') renderStudentEvalReport();
    // که از قبل بود
 }
 
@@ -1334,6 +1346,21 @@ h+='</div>';
 el.innerHTML=h;
   loadHomeRecentNews();
   loadHomeExamSchedules();
+    // چک کردن درخواست‌های ارزیابی برای دبیر
+  if(role === 'دبیر') {
+    fetch(API_URL + '?action=getMyEvalRequests&nationalId=' + encodeURIComponent(currentUser.nationalId) + '&t=' + Date.now())
+      .then(r => r.json())
+      .then(res => {
+        if(res.success && res.data.length > 0) {
+          const banner = document.createElement('div');
+          banner.style.cssText = 'background:#ffebee; border:2px solid #c62828; border-radius:10px; padding:12px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;';
+          banner.innerHTML = '<div style="color:#c62828; font-weight:800;">🔔 شما ' + toFa(res.data.length) + ' درخواست ارزیابی جدید دارید!</div>' +
+                             '<button onclick="goToTab(\'evalCartable\')" style="background:#c62828; color:#fff; border:none; padding:8px 12px; border-radius:8px; font-family:inherit; font-weight:700; cursor:pointer;">مشاهده</button>';
+          const welcomeCard = document.querySelector('.welcome-card');
+          if(welcomeCard) welcomeCard.parentNode.insertBefore(banner, welcomeCard.nextSibling);
+        }
+      }).catch(e => {});
+  }
 }
 function shortcutBtn(tabId,icon,title,color,sub){
   return '<button class="shortcut" onclick="goToTab(\''+tabId+'\')"><div class="sc-icon '+color+'">'+icon+'</div><div class="sc-text"><div class="sc-title">'+esc(title)+'</div><div class="sc-sub">'+esc(sub)+'</div></div></button>';
@@ -1479,6 +1506,148 @@ function toggleClassStudents(gradeCode,header){
   body.innerHTML=h;
   body.style.maxHeight='4000px';
   chev.style.transform='rotate(180deg)';
+}
+// ============================================================
+// 📅 برنامه هفتگی دبیر (استخراج از SCHEDULE_DATA)
+// ============================================================
+
+function normalizeTeacherName(name) {
+  return String(name || '')
+    .replace(/آقای|خانم|استاد|جناب|سرکار|مهندس|دکتر/g, '')
+    .replace(/[\s\u200c\u200f\u200e]/g, '')
+    .replace(/ي/g, 'ی')
+    .replace(/ك/g, 'ک')
+    .replace(/ائی/g, 'ایی')
+    .replace(/وئی/g, 'ویی')
+    .toLowerCase()
+    .trim();
+}
+
+function namesMatch(name1, normalizedName2) {
+  const n1 = normalizeTeacherName(name1);
+  if (!n1 || !normalizedName2) return false;
+  if (n1 === normalizedName2) return true;
+  if (n1.length >= 3 && normalizedName2.length >= 3) {
+    return n1.includes(normalizedName2) || normalizedName2.includes(n1);
+  }
+  return false;
+}
+
+function loadTeacherSchedule() {
+  const el = document.getElementById('tab-mySchedule');
+  if (!el) return;
+  
+  const myNorm = normalizeTeacherName(currentUser.name);
+  const myClasses = currentUser.classes || [];
+  const dayOrder = ['شنبه','یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه'];
+  const dayMap = {};
+  dayOrder.forEach(d => { dayMap[d] = []; });
+  
+  myClasses.forEach(gradeCode => {
+    const cls = SCHEDULE_DATA[gradeCode];
+    if (!cls) return;
+    
+    cls.days.forEach(dayData => {
+      dayData.lessons.forEach((lesson, idx) => {
+        if (!lesson) return;
+        const subject = lesson[0];
+        const teacherStr = lesson[1];
+        const isRot = lesson[2] === true;
+        
+        const teacherParts = String(teacherStr).split('/').map(s => s.trim());
+        const isMine = teacherParts.some(t => namesMatch(t, myNorm));
+        
+        if (isMine) {
+          dayMap[dayData.day].push({
+            period: idx + 1,
+            className: cls.name,
+            gradeCode: gradeCode,
+            subject: subject,
+            isRot: isRot
+          });
+        }
+      });
+    });
+  });
+  
+  let totalLessons = 0;
+  const uniqueClasses = new Set();
+  const uniqueSubjects = new Set();
+  dayOrder.forEach(d => {
+    dayMap[d].forEach(l => {
+      totalLessons++;
+      uniqueClasses.add(l.gradeCode);
+      uniqueSubjects.add(l.subject);
+    });
+  });
+  
+  if (totalLessons === 0) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📅</div>
+        <div class="empty-title">درسی برای شما در برنامه ثبت نشده</div>
+        <div class="empty-desc">اگر فکر می‌کنید اشتباهی رخ داده، با مدیر مدرسه تماس بگیرید.</div>
+      </div>`;
+    return;
+  }
+  
+  let html = '';
+  html += '<div style="background:linear-gradient(135deg,#1a237e,#3949ab); color:#fff; border-radius:14px; padding:16px; margin-bottom:14px; box-shadow:0 4px 16px rgba(26,35,126,.25);">';
+  html += '<div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">';
+  html += '<div style="width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; font-size:22px;">📅</div>';
+  html += '<div><div style="font-size:14px; font-weight:800;">برنامه هفتگی شما</div>';
+  html += '<div style="font-size:11px; opacity:.85; margin-top:2px;">' + esc(currentUser.subject || 'دبیر') + '</div></div>';
+  html += '</div>';
+  html += '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; text-align:center;">';
+  html += '<div style="background:rgba(255,255,255,.15); border-radius:10px; padding:8px 4px;">';
+  html += '<div style="font-size:20px; font-weight:900;">' + toFa(totalLessons) + '</div>';
+  html += '<div style="font-size:10px; opacity:.85;">کلاس در هفته</div></div>';
+  html += '<div style="background:rgba(255,255,255,.15); border-radius:10px; padding:8px 4px;">';
+  html += '<div style="font-size:20px; font-weight:900;">' + toFa(uniqueClasses.size) + '</div>';
+  html += '<div style="font-size:10px; opacity:.85;">کلاس مختلف</div></div>';
+  html += '<div style="background:rgba(255,255,255,.15); border-radius:10px; padding:8px 4px;">';
+  html += '<div style="font-size:20px; font-weight:900;">' + toFa(uniqueSubjects.size) + '</div>';
+  html += '<div style="font-size:10px; opacity:.85;">درس مختلف</div></div>';
+  html += '</div></div>';
+  
+  const todayIdx = getTodayIndex();
+  const todayDayName = todayIdx >= 0 ? dayOrder[todayIdx] : null;
+  
+  let hasAnyLessons = false;
+  dayOrder.forEach(dayName => {
+    const lessons = dayMap[dayName];
+    if (lessons.length === 0) return;
+    hasAnyLessons = true;
+    
+    const isToday = (dayName === todayDayName);
+    
+    html += '<div class="day-block' + (isToday ? ' highlight' : '') + '">';
+    html += '<div class="day-title">📅 ' + esc(dayName);
+    if (isToday) html += '<span class="today-badge">امروز</span>';
+    html += '<span style="margin-right:auto; font-size:10.5px; background:var(--bg); color:var(--text-soft); padding:2px 8px; border-radius:10px; font-weight:700;">' + toFa(lessons.length) + ' کلاس</span>';
+    html += '</div>';
+    
+    lessons.sort((a, b) => a.period - b.period);
+    
+    lessons.forEach(l => {
+      html += '<div class="lesson-row' + (l.isRot ? ' rot' : '') + '">';
+      html += '<span class="z-num">' + toFa(l.period) + '</span>';
+      html += '<div class="lesson-content">';
+      html += '<div class="lesson-name">' + esc(l.subject) + (l.isRot ? ' <span style="font-size:10px; opacity:.7;">🔄</span>' : '') + '</div>';
+      html += '<div class="teacher-name">🎓 ' + esc(l.className) + '</div>';
+      html += '</div></div>';
+    });
+    
+    html += '</div>';
+  });
+  
+  if (hasAnyLessons) {
+    html += '<div style="font-size:10.5px; color:var(--text-muted); text-align:center; padding:14px; line-height:1.8;">';
+    html += '🔄 = هفته‌های زوج و فرد با دبیر دیگری جابه‌جا می‌شود';
+    html += '</div>';
+  }
+  
+  el.innerHTML = html;
 }
 
 // ============================================================
@@ -7646,7 +7815,1125 @@ async function sendExamScheduleToAll(rowIndex, imageUrl, title, type) {
 }
 
 }
+// ============================================================
+// 📋 کارتابل ارزیابی (پنل دبیر)
+// ============================================================
+async function renderTeacherEvalCartable() {
+  const el = document.getElementById('tab-evalCartable');
+  if(!el) return;
+  el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
 
+  try {
+    const res = await fetch(API_URL + '?action=getMyEvalRequests&nationalId=' + encodeURIComponent(currentUser.nationalId) + '&t=' + Date.now()).then(r => r.json());
+    
+    if(!res.success || !res.data || res.data.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">کارتابل شما خالی است</div><div class="empty-desc">در حال حاضر درخواست ارزیابی جدیدی ندارید.</div></div>';
+      return;
+    }
+
+    let h = '<div class="report-header" style="margin-bottom:12px; padding:14px; text-align:center;">';
+    h += '<div style="font-size:14px; font-weight:800; color:var(--header-2); margin-bottom:6px;">📋 درخواست‌های ارزیابی</div>';
+    h += '<div style="font-size:11.5px; color:var(--text-muted);">شما ' + toFa(res.data.length) + ' درخواست در انتظار دارید.</div>';
+    h += '</div>';
+
+    res.data.forEach(req => {
+      h += '<div class="eval-card" style="cursor:pointer;" onclick="openEvalForm(\'' + req.requestId + '\', \'' + req.studentNid + '\', \'' + escAttr(req.studentName) + '\', \'' + escAttr(req.classCode) + '\', \'' + escAttr(req.periodId) + '\')">';      h += '<div style="display:flex; justify-content:space-between; align-items:center;">';
+      h += '<div><div style="font-size:14px; font-weight:800; color:var(--text);">' + esc(req.studentName) + '</div>';
+      h += '<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">🎓 ' + getGradeName(req.classCode) + ' | درخواست‌دهنده: ' + esc(req.requestedBy) + '</div></div>';
+      h += '<div style="background:#e3f2fd; color:#0d47a1; padding:4px 10px; border-radius:8px; font-size:11px; font-weight:700;">پر کردن فرم</div>';
+      h += '</div></div>';
+    });
+
+    el.innerHTML = h;
+  } catch(e) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-title">خطای شبکه</div></div>';
+  }
+}
+
+let _currentEvalScores = {};
+
+function openEvalForm(reqId, sNid, sName, classCode, periodId) {
+  const el = document.getElementById('tab-evalCartable');
+  
+  // ریست کردن نمرات
+  _currentEvalScores = {};
+  for(let i=1; i<=9; i++) _currentEvalScores[i] = -1;
+
+  let h = '<button class="back-btn" onclick="renderTeacherEvalCartable()">← بازگشت به کارتابل</button>';
+  h += '<div class="form-card">';
+  h += '<div class="form-card-header" style="flex-direction:column; text-align:center;">';
+  h += '<div style="font-size:16px; font-weight:800; color:var(--header-2);">فرم ارزیابی رفتار</div>';
+  h += '<div style="font-size:13px; color:var(--text-soft); margin-top:4px;">دانش‌آموز: ' + esc(sName) + ' (' + getGradeName(classCode) + ')</div>';
+  h += '</div>';
+
+  const indicators = [
+    { id: 1, title: 'ادب و احترام', desc: 'احترام به دبیر و همکلاسی' },
+    { id: 2, title: 'نظم و انضباط', desc: 'رعایت مقررات کلاس' },
+    { id: 3, title: 'مسئولیت‌پذیری', desc: 'انجام وظایف و تعهدات' },
+    { id: 4, title: 'همکاری اجتماعی', desc: 'همکاری و کمک به دیگران' },
+    { id: 5, title: 'مشارکت کلاسی', desc: 'مشارکت مناسب در فعالیت‌ها' },
+    { id: 6, title: 'صداقت و امانت‌داری', desc: 'پذیرش اشتباه و رعایت حقوق' },
+    { id: 7, title: 'کنترل رفتار', desc: 'مدیریت اختلاف و خشم' },
+    { id: 8, title: 'رعایت بهداشت', desc: 'حفظ نظافت و اموال مدرسه' },
+    { id: 9, title: 'اخلاق جمعی', desc: 'رعایت حقوق دیگران' }
+  ];
+
+  indicators.forEach(ind => {
+    h += '<div class="indicator-row" style="border-bottom:1px solid #eee; padding:12px 0;">';
+    h += '<div style="font-size:13px; font-weight:700; margin-bottom:8px;">' + ind.id + '. ' + ind.title + ' <span style="font-size:10.5px; color:#888; font-weight:400;">(' + ind.desc + ')</span></div>';
+    h += '<div style="display:flex; gap:6px; direction:ltr; flex-wrap:wrap;">';
+    [4,3,2,1].forEach(val => {
+      h += '<button class="eval-score-btn" data-q="'+ind.id+'" data-val="'+val+'" onclick="setFormScore('+ind.id+', '+val+', this)" style="width:40px; height:40px; border-radius:8px; border:1px solid #ddd; background:#f8f8f8; font-family:inherit; font-weight:800; font-size:16px; cursor:pointer;">' + toFa(val) + '</button>';
+    });
+    h += '<button class="eval-score-btn" data-q="'+ind.id+'" data-val="-1" onclick="setFormScore('+ind.id+', -1, this)" style="width:120px; height:40px; border-radius:8px; border:1px solid #ddd; background:#f8f8f8; font-family:inherit; font-weight:700; font-size:11px; cursor:pointer; color:#666;">فرصت مشاهده نداشتم</button>';
+    h += '</div></div>';
+  });
+
+  h += '<div style="margin-top:15px;">';
+  h += '<label style="font-size:12px; font-weight:700; color:var(--text-soft); display:block; margin-bottom:6px;">نظر تشریحی (اختیاری)</label>';
+  h += '<textarea id="evalComment" class="form-textarea" placeholder="توضیحات خود را بنویسید..."></textarea>';
+  h += '</div>';
+
+  h += '<button class="submit-btn primary-blue" style="margin-top:15px;" onclick="submitTeacherEvalForm(\'' + reqId + '\', \'' + sNid + '\', \'' + escAttr(sName) + '\', \'' + periodId + '\')">📤 ثبت و ارسال</button>';
+  h += '</div>';
+
+  el.innerHTML = h;
+}
+
+function setFormScore(qId, val, btn) {
+  _currentEvalScores[qId] = val;
+  const container = btn.closest('div');
+  container.querySelectorAll('.eval-score-btn').forEach(b => {
+    b.style.background = '#f8f8f8';
+    b.style.color = (b.dataset.val === '-1') ? '#666' : '#000';
+    b.style.borderColor = '#ddd';
+  });
+  
+  // رنگ‌دهی به دکمه فعال
+  const colors = { '4': '#2e7d32', '3': '#1976d2', '2': '#ef6c00', '1': '#c62828', '-1': '#9e9e9e' };
+  btn.style.background = colors[val];
+  btn.style.color = '#fff';
+  btn.style.borderColor = colors[val];
+}
+
+async function submitTeacherEvalForm(reqId, sNid, sName, periodId) {
+    // چک کنیم که آیا حداقل به یکی نمره داده یا نه
+  let hasScore = false;
+  for(let i=1; i<=9; i++) { if(_currentEvalScores[i] !== undefined) hasScore = true; }
+  if(!hasScore) { showToast('⚠️ لطفاً به حداقل یک شاخص نمره بدهید'); return; }
+
+  const comment = document.getElementById('evalComment').value.trim();
+  
+  const params = new URLSearchParams();
+  params.append('action', 'submitForm1');
+  params.append('requestId', reqId);
+  params.append('studentNid', sNid);
+  params.append('teacherNid', currentUser.nationalId);
+  params.append('teacherName', currentUser.name);
+  params.append('subject', currentUser.subject || '');
+  params.append('comment', comment);
+  for(let i=1; i<=9; i++) {
+    if(_currentEvalScores[i] !== undefined) {
+      params.append('q' + i, _currentEvalScores[i]);
+    }
+  }
+  params.append('periodId', periodId);
+  params.append('t', Date.now());
+
+  try {
+    showToast('⏳ در حال ثبت...');
+    const res = await fetch(API_URL, { method: 'POST', body: params }).then(r => r.json());
+    if(res.success) {
+      showToast('✅ ارزیابی با موفقیت ثبت شد');
+      renderTeacherEvalCartable(); // برگشت به کارتابل
+    } else {
+      showToast('❌ ' + (res.message || 'خطا در ثبت'));
+    }
+  } catch(e) {
+    showToast('❌ خطای شبکه');
+  }
+}
+// ============================================================
+// 🎯 توابع بارگذاری لیست دانش‌آموزان و وضعیت ارزیابی
+// ============================================================
+
+async function loadEvalMgrStudents() {
+  const classCode = document.getElementById('evalMgrClass').value;
+  const wrap = document.getElementById('evalMgrStudentWrap');
+  const teacherWrap = document.getElementById('evalMgrTeacherWrap');
+  const sel = document.getElementById('evalMgrStudent');
+  const teacherSel = document.getElementById('evalMgrTeacher');
+  const reportsList = document.getElementById('evalMgrReportsList');
+
+  if(!classCode) {
+    if(wrap) wrap.style.display = 'none'; 
+    if(teacherWrap) teacherWrap.style.display = 'none';
+    if(reportsList) reportsList.innerHTML = '<div class="empty-state"><div class="empty-title">کلاس را انتخاب کنید</div></div>';
+    return;
+  }
+
+  if(wrap) wrap.style.display = 'block'; 
+  if(teacherWrap) teacherWrap.style.display = 'block';
+  
+  if(sel) sel.innerHTML = '<option value="ALL_CLASS">👥 کل دانش‌آموزان این کلاس</option>';
+  if(teacherSel) teacherSel.innerHTML = '<option value="ALL">📢 همه دبیران این کلاس</option>';
+  if(reportsList) reportsList.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+  try {
+    // ۱. دریافت اطلاعات کلاس و دانش‌آموزان
+    const rClasses = await fetch(API_URL + '?action=getAllClasses&t=' + Date.now()).then(r => r.json());
+    const cls = rClasses.data ? rClasses.data[classCode] : null;
+    
+    if(cls && cls.students) {
+      cls.students.sort((a,b) => String(a.name).localeCompare(String(b.name), 'fa')).forEach(s => {
+        if(sel) sel.innerHTML += '<option value="' + s.nationalId + '">' + s.name + '</option>';
+      });
+    }
+
+    // ۲. دریافت لیست دبیران این کلاس
+    const rTeachers = await fetch(API_URL + '?action=getMyTeachers&gradeCode=' + encodeURIComponent(classCode) + '&t=' + Date.now()).then(r => r.json());
+    if(rTeachers.success && rTeachers.data && rTeachers.data.length > 0) {
+      rTeachers.data.forEach(t => {
+        if(teacherSel) teacherSel.innerHTML += '<option value="' + escAttr(t.nationalId) + '">' + esc(t.name) + ' - ' + esc(t.subject) + '</option>';
+      });
+    }
+
+    // ۳. دریافت وضعیت تکمیل ارزیابی‌ها
+    const periodId = window._evalViewPeriod || '';
+    const rProgress = await fetch(API_URL + '?action=getEvalClassProgress&classCode=' + encodeURIComponent(classCode) + '&periodId=' + encodeURIComponent(periodId) + '&t=' + Date.now()).then(r => r.json());
+    const progressData = (rProgress.success && rProgress.data) ? rProgress.data : [];
+    window._lastEvalProgressData = progressData;
+    window._lastEvalClassName = cls ? cls.name : '';
+
+
+    // ۴. ساخت لیست دانش‌آموزان با نمایش وضعیت
+    if(cls && cls.students && reportsList) {
+      let h = '<div style="font-size:13px; font-weight:800; color:var(--header-2); margin-bottom:10px;">📋 وضعیت تکمیل ارزیابی دانش‌آموزان</div>';
+      if(cls && cls.students && reportsList) {
+  // 🎯 شمارش دبیران دارای دانش‌آموز پندینگ
+  const teacherAggCount = {};
+  progressData.forEach(p => {
+    if(p.pendingTeachers) {
+      p.pendingTeachers.forEach(t => {
+        teacherAggCount[t.nid] = (teacherAggCount[t.nid] || 0) + 1;
+      });
+    }
+  });
+  const teachersPendingCount = Object.keys(teacherAggCount).length;
+  
+  let h = '';
+  
+  // 🔔 بنر یادآوری گروهی
+  if (teachersPendingCount > 0) {
+    h += '<div style="background:linear-gradient(135deg,#fff3e0,#ffe0b2); border:1.5px solid #ffb74d; border-radius:12px; padding:12px; margin-bottom:14px;">';
+    h += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">';
+    h += '<span style="font-size:18px;">🔔</span>';
+    h += '<span style="font-size:12.5px; font-weight:800; color:#e65100; flex:1;">' + toFa(teachersPendingCount) + ' دبیر هنوز ارزیابی‌شون رو تکمیل نکردن</span>';
+    h += '</div>';
+    h += '<button onclick="openGroupReminderModal()" style="width:100%; padding:11px; background:linear-gradient(135deg,#ef6c00,#f57c00); color:#fff; border:none; border-radius:10px; font-family:inherit; font-weight:800; font-size:12.5px; cursor:pointer; box-shadow:0 3px 8px rgba(239,108,0,.3);">📢 یادآوری گروهی به همه دبیران</button>';
+    h += '</div>';
+  }
+  
+  h += '<div style="font-size:13px; font-weight:800; color:var(--header-2); margin-bottom:10px;">📋 وضعیت تکمیل ارزیابی دانش‌آموزان</div>';
+  
+  progressData.forEach((p) => {
+    // ... (همون کد قبلی بدون تغییر)
+  });
+  reportsList.innerHTML = h;
+}
+      progressData.forEach((p) => {
+        let statusIcon = '⏳';
+        let statusColor = '#ef6c00';
+        let statusText = p.completed + ' از ' + p.total + ' دبیر';
+        
+        if (p.isComplete) {
+          statusIcon = '✅'; statusColor = '#2e7d32'; statusText = 'تکمیل شده (' + p.completed + ' دبیر)';
+        } else if (p.total === 0) {
+          statusIcon = '⚠️'; statusColor = '#9e9e9e'; statusText = 'درخواستی ارسال نشده';
+        } else {
+          statusIcon = '⏳'; statusColor = '#ef6c00'; statusText = p.pending + ' دبیر در انتظار';
+        }
+        
+        h += '<div style="display:flex; align-items:center; justify-content:space-between; padding:12px; border-bottom:1px solid var(--line); gap:8px; flex-wrap:wrap;">';
+        h += '<div style="flex:1; min-width:150px;">';
+        h += '<div style="font-size:13px; font-weight:700; color:var(--text);">' + statusIcon + ' ' + esc(p.name) + '</div>';
+        h += '<div style="font-size:11px; color:' + statusColor + '; margin-top:2px; font-weight:700;">' + statusText + '</div>';
+        h += '</div>';
+        
+        h += '<div style="display:flex; gap:6px; flex-wrap:wrap;">';
+        h += '<button onclick="openEvalReportModal(\'' + p.nationalId + '\', \'' + escAttr(p.name) + '\', \'' + escAttr(cls.name) + '\', \'' + (periodId || '') + '\')" style="padding:6px 12px; border-radius:8px; background:#e3f2fd; color:#0d47a1; border:none; font-family:inherit; font-weight:700; font-size:11px; cursor:pointer;">📄 کارنامه</button>';
+        
+        if (p.pending > 0) {
+          h += '<button onclick="sendBulkReminder(\'' + p.nationalId + '\', \'' + escAttr(p.name) + '\', \'' + escAttr(cls.name) + '\', \'' + escAttr(JSON.stringify(p.pendingTeachers)) + '\')" style="padding:6px 12px; border-radius:8px; background:#fff3e0; color:#e65100; border:none; font-family:inherit; font-weight:700; font-size:11px; cursor:pointer;">🔔 یادآوری به ' + toFa(p.pending) + ' دبیر</button>';
+        }
+        h += '</div></div>';
+      });
+      reportsList.innerHTML = h;
+    }
+  } catch(e) { 
+    console.error("خطا در بارگذاری لیست:", e); 
+  }
+}
+
+async function sendBulkReminder(sNid, sName, className, pendingTeachersJson) {
+  try {
+    const pendingTeachers = JSON.parse(pendingTeachersJson);
+    if (pendingTeachers.length === 0) { showToast('⚠️ دبیری در انتظار نیست'); return; }
+    
+    const tasks = pendingTeachers.map(t => ({
+      teacherNid: t.nid,
+      teacherName: t.name,
+      studentNames: [sName],
+      studentNids: [sNid]
+    }));
+    
+    openReminderModal({
+      title: '🔔 یادآوری به دبیران',
+      className: className,
+      tasks: tasks,
+      defaultTemplate: REMINDER_TEMPLATE_SINGLE
+    });
+  } catch(e) {
+    console.error('sendBulkReminder error:', e);
+    showToast('❌ خطا: ' + (e.message || 'نامشخص'));
+  }
+}
+// ============================================================
+// 🔔 سیستم یادآوری یکپارچه (تکی + گروهی) با پیش‌نمایش پیام
+// ============================================================
+
+const REMINDER_TEMPLATE_SINGLE = `🔔 یادآوری ارزیابی
+
+استاد گرامی [نام دبیر]،
+لطفاً هرچه سریع‌تر نسبت به تکمیل فرم ارزیابی رفتار دانش‌آموز زیر از کلاس «[کلاس]» اقدام فرمایید:
+
+[لیست دانش‌آموزان]
+
+با تشکر، [فرستنده]`;
+
+const REMINDER_TEMPLATE_BULK = `🔔 یادآوری ارزیابی
+
+استاد گرامی [نام دبیر]،
+لطفاً هرچه سریع‌تر نسبت به تکمیل فرم ارزیابی رفتار [تعداد] دانش‌آموز زیر از کلاس «[کلاس]» اقدام فرمایید:
+
+[لیست دانش‌آموزان]
+
+با تشکر، [فرستنده]`;
+
+// 🎯 مودال یادآوری (مشترک برای تکی و گروهی)
+function openReminderModal(config) {
+  document.getElementById('reminderUnifiedModal')?.remove();
+  
+  const tasks = config.tasks || [];
+  if (tasks.length === 0) { showToast('⚠️ موردی برای یادآوری نیست'); return; }
+  
+  const template = config.defaultTemplate || REMINDER_TEMPLATE_SINGLE;
+  
+  let tasksHtml = '';
+  tasks.forEach((t, idx) => {
+    const count = t.studentNames.length;
+    tasksHtml += `
+      <label style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--bg); border-radius:8px; margin-bottom:6px; cursor:pointer;">
+        <input type="checkbox" class="reminder-task-cb" data-idx="${idx}" checked onchange="updateReminderPreview()" style="width:18px; height:18px; accent-color:#1a237e; cursor:pointer; flex-shrink:0;">
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:13px; font-weight:700; color:var(--text);">${esc(t.teacherName)}</div>
+          <div style="font-size:10.5px; color:#ef6c00; font-weight:700; margin-top:2px;">👥 ${toFa(count)} دانش‌آموز در انتظار</div>
+        </div>
+      </label>
+    `;
+  });
+  
+  const overlay = document.createElement('div');
+  overlay.id = 'reminderUnifiedModal';
+  overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:10001; display:flex; align-items:center; justify-content:center; padding:15px; backdrop-filter:blur(4px);';
+  overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
+  
+  overlay.innerHTML = `
+    <div style="background:var(--card); border-radius:16px; width:100%; max-width:560px; max-height:92vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.5); overflow:hidden;" onclick="event.stopPropagation()">
+      <div style="padding:16px; background:linear-gradient(135deg,#ff9800,#f57c00); color:#fff; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:15px; font-weight:800;">${esc(config.title || '🔔 یادآوری')}</div>
+          <div style="font-size:11px; opacity:.9; margin-top:2px;">🎓 ${esc(config.className || '')}</div>
+        </div>
+        <button onclick="document.getElementById('reminderUnifiedModal').remove()" style="background:rgba(255,255,255,.2); border:none; color:#fff; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; font-family:inherit;">✕</button>
+      </div>
+      
+      <div style="flex:1; overflow-y:auto; padding:14px;">
+        <label style="display:flex; align-items:center; gap:8px; padding:10px 12px; background:linear-gradient(135deg,#e3f2fd,#bbdefb); border-radius:8px; margin-bottom:12px; cursor:pointer; font-weight:800; font-size:12.5px; color:#0d47a1;">
+          <input type="checkbox" id="reminderSelectAllTasks" checked onchange="toggleAllReminderTasks(this)" style="width:18px; height:18px; accent-color:#0d47a1; cursor:pointer;">
+          <span>انتخاب همه (${toFa(tasks.length)} دبیر)</span>
+        </label>
+        
+        <div id="reminderTaskList">${tasksHtml}</div>
+        
+        <div style="margin-top:16px; padding-top:12px; border-top:2px dashed var(--line);">
+          <div style="font-size:12.5px; font-weight:800; color:var(--header-2); margin-bottom:6px;">✏️ متن پیام</div>
+          <div style="font-size:10.5px; color:var(--text-muted); margin-bottom:8px; line-height:1.6;">
+            متغیرها: 
+            <code style="background:var(--bg); padding:1px 5px; border-radius:4px; font-size:10px;">[نام دبیر]</code> · 
+            <code style="background:var(--bg); padding:1px 5px; border-radius:4px; font-size:10px;">[کلاس]</code> · 
+            <code style="background:var(--bg); padding:1px 5px; border-radius:4px; font-size:10px;">[تعداد]</code> · 
+            <code style="background:var(--bg); padding:1px 5px; border-radius:4px; font-size:10px;">[لیست دانش‌آموزان]</code> · 
+            <code style="background:var(--bg); padding:1px 5px; border-radius:4px; font-size:10px;">[فرستنده]</code>
+          </div>
+          <textarea id="reminderTemplate" style="width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; font-size:12px; background:var(--bg); color:var(--text); min-height:130px; resize:vertical; line-height:1.7;" oninput="updateReminderPreview()">${esc(template)}</textarea>
+          
+          <div style="margin-top:10px;">
+            <div style="font-size:12px; font-weight:800; color:#2e7d32; margin-bottom:6px;">👁 پیش‌نمایش (برای اولین دبیر انتخاب‌شده)</div>
+            <div id="reminderPreview" style="background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:10px 12px; font-size:11.5px; color:#166534; line-height:1.7; white-space:pre-wrap; max-height:180px; overflow-y:auto;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div style="padding:12px 14px; background:var(--bg); border-top:1px solid var(--line); display:flex; gap:8px;">
+        <button onclick="document.getElementById('reminderUnifiedModal').remove()" style="flex:1; padding:11px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--text-soft); font-family:inherit; font-weight:700; font-size:12px; cursor:pointer;">انصراف</button>
+        <button onclick="sendAllReminders()" style="flex:2; padding:11px; border:none; border-radius:8px; background:linear-gradient(135deg,#2e7d32,#43a047); color:#fff; font-family:inherit; font-weight:800; font-size:12.5px; cursor:pointer; box-shadow:0 3px 8px rgba(46,125,50,.3);">📤 ارسال یادآوری‌ها</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(overlay);
+  window._reminderTasks = tasks;
+  window._reminderClassName = config.className || '';
+  setTimeout(updateReminderPreview, 50);
+}
+
+function toggleAllReminderTasks(source) {
+  document.querySelectorAll('.reminder-task-cb').forEach(cb => cb.checked = source.checked);
+  updateReminderPreview();
+}
+
+function updateReminderPreview() {
+  const tasks = window._reminderTasks || [];
+  const className = window._reminderClassName || '';
+  const template = document.getElementById('reminderTemplate')?.value || '';
+  const previewEl = document.getElementById('reminderPreview');
+  
+  const all = document.querySelectorAll('.reminder-task-cb');
+  const checked = document.querySelectorAll('.reminder-task-cb:checked');
+  const master = document.getElementById('reminderSelectAllTasks');
+  if (master) master.checked = (all.length > 0 && all.length === checked.length);
+  
+  if (!previewEl) return;
+  
+  const checkedCb = document.querySelector('.reminder-task-cb:checked');
+  if (!checkedCb) {
+    previewEl.textContent = 'هیچ دبیری انتخاب نشده';
+    previewEl.style.color = '#c62828';
+    return;
+  }
+  previewEl.style.color = '#166534';
+  
+  const idx = parseInt(checkedCb.dataset.idx);
+  const task = tasks[idx];
+  if (!task) return;
+  
+  const studentList = task.studentNames.length === 1
+    ? task.studentNames[0]
+    : task.studentNames.map(n => '• ' + n).join('\n');
+  
+  const preview = template
+    .replace(/\[نام دبیر\]/g, task.teacherName)
+    .replace(/\[کلاس\]/g, className)
+    .replace(/\[تعداد\]/g, toFa(task.studentNames.length))
+    .replace(/\[لیست دانش‌آموزان\]/g, studentList)
+    .replace(/\[فرستنده\]/g, currentUser.name);
+  
+  previewEl.textContent = preview;
+}
+
+async function sendAllReminders() {
+  const tasks = window._reminderTasks || [];
+  const className = window._reminderClassName || '';
+  const template = document.getElementById('reminderTemplate')?.value || '';
+  
+  const selectedTasks = [];
+  document.querySelectorAll('.reminder-task-cb:checked').forEach(cb => {
+    const idx = parseInt(cb.dataset.idx);
+    if (tasks[idx]) selectedTasks.push(tasks[idx]);
+  });
+  
+  if (selectedTasks.length === 0) {
+    showToast('⚠️ حداقل یک دبیر را انتخاب کنید');
+    return;
+  }
+  
+  document.getElementById('reminderUnifiedModal')?.remove();
+  showToast(`⏳ در حال ارسال به ${toFa(selectedTasks.length)} دبیر...`);
+  
+  let successCount = 0, errorCount = 0;
+  
+  for (let i = 0; i < selectedTasks.length; i++) {
+    const task = selectedTasks[i];
+    const studentList = task.studentNames.length === 1
+      ? task.studentNames[0]
+      : task.studentNames.map(n => '• ' + n).join('\n');
+    
+    const finalMessage = template
+      .replace(/\[نام دبیر\]/g, task.teacherName)
+      .replace(/\[کلاس\]/g, className)
+      .replace(/\[تعداد\]/g, toFa(task.studentNames.length))
+      .replace(/\[لیست دانش‌آموزان\]/g, studentList)
+      .replace(/\[فرستنده\]/g, currentUser.name);
+    
+    try {
+      const url = API_URL + '?action=sendTeacherGroupReminder'
+        + '&role=' + encodeURIComponent(currentUser.role)
+        + '&teacherNid=' + encodeURIComponent(task.teacherNid)
+        + '&teacherName=' + encodeURIComponent(task.teacherName)
+        + '&className=' + encodeURIComponent(className)
+        + '&senderName=' + encodeURIComponent(currentUser.name)
+        + '&customMessage=' + encodeURIComponent(finalMessage)
+        + '&t=' + Date.now();
+      
+      const res = await fetch(url).then(r => r.json());
+      if (res.success) successCount++;
+      else errorCount++;
+    } catch(e) {
+      console.error('خطا برای دبیر', task.teacherName, e);
+      errorCount++;
+    }
+  }
+  
+  if (successCount === 0) showToast('❌ هیچ یادآوری‌ای ارسال نشد');
+  else if (errorCount === 0) showToast(`✅ یادآوری به ${toFa(successCount)} دبیر ارسال شد`);
+  else showToast(`⚠️ ${toFa(successCount)} موفق، ${toFa(errorCount)} خطا`);
+}
+
+// 🎯 یادآوری گروهی به همه‌ی دبیران یک کلاس
+function openGroupReminderModal() {
+  const progressData = window._lastEvalProgressData || [];
+  const className = window._lastEvalClassName || '';
+  
+  if (progressData.length === 0) { showToast('⚠️ داده‌ای نیست'); return; }
+  
+  const teacherAgg = {};
+  progressData.forEach(p => {
+    if(p.pendingTeachers) {
+      p.pendingTeachers.forEach(t => {
+        if(!teacherAgg[t.nid]) teacherAgg[t.nid] = {nid: t.nid, name: t.name, students: []};
+        teacherAgg[t.nid].students.push({name: p.name, nationalId: p.nationalId});
+      });
+    }
+  });
+  
+  const tasks = Object.values(teacherAgg).map(t => ({
+    teacherNid: t.nid,
+    teacherName: t.name,
+    studentNames: t.students.map(s => s.name),
+    studentNids: t.students.map(s => s.nationalId)
+  })).sort((a,b) => b.studentNames.length - a.studentNames.length);
+  
+  if (tasks.length === 0) { showToast('⚠️ دبیری در انتظار نیست'); return; }
+  
+  openReminderModal({
+    title: '📢 یادآوری گروهی به دبیران',
+    className: className,
+    tasks: tasks,
+    defaultTemplate: REMINDER_TEMPLATE_BULK
+  });
+}
+
+function toggleReminderAll(source) {
+  document.querySelectorAll('.reminder-cb').forEach(cb => cb.checked = source.checked);
+}
+
+function updateReminderSelectAllStatus() {
+  const all = document.querySelectorAll('.reminder-cb');
+  const checked = document.querySelectorAll('.reminder-cb:checked');
+  const master = document.getElementById('reminderSelectAll');
+  if(master) master.checked = (all.length > 0 && all.length === checked.length);
+}
+
+async function confirmSendReminders(sNid, sName, className) {
+  const selected = [];
+  document.querySelectorAll('.reminder-cb:checked').forEach(cb => {
+    selected.push({ nid: cb.dataset.nid, name: cb.dataset.name });
+  });
+  
+  if (selected.length === 0) {
+    showToast('⚠️ حداقل یک دبیر را انتخاب کنید');
+    return;
+  }
+  
+  document.getElementById('reminderTeacherPicker')?.remove();
+  
+  showToast(`⏳ در حال ارسال به ${toFa(selected.length)} دبیر...`);
+  
+  let successCount = 0;
+  let errorCount = 0;
+  for (let i = 0; i < selected.length; i++) {
+    const t = selected[i];
+    try {
+      const url = API_URL + '?action=sendTeacherReminder'
+        + '&role=' + encodeURIComponent(currentUser.role)
+        + '&teacherNid=' + encodeURIComponent(t.nid)
+        + '&teacherName=' + encodeURIComponent(t.name)
+        + '&studentName=' + encodeURIComponent(sName)
+        + '&className=' + encodeURIComponent(className)
+        + '&senderName=' + encodeURIComponent(currentUser.name)
+        + '&t=' + Date.now();
+      
+      const res = await fetch(url).then(r => r.json());
+      if (res.success) successCount++;
+      else errorCount++;
+    } catch(e) {
+      console.error('خطا برای دبیر', t.name, e);
+      errorCount++;
+    }
+  }
+  
+  if (successCount === 0) {
+    showToast('❌ هیچ یادآوری‌ای ارسال نشد');
+  } else if (errorCount === 0) {
+    showToast(`✅ یادآوری به ${toFa(successCount)} دبیر ارسال شد`);
+  } else {
+    showToast(`⚠️ ${toFa(successCount)} موفق، ${toFa(errorCount)} خطا`);
+  }
+}
+// ============================================================
+// 📊 پنل مدیر: ارسال درخواست ارزیابی
+// ============================================================
+async function renderEvalManagerPage() {
+  const el = document.getElementById('tab-evalManager');
+  if(!el) return;
+  el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+  try {
+    const [rClasses, rPeriods, rActive] = await Promise.all([
+      fetch(API_URL + '?action=getAllClasses&t=' + Date.now()).then(r => r.json()),
+      fetch(API_URL + '?action=getEvalPeriods&t=' + Date.now()).then(r => r.json()),
+      fetch(API_URL + '?action=getActiveEvalPeriod&t=' + Date.now()).then(r => r.json())
+    ]);
+    
+    const classes = rClasses.data || {};
+    const periods = (rPeriods.success && rPeriods.data) ? rPeriods.data : [];
+    const activePeriod = (rActive.success) ? rActive : { id: '', name: 'هیچ دوره‌ای فعال نیست' };
+        if (activePeriod.id) window._evalViewPeriod = activePeriod.id;
+
+    let h = '';
+
+    // 🎯 بخش مدیریت دوره‌ها
+    h += '<div class="form-card" style="margin-bottom:20px; background:#f0f4ff; border:1px solid #c5cae9;">';
+    h += '<div style="font-size:14px; font-weight:800; color:#1a237e; margin-bottom:10px;">📅 دوره ارزیابی فعلی: ' + esc(activePeriod.name) + '</div>';
+    h += '<div style="display:flex; gap:10px; flex-wrap:wrap;">';
+    h += '<input type="text" id="newPeriodName" class="form-input" placeholder="نام دوره جدید (مثلاً نوبت دوم)" style="flex:1; min-width:200px;">';
+    h += '<button onclick="createNewPeriod()" style="padding:10px 15px; background:#2e7d32; color:#fff; border:none; border-radius:8px; font-family:inherit; font-weight:700; cursor:pointer;">➕ ساخت دوره</button>';
+    h += '</div>';
+    if(periods.length > 0) {
+      h += '<div style="margin-top:10px;">';
+      h += '<select class="form-select" onchange="activatePeriod(this.value); window._evalViewPeriod = this.value;">';
+      periods.forEach(p => {
+        h += '<option value="' + p.id + '"' + (p.active ? ' selected' : '') + '>' + p.name + (p.active ? ' (فعال)' : '') + '</option>';
+      });
+      h += '</select></div>';
+    }
+    h += '</div>';
+
+    // بخش ارسال درخواست
+    h += '<div class="form-card" style="margin-bottom:20px;">';
+    h += '<div class="form-card-header"><div class="icon-box">📤</div><div><div class="title">ارسال درخواست ارزیابی</div><div class="sub">درخواست پر کردن فرم شایستگی</div></div></div>';
+    h += '<div class="form-group"><label class="form-label">🎓 انتخاب کلاس</label><select class="form-select" id="evalMgrClass" onchange="loadEvalMgrStudents()"><option value="">-- انتخاب کنید --</option>';
+    Object.keys(classes).forEach(c => { h += '<option value="' + c + '">' + classes[c].name + '</option>'; });
+    h += '</select></div>';
+    
+    h += '<div class="form-group" id="evalMgrStudentWrap" style="display:none;"><label class="form-label">👤 انتخاب دانش‌آموز</label><select class="form-select" id="evalMgrStudent"><option value="ALL_CLASS">👥 کل دانش‌آموزان این کلاس</option></select></div>';
+    h += '<div class="form-group" id="evalMgrTeacherWrap" style="display:none;"><label class="form-label">👨‍🏫 ارسال به کدام دبیران؟</label><select class="form-select" id="evalMgrTeacher"><option value="ALL">📢 همه دبیران این کلاس</option></select></div>';
+    h += '<button class="submit-btn primary-blue" id="btnSendEvalReq" onclick="sendEvalRequest()">🚀 ارسال درخواست</button>';
+    h += '</div>';
+
+    // بخش مشاهده کارنامه
+    h += '<div class="form-card">';
+    h += '<div class="form-card-header"><div class="icon-box">📄</div><div><div class="title">مشاهده کارنامه‌های شایستگی</div><div class="sub">مشاهده، ثبت نظر و چاپ کارنامه</div></div></div>';
+    h += '<div id="evalMgrReportsList"><div class="empty-state"><div class="empty-title">برای مشاهده کارنامه، ابتدا یک کلاس را از منوی بالا انتخاب کنید</div></div></div>';
+    h += '</div>';
+
+    el.innerHTML = h;
+
+  } catch(e) {
+    console.error(e);
+    el.innerHTML = '<div class="empty-state"><div class="empty-title">خطای شبکه</div></div>';
+  }
+}
+
+// توابع ساخت و فعال‌سازی دوره
+async function createNewPeriod() {
+  const name = document.getElementById('newPeriodName').value.trim();
+  if(!name) { showToast('⚠️ نام دوره را وارد کنید'); return; }
+  if (activePeriod.id) window._evalViewPeriod = activePeriod.id;
+  try {
+    const res = await fetch(API_URL + '?action=createEvalPeriod&role=' + encodeURIComponent(currentUser.role) + '&periodName=' + encodeURIComponent(name) + '&t=' + Date.now()).then(r => r.json());
+    if(res.success) {
+      showToast('✅ دوره جدید ساخته شد');
+      renderEvalManagerPage(); // رفرش
+    }
+  } catch(e) { showToast('❌ خطا'); }
+}
+
+async function activatePeriod(pId) {
+  if(!pId) return;
+  try {
+    const res = await fetch(API_URL + '?action=setActiveEvalPeriod&role=' + encodeURIComponent(currentUser.role) + '&periodId=' + encodeURIComponent(pId) + '&t=' + Date.now()).then(r => r.json());
+    if(res.success) {
+      showToast('✅ دوره فعال شد');
+      renderEvalManagerPage(); // رفرش
+    }
+  } catch(e) { showToast('❌ خطا'); }
+}
+
+
+// ارسال درخواست به بک‌اند
+async function sendEvalRequest() {
+  const classCode = document.getElementById('evalMgrClass').value;
+  const studentNid = document.getElementById('evalMgrStudent').value;
+  const targetTeacher = document.getElementById('evalMgrTeacher').value;
+  
+  if(!classCode || !studentNid) { showToast('⚠️ لطفاً کلاس و دانش‌آموز را انتخاب کنید'); return; }
+
+  const btn = document.getElementById('btnSendEvalReq');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span><span>در حال ارسال...</span>';
+
+  try {
+    let studentsToSend = [];
+    if(studentNid === 'ALL_CLASS') {
+      const rClasses = await fetch(API_URL + '?action=getAllClasses&t=' + Date.now()).then(r => r.json());
+      const cls = rClasses.data[classCode];
+      if(cls && cls.students) {
+        cls.students.forEach(s => studentsToSend.push({ nid: s.nationalId, name: s.name }));
+      }
+    } else {
+      const sel = document.getElementById('evalMgrStudent');
+      const sName = sel.options[sel.selectedIndex].text;
+      studentsToSend.push({ nid: studentNid, name: sName });
+    }
+
+    let successCount = 0;
+    let errorMsg = '';
+    
+    for(let i=0; i<studentsToSend.length; i++) {
+      const st = studentsToSend[i];
+      const url = API_URL + '?action=createEvalRequest'
+        + '&studentNid=' + encodeURIComponent(st.nid)
+        + '&studentName=' + encodeURIComponent(st.name)
+        + '&classCode=' + encodeURIComponent(classCode)
+        + '&formType=form1'
+        + '&targetTeacher=' + encodeURIComponent(targetTeacher)
+        + '&requestedBy=' + encodeURIComponent(currentUser.name)
+        + '&t=' + Date.now();
+      
+      const res = await fetch(url).then(r => r.json());
+      if(res.success) {
+        successCount++;
+      } else {
+        if(!errorMsg) errorMsg = res.message || 'خطای ناشناخته';
+      }
+    }
+
+    if(successCount > 0) {
+      showToast(`✅ درخواست برای ${toFa(successCount)} دانش‌آموز ارسال شد`);
+    } else {
+      showToast(`❌ ${errorMsg}`);
+    }
+    
+  } catch(e) {
+    console.error(e);
+    showToast('❌ خطای شبکه');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<span>🚀</span><span>ارسال درخواست</span>';
+}
+async function openEvalReportModal(sNid, sName, className, periodId) {
+  showToast('⏳ در حال دریافت اطلاعات...');
+  
+  try {
+   const url = API_URL + '?action=getEvalReportData&studentNid=' + encodeURIComponent(sNid) + (periodId ? '&periodId=' + encodeURIComponent(periodId) : '') + '&t=' + Date.now();
+   const res = await fetch(url).then(r => r.json());   
+    if(!res.success) { showToast('❌ ' + (res.message || 'خطا')); return; }
+
+    // 🎯 اصلاح شد: داده‌ها مستقیماً از res خوانده می‌شوند
+    const student = res.student;
+    const teachers = res.teachers || [];
+    const averages = res.averages || [0,0,0,0,0,0,0,0,0];
+    const notes = res.notes || { counselor: '', vp: '', published: false };
+     window._currentEvalReportData = { student, teachers, averages, notes };
+     window._currentEvalPeriodId = periodId || res.periodId || '';  // ← این خط رو اضافه کن
+
+    // ساخت مودال
+    const old = document.getElementById('evalReportOverlay');
+    if(old) old.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'evalReportOverlay';
+    overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:9999; overflow:auto; padding:20px 0;';
+    
+    let h = '<div style="max-width:900px; margin:0 auto; background:#fff; padding:30px; border-radius:14px; position:relative;">';
+    
+    // دکمه بستن
+    h += '<button onclick="document.getElementById(\'evalReportOverlay\').remove()" style="position:absolute; top:15px; left:15px; background:#c62828; color:#fff; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-family:inherit; font-weight:bold;">✕ بستن</button>';
+
+    // هدر
+    h += '<div class="report-header" style="text-align:center; border-bottom:2px solid #1a237e; padding-bottom:15px; margin-bottom:20px;">';
+    h += '<h2 style="margin:0 0 10px 0; color:#1a237e; font-size:20px;">کارنامه شایستگی‌های تربیتی</h2>';
+    h += '<p style="margin:0; font-size:13px; color:#6b7890;">دبیرستان شهید پورصابری | سال تحصیلی ۱۴۰۵-۱۴۰۶</p>';
+    h += '<p style="margin-top:5px; font-weight:800; color:#000; font-size:15px;">' + esc(student.name) + ' - ' + esc(student.grade) + '</p>';
+    h += '</div>';
+
+    // نمودارها
+    h += '<div style="display:flex; justify-content:space-between; align-items:center; gap:20px; margin-bottom:25px; flex-wrap:wrap;">';
+    h += '<div style="flex:1; min-width:300px; height:250px;"><canvas id="mgrRadarChart"></canvas></div>';
+    h += '<div style="flex:1; min-width:300px; height:250px;"><canvas id="mgrBarChart"></canvas></div>';
+    h += '</div>';
+
+    // نظرات (کادرهای ورودی)
+    h += '<div style="background:#f4f6f8; padding:15px; border-radius:10px; margin-bottom:15px;">';
+    h += '<label style="font-size:13px; font-weight:800; color:#009688; display:block; margin-bottom:5px;">🧑‍⚕️ نظر تخصصی مشاور:</label>';
+    h += '<textarea id="mgrCounselorNote" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; font-family:inherit; font-size:13px; min-height:60px; margin-bottom:10px;">' + esc(notes.counselor) + '</textarea>';
+    h += '<label style="font-size:13px; font-weight:800; color:#ff5722; display:block; margin-bottom:5px;">👨‍💼 نظر معاون آموزشی:</label>';
+    h += '<textarea id="mgrVpNote" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; font-family:inherit; font-size:13px; min-height:60px;">' + esc(notes.vp) + '</textarea>';
+    h += '</div>';
+
+    // دکمه‌ها
+    h += '<div style="display:flex; gap:10px; margin-bottom:20px;">';
+    h += '<button onclick="saveEvalNotesFromMgr(\'' + sNid + '\')" style="flex:1; padding:12px; background:#1976d2; color:#fff; border:none; border-radius:10px; font-family:inherit; font-weight:700; cursor:pointer;">💾 ذخیره نظرات</button>';
+    h += '<button onclick="publishEvalReportFromMgr(\'' + sNid + '\')" style="flex:1; padding:12px; background:' + (notes.published ? '#2e7d32' : '#ef6c00') + '; color:#fff; border:none; border-radius:10px; font-family:inherit; font-weight:700; cursor:pointer;">' + (notes.published ? '✅ منتشر شده (لغو انتشار)' : '🔓 انتشار کارنامه برای دانش‌آموز') + '</button>';
+    h += '<button onclick="printEvalReportModal()" style="flex:1; padding:12px; background:#2e7d32; color:#fff; border:none; border-radius:10px; font-family:inherit; font-weight:700; cursor:pointer;">🖨️ چاپ / PDF</button>';
+    h += '</div>';
+
+    // جدول دبیران
+    h += '<h4 style="text-align:center; margin-top:20px; font-size:14px; color:#1a237e;">جزئیات ارزیابی دبیران</h4>';
+    h += '<table style="width:100%; border-collapse:collapse; margin-top:15px; font-size:12px; text-align:center;">';
+    h += '<thead><tr style="background:#e8eaf6; color:#1a237e;"><th style="border:1px solid #ccc; padding:8px;">نام دبیر</th><th style="border:1px solid #ccc; padding:8px;">درس</th><th style="border:1px solid #ccc; padding:8px;">میانگین نمرات (از ۴)</th></tr></thead><tbody>';
+    teachers.forEach(t => {
+      let sum = 0, cnt = 0;
+      t.scores.forEach(s => { if(parseInt(s) > 0) { sum += parseInt(s); cnt++; } });
+      let avg = cnt > 0 ? (sum/cnt).toFixed(2) : '—';
+      h += '<tr><td style="border:1px solid #ccc; padding:8px;">' + esc(t.teacherName) + '</td><td style="border:1px solid #ccc; padding:8px;">' + esc(t.subject) + '</td><td style="border:1px solid #ccc; padding:8px;">' + avg + '</td></tr>';
+    });
+    h += '</tbody></table>';
+
+    h += '</div>'; // بستن کانتینر اصلی
+    overlay.innerHTML = h;
+    document.body.appendChild(overlay);
+
+    // رسم نمودارها
+    setTimeout(() => {
+      renderMgrCharts(averages);
+    }, 100);
+
+  } catch(e) {
+    console.error("خطای دقیق:", e); // این خط رو اضافه کردم تا اگه بازم خطا داد، تو کنسول ببینیم چیه
+    showToast('❌ خطای شبکه');
+  }
+}
+let _mgrRadarChart = null;
+let _mgrBarChart = null;
+
+function renderMgrCharts(averages) {
+  const labels = ['ادب', 'نظم', 'مسئولیت', 'همکاری', 'مشارکت', 'صداقت', 'کنترل رفتار', 'بهداشت', 'اخلاق جمعی'];
+  
+  // نمودار راداری
+  const ctxRadar = document.getElementById('mgrRadarChart').getContext('2d');
+  if(_mgrRadarChart) _mgrRadarChart.destroy();
+  _mgrRadarChart = new Chart(ctxRadar, {
+    type: 'radar',
+    data: { labels: labels, datasets: [{ data: averages, backgroundColor: 'rgba(26, 35, 126, 0.2)', borderColor: 'rgba(26, 35, 126, 1)', pointBackgroundColor: 'rgba(26, 35, 126, 1)', borderWidth: 2 }] },
+    options: { animation: false, responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 4, ticks: { stepSize: 1, display: false }, pointLabels: { font: { family: 'Vazirmatn', size: 9 } } } }, plugins: { legend: { display: false } } }
+  });
+
+  // نمودار میله‌ای
+  const ctxBar = document.getElementById('mgrBarChart').getContext('2d');
+  if(_mgrBarChart) _mgrBarChart.destroy();
+  const barColors = averages.map(val => { if (val >= 3.5) return '#2e7d32'; if (val >= 2.5) return '#1976d2'; if (val >= 1.5) return '#ef6c00'; return '#c62828'; });
+  _mgrBarChart = new Chart(ctxBar, {
+    type: 'bar',
+    data: { labels: labels, datasets: [{ data: averages, backgroundColor: barColors, borderRadius: 5, barThickness: 12 }] },
+    options: { animation: false, responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { min: 0, max: 4, grid: { display: false }, ticks: { display: false } }, y: { grid: { display: false }, ticks: { font: { family: 'Vazirmatn', size: 9 } } } }, plugins: { legend: { display: false } } }
+  });
+}
+
+async function saveEvalNotesFromMgr(sNid) {
+  const cNote = document.getElementById('mgrCounselorNote').value.trim();
+  const vNote = document.getElementById('mgrVpNote').value.trim();
+  try {
+    showToast('⏳ در حال ذخیره...');
+  const params = new URLSearchParams();
+    params.append('action', 'saveEvalNotes');
+    params.append('studentNid', sNid);
+    params.append('counselorNote', cNote);
+    params.append('vpNote', vNote);
+    params.append('periodId', window._currentEvalPeriodId || '');
+    
+    const res = await fetch(API_URL, { method: 'POST', body: params }).then(r => r.json());
+    if(res.success) showToast('✅ نظرات ذخیره شد');
+    else showToast('❌ ' + (res.message || 'خطا'));
+  } catch(e) { showToast('❌ خطای شبکه'); }
+}
+
+async function publishEvalReportFromMgr(sNid) {
+  try {
+        const res = await fetch(API_URL + '?action=publishEvalReport&studentNid=' + encodeURIComponent(sNid) + '&periodId=' + encodeURIComponent(window._currentEvalPeriodId || '') + '&t=' + Date.now()).then(r => r.json());
+    if(res.success) {
+      showToast('✅ وضعیت انتشار تغییر کرد');
+      // رفرش مودال
+      document.getElementById('evalReportOverlay').remove();
+      openEvalReportModal(sNid, '', '');
+    }
+  } catch(e) { showToast('❌ خطا'); }
+}
+// 🎯 تابع پرینت بدون باز شدن تب جدید (Inline Print)
+function printHTMLInline(html) {
+    const old = document.getElementById('_inlinePrintFrame');
+    if (old) old.remove();
+    
+    const frame = document.createElement('iframe');
+    frame.id = '_inlinePrintFrame';
+    // iframe رو خارج از دید قرار میدیم اما رندر میشه
+    frame.style.cssText = 'position:absolute;top:0;left:-9999px;width:900px;height:1200px;border:0;';
+    document.body.appendChild(frame);
+    
+    const doc = frame.contentWindow.document;
+    doc.open();
+    doc.write(html);
+    doc.close();
+    
+    // صبر برای لود فونت‌ها و بعد پرینت
+    const fontsReady = (doc.fonts && doc.fonts.ready) ? doc.fonts.ready : Promise.resolve();
+    fontsReady.then(() => {
+        setTimeout(() => {
+            try {
+                frame.contentWindow.focus();
+                frame.contentWindow.print();
+            } catch(e) {
+                console.error(e);
+                showToast('❌ خطا در پرینت');
+            }
+            // پاک کردن iframe بعد از ۳۰ ثانیه
+            setTimeout(() => { try { frame.remove(); } catch(e){} }, 30000);
+        }, 600);
+    }).catch(() => {
+        setTimeout(() => {
+            try { frame.contentWindow.print(); } catch(e){}
+        }, 1000);
+    });
+}
+
+function printEvalReportModal() {
+  const data = window._currentEvalReportData;
+  if(!data) { showToast('❌ اطلاعاتی برای چاپ یافت نشد'); return; }
+
+  // تبدیل نمودارهای فعلی به تصویر
+  const radarCanvas = document.getElementById('mgrRadarChart');
+  const barCanvas = document.getElementById('mgrBarChart');
+  const radarImg = radarCanvas ? radarCanvas.toDataURL('image/png') : '';
+  const barImg = barCanvas ? barCanvas.toDataURL('image/png') : '';
+
+  const labels = ['ادب', 'نظم', 'مسئولیت', 'همکاری', 'مشارکت', 'صداقت', 'کنترل رفتار', 'بهداشت', 'اخلاق جمعی'];
+  
+  // پیدا کردن نقاط قوت و ضعف بر اساس بالاترین و پایین‌ترین میانگین
+  let maxIdx = 0, minIdx = 0;
+  data.averages.forEach((v, i) => {
+    if(v > data.averages[maxIdx]) maxIdx = i;
+    if(v < data.averages[minIdx]) minIdx = i;
+  });
+
+  const strengths = labels[maxIdx] + ' و ' + labels[(maxIdx+1)%9];
+  const improvements = labels[minIdx] + ' و ' + labels[(minIdx+1)%9];
+
+  // ساخت صفحه HTML مستقل برای چاپ
+  let html = '<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>کارنامه شایستگی</title>';
+  html += '<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">';
+  html += '<style>';
+  html += 'body { font-family: Vazirmatn, sans-serif; padding: 20px; direction: rtl; }';
+  html += '.header { text-align: center; border-bottom: 2px solid #1a237e; padding-bottom: 15px; margin-bottom: 20px; }';
+  html += '.header h2 { color: #1a237e; margin: 0 0 10px 0; font-size: 20px; }';
+  html += '.header p { margin: 0; font-size: 13px; color: #6b7890; }';
+  html += '.charts { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }';
+  html += '.charts img { max-width: 48%; max-height: 250px; object-fit: contain; }';
+  html += '.section { background: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 15px; border-right: 4px solid #1a237e; page-break-inside: avoid; }';
+  html += '.section.strengths { border-right-color: #2e7d32; }';
+  html += '.section.improvements { border-right-color: #ef6c00; }';
+  html += '.section h4 { margin: 0 0 10px 0; font-size: 14px; }';
+  html += '.section p { margin: 0; font-size: 13px; line-height: 1.8; white-space: pre-wrap; }';
+  html += 'table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; text-align: center; page-break-inside: avoid; }';
+  html += 'th, td { border: 1px solid #ddd; padding: 8px; }';
+  html += 'th { background: #e8eaf6; color: #1a237e; }';
+  html += '.signatures { display: flex; justify-content: space-between; margin-top: 40px; padding-top: 20px; border-top: 1px dashed #ccc; font-size: 13px; color: #6b7890; page-break-inside: avoid; }';
+  html += '@media print { @page { size: A4; margin: 10mm; } body { padding: 0; } }';
+  html += '</style></head><body>';
+
+  html += '<div class="header">';
+  html += '<h2>کارنامه شایستگی‌های تربیتی</h2>';
+  html += '<p>دبیرستان شهید پورصابری | سال تحصیلی ۱۴۰۵-۱۴۰۶</p>';
+  html += '<p style="font-weight:800; color:#000; font-size:15px;">' + data.student.name + ' - ' + data.student.grade + '</p>';
+  html += '</div>';
+
+  html += '<div class="charts">';
+  if(radarImg) html += '<img src="' + radarImg + '">';
+  if(barImg) html += '<img src="' + barImg + '">';
+  html += '</div>';
+
+  html += '<div class="section strengths"><h4>🌟 نقاط قوت:</h4><p>دانش‌آموز در شاخص‌های <b>' + strengths + '</b> عملکرد بسیار مطلوبی داشته است.</p></div>';
+  html += '<div class="section improvements"><h4>📈 زمینه‌های قابل پیشرفت:</h4><p>نیاز به توجه بیشتر در شاخص‌های <b>' + improvements + '</b> دارد.</p></div>';
+
+  if(data.notes.counselor) {
+    html += '<div class="section" style="border-right-color:#009688; background:#e0f2f1;"><h4>🧑‍⚕️ نظر تخصصی مشاور:</h4><p>' + data.notes.counselor + '</p></div>';
+  }
+  if(data.notes.vp) {
+    html += '<div class="section" style="border-right-color:#ff5722; background:#fbe9e7;"><h4>👨‍💼 نظر معاون آموزشی:</h4><p>' + data.notes.vp + '</p></div>';
+  }
+
+  html += '<h4 style="text-align:center; margin-top:20px; font-size:14px; color:#1a237e;">جزئیات ارزیابی دبیران</h4>';
+  html += '<table><thead><tr><th>نام دبیر</th><th>درس</th><th>میانگین نمرات (از ۴)</th></tr></thead><tbody>';
+  data.teachers.forEach(t => {
+    let sum = 0, cnt = 0;
+    t.scores.forEach(s => { if(parseInt(s) > 0) { sum += parseInt(s); cnt++; } });
+    let avg = cnt > 0 ? (sum/cnt).toFixed(2) : '—';
+    html += '<tr><td>' + t.teacherName + '</td><td>' + t.subject + '</td><td>' + avg + '</td></tr>';
+  });
+  html += '</tbody></table>';
+
+  html += '<div class="signatures"><div>مهر و امضای مدیر</div><div>مهر و امضای معاون</div><div>امضای اولیا</div></div>';
+  html += '</body></html>';
+
+    printHTMLInline(html);
+}
+// ============================================================
+// 📜 نمایش کارنامه شایستگی (دانش‌آموز و والدین)
+// ============================================================
+async function renderStudentEvalReport() {
+  const isParent = currentUser.role === 'والدین';
+  const tabId = isParent ? 'tab-parentEvalReport' : 'tab-myEvalReport';
+  const el = document.getElementById(tabId);
+  if(!el) return;
+
+  // 🎯 تعریف متغیرها قبل از استفاده
+  const sNid = currentUser.nationalId;
+  const periodId = window._evalViewPeriod || window._currentEvalPeriodId || '';
+
+  el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+  try {
+    const res = await fetch(
+      API_URL + '?action=getEvalReportData'
+      + '&studentNid=' + encodeURIComponent(sNid)
+      + (periodId ? '&periodId=' + encodeURIComponent(periodId) : '')
+      + '&t=' + Date.now()
+    ).then(r => r.json());
+
+    // 🎯 دوره‌ای که واقعاً داده داشته رو ذخیره کن
+    window._currentEvalPeriodId = periodId || res.periodId || '';
+
+    if(!res.success) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-title">خطا در دریافت اطلاعات</div></div>';
+      return;
+    }
+
+    if(!res.notes || !res.notes.published) {
+      el.innerHTML = `
+        <div class="empty-state" style="padding:60px 20px;">
+          <div class="empty-icon" style="font-size:64px;">🔒</div>
+          <div class="empty-title" style="font-size:16px; margin-bottom:10px;">کارنامه هنوز منتشر نشده است</div>
+          <div class="empty-desc">مدیر مدرسه پس از بررسی و تایید نهایی، کارنامه شایستگی‌های شما را منتشر خواهد کرد.</div>
+        </div>`;
+      return;
+    }
+    // ... بقیه کد فعلی همین‌طور ادامه پیدا کنه
+    const student = res.student;
+    const teachers = res.teachers || [];
+    const averages = res.averages || [0,0,0,0,0,0,0,0,0];
+    const notes = res.notes;
+
+    let h = '<div class="report-card-print" style="background:#fff; border-radius:14px; padding:20px; box-shadow:0 4px 15px rgba(0,0,0,0.05);">';
+    
+    // هدر
+    h += '<div class="report-header" style="text-align:center; border-bottom:2px solid #1a237e; padding-bottom:15px; margin-bottom:20px;">';
+    h += '<h2 style="margin:0 0 10px 0; color:#1a237e; font-size:20px;">کارنامه شایستگی‌های تربیتی</h2>';
+    h += '<p style="margin:0; font-size:13px; color:#6b7890;">دبیرستان شهید پورصابری | سال تحصیلی ۱۴۰۵-۱۴۰۶</p>';
+    h += '<p style="margin-top:5px; font-weight:800; color:#000; font-size:15px;">' + esc(student.name) + ' - ' + esc(student.grade) + '</p>';
+    h += '</div>';
+
+    // نمودارها
+    h += '<div style="display:flex; justify-content:space-between; align-items:center; gap:20px; margin-bottom:25px; flex-wrap:wrap;">';
+    h += '<div style="flex:1; min-width:280px; height:250px;"><canvas id="stuRadarChart"></canvas></div>';
+    h += '<div style="flex:1; min-width:280px; height:250px;"><canvas id="stuBarChart"></canvas></div>';
+    h += '</div>';
+
+    // نقاط قوت و ضعف (بر اساس بالاترین و پایین‌ترین میانگین)
+    const labels = ['ادب', 'نظم', 'مسئولیت', 'همکاری', 'مشارکت', 'صداقت', 'کنترل رفتار', 'بهداشت', 'اخلاق جمعی'];
+    let maxIdx = 0, minIdx = 0;
+    averages.forEach((v, i) => {
+      if(v > averages[maxIdx]) maxIdx = i;
+      if(v < averages[minIdx]) minIdx = i;
+    });
+
+    h += '<div class="report-section strengths" style="background:#f8f9fa; border-radius:10px; padding:15px; margin-bottom:15px; border-right:4px solid #2e7d32;">';
+    h += '<h4 style="margin:0 0 10px 0; font-size:14px;">🌟 نقاط قوت:</h4>';
+    h += '<p style="margin:0; font-size:13px; line-height:1.8;">دانش‌آموز در شاخص‌های <b>' + labels[maxIdx] + ' و ' + labels[(maxIdx+1)%9] + '</b> عملکرد بسیار مطلوبی داشته است.</p>';
+    h += '</div>';
+
+    h += '<div class="report-section improvements" style="background:#f8f9fa; border-radius:10px; padding:15px; margin-bottom:15px; border-right:4px solid #ef6c00;">';
+    h += '<h4 style="margin:0 0 10px 0; font-size:14px;">📈 زمینه‌های قابل پیشرفت:</h4>';
+    h += '<p style="margin:0; font-size:13px; line-height:1.8;">نیاز به توجه بیشتر در شاخص‌های <b>' + labels[minIdx] + ' و ' + labels[(minIdx+1)%9] + '</b> دارد.</p>';
+    h += '</div>';
+
+    // نظرات مشاور و معاون
+    if(notes.counselor) {
+      h += '<div style="background:#e0f2f1; border-right:4px solid #009688; border-radius:10px; padding:15px; margin-bottom:15px;">';
+      h += '<h4 style="margin:0 0 10px 0; font-size:14px; color:#00695c;">🧑‍⚕️ نظر تخصصی مشاور:</h4>';
+      h += '<p style="margin:0; font-size:13px; line-height:1.8; white-space:pre-wrap;">' + esc(notes.counselor) + '</p>';
+      h += '</div>';
+    }
+
+    if(notes.vp) {
+      h += '<div style="background:#fbe9e7; border-right:4px solid #ff5722; border-radius:10px; padding:15px; margin-bottom:15px;">';
+      h += '<h4 style="margin:0 0 10px 0; font-size:14px; color:#d84315;">👨‍💼 نظر معاون آموزشی:</h4>';
+      h += '<p style="margin:0; font-size:13px; line-height:1.8; white-space:pre-wrap;">' + esc(notes.vp) + '</p>';
+      h += '</div>';
+    }
+
+    // جدول دبیران
+    h += '<h4 style="text-align:center; margin-top:20px; font-size:14px; color:#1a237e;">جزئیات ارزیابی دبیران</h4>';
+    h += '<table style="width:100%; border-collapse:collapse; margin-top:15px; font-size:12px; text-align:center;">';
+    h += '<thead><tr style="background:#e8eaf6; color:#1a237e;"><th style="border:1px solid #ccc; padding:8px;">نام دبیر</th><th style="border:1px solid #ccc; padding:8px;">درس</th><th style="border:1px solid #ccc; padding:8px;">میانگین نمرات</th></tr></thead><tbody>';
+    teachers.forEach(t => {
+      let sum = 0, cnt = 0;
+      t.scores.forEach(s => { if(parseInt(s) > 0) { sum += parseInt(s); cnt++; } });
+      let avg = cnt > 0 ? (sum/cnt).toFixed(2) : '—';
+      h += '<tr><td style="border:1px solid #ccc; padding:8px;">' + esc(t.teacherName) + '</td><td style="border:1px solid #ccc; padding:8px;">' + esc(t.subject) + '</td><td style="border:1px solid #ccc; padding:8px;">' + avg + '</td></tr>';
+    });
+    h += '</tbody></table>';
+
+    h += '</div>';
+
+    el.innerHTML = h;
+
+    // رسم نمودارها
+    setTimeout(() => {
+      // نمودار راداری
+      const ctxRadar = document.getElementById('stuRadarChart').getContext('2d');
+      new Chart(ctxRadar, {
+        type: 'radar',
+        data: { labels: labels, datasets: [{ data: averages, backgroundColor: 'rgba(26, 35, 126, 0.2)', borderColor: 'rgba(26, 35, 126, 1)', pointBackgroundColor: 'rgba(26, 35, 126, 1)', borderWidth: 2 }] },
+        options: { animation: false, responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 4, ticks: { stepSize: 1, display: false }, pointLabels: { font: { family: 'Vazirmatn', size: 9 } } } }, plugins: { legend: { display: false } } }
+      });
+
+      // نمودار میله‌ای
+      const ctxBar = document.getElementById('stuBarChart').getContext('2d');
+      const barColors = averages.map(val => { if (val >= 3.5) return '#2e7d32'; if (val >= 2.5) return '#1976d2'; if (val >= 1.5) return '#ef6c00'; return '#c62828'; });
+      new Chart(ctxBar, {
+        type: 'bar',
+        data: { labels: labels, datasets: [{ data: averages, backgroundColor: barColors, borderRadius: 5, barThickness: 12 }] },
+        options: { animation: false, responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { min: 0, max: 4, grid: { display: false }, ticks: { display: false } }, y: { grid: { display: false }, ticks: { font: { family: 'Vazirmatn', size: 9 } } } }, plugins: { legend: { display: false } } }
+      });
+    }, 100);
+
+  } catch(e) {
+    console.error(e);
+    el.innerHTML = '<div class="empty-state"><div class="empty-title">خطای شبکه</div></div>';
+  }
+}
 </script>
 
 <!-- 🎯 پنجره شناور برای نمایش تقدیرنامه (بدون باز شدن تب جدید) -->
