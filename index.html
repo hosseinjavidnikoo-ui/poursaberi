@@ -4026,7 +4026,7 @@ function uploadWithProgress(url, fields, fileName, fileSize){
         hideUploadOverlay();
         cleanup();
         resolve({success:true});
-      }, 700);
+      }, 1500);
     };
     
     form.submit();
@@ -4066,12 +4066,10 @@ function renderTeacherGrades(){
             <option>در حال بارگذاری...</option>
           </select>
         </div>
-        <button class="btn primary-blue" onclick="saveTeacherGrades()" style="margin-top:18px; padding:11px 20px; border-radius:10px; font-family:inherit; font-weight:700;">💾 ذخیره نمرات</button>
       </div>
     </div>
     <div class="grade-scroll" id="gradeTableContainer"></div>
   `;
-  // بارگذاری اولیه درس‌ها برای اولین کلاس
   loadSubjectsForClass(document.getElementById('gradeClassSelect').value);
 }
 async function loadSubjectsForClass(classCode) {
@@ -4120,25 +4118,21 @@ async function loadGradesForClass(){
   }
 
   container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+  _gradesDirty = false;
+  if (_gradesAutoSaveTimer) { clearTimeout(_gradesAutoSaveTimer); _gradesAutoSaveTimer = null; }
 
   try{
     const rClasses = await fetch(API_URL+'?action=getAllClasses&t='+Date.now()).then(r=>r.json());
     const rGrades = await fetch(API_URL+'?action=getGrades&classCode='+encodeURIComponent(classCode)+'&subject='+encodeURIComponent(subject)+'&t='+Date.now()).then(r=>r.json());
 
-    if(!rClasses.success || !rClasses.data){
-      container.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">خطا در دریافت لیست دانش‌آموزان</div><div class="empty-desc">لطفاً دوباره تلاش کنید یا با مدیر تماس بگیرید</div></div>';
+    if(!rClasses.success || !rClasses.data || !rClasses.data[classCode]){
+      container.innerHTML = '<div class="empty-state"><div class="empty-title">دانش‌آموزی در این کلاس نیست</div></div>';
       return;
     }
 
-    const classData = rClasses.data[classCode];
-    if(!classData){
-      container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">کلاس انتخاب شده پیدا نشد</div><div class="empty-desc">کد کلاس: '+esc(classCode)+'</div></div>';
-      return;
-    }
-
-    const students = classData.students || [];
+    const students = rClasses.data[classCode].students || [];
     if(students.length === 0){
-      container.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">دانش‌آموزی در این کلاس نیست</div></div>';
+      container.innerHTML = '<div class="empty-state"><div class="empty-title">دانش‌آموزی در این کلاس نیست</div></div>';
       return;
     }
 
@@ -4147,50 +4141,98 @@ async function loadGradesForClass(){
     existingGrades.forEach(g => gradeMap[g.nationalId] = g);
 
     const months = [
-      {key:'m', label:'مهر'}, {key:'aban', label:'آبان'}, {key:'azar', label:'آذر'}, {key:'mid1', label:'میان‌ترم ۱'}, {key:'dey', label:'دی'},
-      {key:'bahman', label:'بهمن'}, {key:'esfand', label:'اسفند'}, {key:'farvardin', label:'فروردین'}, {key:'mid2', label:'میان‌ترم ۲'}, {key:'ordibehesht', label:'اردیبهشت'}, {key:'khordad', label:'خرداد'}
+      {key:'m', label:'مهر'}, {key:'aban', label:'آبان'}, {key:'azar', label:'آذر'},
+      {key:'mid1', label:'میان‌ترم ۱'}, {key:'dey', label:'دی'},
+      {key:'bahman', label:'بهمن'}, {key:'esfand', label:'اسفند'},
+      {key:'farvardin', label:'فروردین'}, {key:'mid2', label:'میان‌ترم ۲'},
+      {key:'ordibehesht', label:'اردیبهشت'}, {key:'khordad', label:'خرداد'}
     ];
 
-    let html = '<table class="grade-table"><thead><tr><th class="grade-name">نام دانش‌آموز</th>';
-    months.forEach(m => html += `<th>${m.label}</th>`);
+    // 🎯 راهنما
+    let html = `
+      <div style="background:linear-gradient(135deg,#e3f2fd,#bbdefb); border:1px solid #90caf9; border-radius:10px; padding:10px 12px; margin-bottom:12px;">
+        <div style="font-size:12px; font-weight:800; color:#0d47a1; margin-bottom:6px;">📖 راهنمای سریع</div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; font-size:10.5px; margin-bottom:6px;">
+          <span style="background:#fff; border:1px solid #64b5f6; padding:3px 9px; border-radius:8px; font-weight:700; color:#0d47a1;">🔢 نمره: ۰ تا ۲۰</span>
+          <span style="background:#fff8e1; border:1px solid #ffcc80; padding:3px 9px; border-radius:8px; font-weight:700; color:#e65100;">🟡 غیبت موجه: ۹۸</span>
+          <span style="background:#ffebee; border:1px solid #ef9a9a; padding:3px 9px; border-radius:8px; font-weight:700; color:#c62828;">🔴 غیبت غیرموجه: ۹۹</span>
+        </div>
+        <div style="font-size:10px; color:#0d47a1; opacity:.85; line-height:1.7;">
+          💡 بعد از ۲ رقم، خودکار به نفر بعدی می‌رود · تک‌رقمی: بعد از مکث کوتاه · Enter/↓ پایین · ↑ بالا
+        </div>
+      </div>
+
+      <div id="gradeProgressBar" style="background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-size:11.5px; font-weight:700; color:var(--header-2);">📊 پیشرفت ورود نمرات</span>
+          <span class="gp-text" style="font-size:11px; font-weight:800; color:var(--text);">—</span>
+        </div>
+        <div style="height:8px; background:#e3e9f2; border-radius:4px; overflow:hidden;">
+          <div class="gp-fill" style="height:100%; width:0%; background:linear-gradient(90deg,#ef6c00,#ff9800); transition:width .3s, background .3s;"></div>
+        </div>
+      </div>
+
+      <table class="grade-table"><thead><tr><th class="grade-name">نام دانش‌آموز</th>
+    `;
+
+    months.forEach(m => {
+      html += `<th>${m.label} <span class="col-count" data-key="${m.key}" style="font-size:9px; color:#97a2b5; display:block; font-weight:600;">۰/${toFa(students.length)}</span></th>`;
+    });
     html += '</tr></thead><tbody>';
 
-    students.sort((a,b)=>String(a.name).localeCompare(String(b.name),'fa')).forEach(s=>{
+    students.sort((a,b)=>String(a.name).localeCompare(String(b.name),'fa')).forEach(s => {
       const g = gradeMap[s.nationalId] || {};
       html += `<tr><td class="grade-name">${esc(s.name)}</td>`;
-      months.forEach(m=>{
+      months.forEach(m => {
         let val = (g[m.key] !== undefined && g[m.key] !== null) ? g[m.key] : '';
-        let inputClass = 'grade-input';
         let displayVal = val;
-        if(val === 'غیبت موجه') displayVal = 'م';
-        if(val === 'غیبت غیرموجه') { displayVal = 'غ'; inputClass += ' absent'; }
-        
-        html += `<td><input class="${inputClass}" data-nid="${escAttr(s.nationalId)}" data-key="${m.key}" value="${escAttr(displayVal)}" placeholder="-"></td>`;
+
+        // 🎯 تبدیل متن به عدد
+        if (val === 'غیبت موجه' || val === 'م') displayVal = '98';
+        else if (val === 'غیبت غیرموجه' || val === 'غ') displayVal = '99';
+
+        html += `<td><input class="grade-input"
+          data-nid="${escAttr(s.nationalId)}"
+          data-key="${m.key}"
+          value="${escAttr(displayVal)}"
+          placeholder="-"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          autocomplete="off"
+          onfocus="this.select()"
+          oninput="handleGradeInput(this)"
+          onkeydown="handleGradeKeydown(event, this)"></td>`;
       });
       html += '</tr>';
     });
     html += '</tbody></table>';
+
+    // 🎯 نوار چسبیده به پایین
+    html += `
+  <div id="stickySaveBar" style="position:fixed; bottom:10px; left:50%; transform:translateX(-50%); z-index:9000; max-width:680px; width:calc(100% - 24px); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; background:linear-gradient(135deg,#2e7d32,#43a047); color:#fff; box-shadow:0 6px 20px rgba(0,0,0,.3); transition:all .3s; border-radius:14px;">
+    <span class="ssb-status" style="font-size:11.5px; font-weight:700;">—</span>
+    <button class="ssb-btn" onclick="saveTeacherGrades()" style="padding:10px 18px; border:none; border-radius:10px; font-family:inherit; font-weight:800; font-size:12.5px; cursor:pointer; background:rgba(255,255,255,.2); color:#fff; white-space:nowrap;">✅ همه ذخیره شده</button>
+  </div>
+  <div style="height:90px;"></div>
+`;
+
     container.innerHTML = html;
 
-    container.querySelectorAll('.grade-input').forEach(inp=>{
-      inp.addEventListener('input', function(){
-        let v = this.value.trim();
-        if(v === 'م' || v === 'غ') {
-          this.classList.toggle('absent', v === 'غ');
-        } else {
-          this.classList.remove('absent');
-          this.value = this.value.replace(/[^0-9\.]/g, '');
-        }
-      });
+    // 🎯 رنگ‌بندی مقادیر لود‌شده + شروع
+    container.querySelectorAll('.grade-input').forEach(inp => {
+      applyGradeColor(inp);
     });
+
+    updateGradesProgress();
+    updateStickySaveStatus();
 
   } catch(e){
     console.error('خطا:', e);
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">خطای شبکه</div><div class="empty-desc">لطفاً اتصال اینترنت خود را بررسی کنید</div></div>';
+    container.innerHTML = '<div class="empty-state"><div class="empty-title">خطای شبکه</div></div>';
   }
 }
 
-async function saveTeacherGrades(){
+async function saveTeacherGrades(silent){
   const classCode = document.getElementById('gradeClassSelect').value;
   const subject = document.getElementById('gradeSubjectSelect').value;
   if(!subject){ showToast('⚠️ نام درس را وارد کنید'); return; }
@@ -4202,8 +4244,10 @@ async function saveTeacherGrades(){
     const nid = inp.dataset.nid;
     const key = inp.dataset.key;
     let val = inp.value.trim();
-    if(val === 'م') val = 'غیبت موجه';
-    else if(val === 'غ') val = 'غیبت غیرموجه';
+
+    // 🎯 تبدیل 98/99 و م/غ
+    if(val === '98' || val === 'م') val = 'غیبت موجه';
+    else if(val === '99' || val === 'غ') val = 'غیبت غیرموجه';
 
     if(!recordsMap[nid]) recordsMap[nid] = {};
     recordsMap[nid][key] = val;
@@ -4213,7 +4257,8 @@ async function saveTeacherGrades(){
     return { nationalId: nid, ...recordsMap[nid] };
   });
 
-  showToast('⏳ در حال ذخیره...');
+  if(!silent) showToast('⏳ در حال ذخیره...');
+
   try{
     const params = new URLSearchParams();
     params.append('action', 'saveGrades');
@@ -4225,12 +4270,195 @@ async function saveTeacherGrades(){
     const r = await fetch(API_URL, { method: 'POST', body: params });
     const result = await r.json();
     if(result.success){
-      showToast('✅ نمرات با موفقیت ذخیره شد');
+      _gradesDirty = false;
+      if (_gradesAutoSaveTimer) { clearTimeout(_gradesAutoSaveTimer); _gradesAutoSaveTimer = null; }
+      updateStickySaveStatus();
+      if(!silent) showToast('✅ نمرات با موفقیت ذخیره شد');
     } else {
-      showToast('❌ ' + (result.message || 'خطا در ذخیره'));
+      if(!silent) showToast('❌ ' + (result.message || 'خطا در ذخیره'));
     }
   }catch(e){
-    showToast('❌ خطای شبکه');
+    if(!silent) showToast('❌ خطای شبکه');
+  }
+}
+// ============================================================
+// 🎯 ورود سریع نمرات — توابع کمکی
+// ============================================================
+
+let _gradesDirty = false;
+let _gradesAutoSaveTimer = null;
+
+function isValidGrade(val) {
+  if (val === '' || val === '98' || val === '99') return true;
+  const n = parseInt(val);
+  return !isNaN(n) && n >= 0 && n <= 20;
+}
+
+function applyGradeColor(el) {
+  const val = el.value.trim();
+  el.style.background = '';
+  el.style.color = '';
+  el.style.borderColor = '';
+  el.style.fontWeight = '';
+
+  if (val === '98') {
+    el.style.background = '#fff8e1';
+    el.style.color = '#e65100';
+    el.style.fontWeight = '800';
+    el.style.borderColor = '#ffcc80';
+  } else if (val === '99') {
+    el.style.background = '#ffebee';
+    el.style.color = '#c62828';
+    el.style.fontWeight = '800';
+    el.style.borderColor = '#ef9a9a';
+  } else if (val !== '') {
+    const n = parseInt(val);
+    if (isNaN(n) || n > 20) {
+      el.style.background = '#ffebee';
+      el.style.color = '#c62828';
+      el.style.borderColor = '#ef9a9a';
+    }
+  }
+}
+
+function updateGradesProgress() {
+  const inputs = document.querySelectorAll('.grade-input');
+  if (inputs.length === 0) return;
+
+  let filled = 0;
+  const perKey = {};
+  const perKeyTotal = {};
+
+  inputs.forEach(inp => {
+    const key = inp.dataset.key;
+    if (!perKey[key]) { perKey[key] = 0; perKeyTotal[key] = 0; }
+    perKeyTotal[key]++;
+    if (inp.value.trim() !== '') {
+      filled++;
+      perKey[key]++;
+    }
+  });
+
+  const pct = inputs.length > 0 ? Math.round(filled / inputs.length * 100) : 0;
+  const bar = document.getElementById('gradeProgressBar');
+  if (bar) {
+    bar.querySelector('.gp-fill').style.width = pct + '%';
+    bar.querySelector('.gp-text').textContent = toFa(filled) + ' از ' + toFa(inputs.length) + ' (' + toFa(pct) + '٪)';
+    const fill = bar.querySelector('.gp-fill');
+    if (pct === 100) fill.style.background = 'linear-gradient(90deg,#2e7d32,#43a047)';
+    else if (pct >= 50) fill.style.background = 'linear-gradient(90deg,#1976d2,#42a5f5)';
+    else fill.style.background = 'linear-gradient(90deg,#ef6c00,#ff9800)';
+  }
+
+  Object.keys(perKey).forEach(key => {
+    const el = document.querySelector('.col-count[data-key="' + key + '"]');
+    if (el) {
+      const done = perKey[key] === perKeyTotal[key];
+      el.textContent = (done ? '✓ ' : '') + toFa(perKey[key]) + '/' + toFa(perKeyTotal[key]);
+      el.style.color = done ? '#2e7d32' : '#ef6c00';
+      el.style.fontWeight = '800';
+    }
+  });
+}
+
+function updateStickySaveStatus() {
+  const bar = document.getElementById('stickySaveBar');
+  if (!bar) return;
+  const statusEl = bar.querySelector('.ssb-status');
+  const btn = bar.querySelector('.ssb-btn');
+
+  if (_gradesDirty) {
+    bar.style.background = 'linear-gradient(135deg,#ef6c00,#f57c00)';
+    btn.textContent = '💾 ذخیره نمرات';
+    btn.style.background = '#fff';
+    btn.style.color = '#e65100';
+    if (statusEl) statusEl.textContent = '⚠️ تغییرات ذخیره نشده';
+  } else {
+    bar.style.background = 'linear-gradient(135deg,#2e7d32,#43a047)';
+    btn.textContent = '✅ همه ذخیره شده';
+    btn.style.background = 'rgba(255,255,255,.2)';
+    btn.style.color = '#fff';
+    if (statusEl) statusEl.textContent = '💡 آماده‌ی ثبت';
+  }
+}
+
+function markGradesDirty() {
+  _gradesDirty = true;
+  updateStickySaveStatus();
+  if (_gradesAutoSaveTimer) clearTimeout(_gradesAutoSaveTimer);
+  _gradesAutoSaveTimer = setTimeout(() => {
+    if (_gradesDirty && (!document.activeElement || !document.activeElement.classList.contains('grade-input'))) {
+      saveTeacherGrades(true);
+    }
+  }, 20000);
+}
+
+function handleGradeInput(el) {
+  let val = el.value.replace(/[^0-9]/g, '');
+  if (val.length > 2) val = val.slice(0, 2);
+  if (el.value !== val) el.value = val;
+
+  applyGradeColor(el);
+  markGradesDirty();
+  updateGradesProgress();
+
+  clearTimeout(el._advanceTimer);
+
+  if (val.length === 2) {
+    if (isValidGrade(val)) {
+      el._advanceTimer = setTimeout(() => {
+        if (el.value === val) moveGradeToNextRow(el);
+      }, 100);
+    }
+  } else if (val.length === 1) {
+    el._advanceTimer = setTimeout(() => {
+      if (el.value === val && el.value.length === 1) moveGradeToNextRow(el);
+    }, 700);
+  }
+}
+
+function moveGradeToNextRow(el) {
+  clearTimeout(el._advanceTimer);
+  const row = el.closest('tr');
+  if (!row) return;
+  const next = row.nextElementSibling;
+  if (!next) return;
+  const input = next.querySelector('input.grade-input[data-key="' + el.dataset.key + '"]');
+  if (input) {
+    input.focus();
+    input.select();
+    input.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+}
+
+function moveGradeToPrevRow(el) {
+  clearTimeout(el._advanceTimer);
+  const row = el.closest('tr');
+  if (!row) return;
+  const prev = row.previousElementSibling;
+  if (!prev) return;
+  const input = prev.querySelector('input.grade-input[data-key="' + el.dataset.key + '"]');
+  if (input) {
+    input.focus();
+    input.select();
+    input.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+}
+
+function handleGradeKeydown(e, el) {
+  if (e.key === 'Enter' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    moveGradeToNextRow(el);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    moveGradeToPrevRow(el);
+  } else if (e.key === 'Tab') {
+    e.preventDefault();
+    if (e.shiftKey) moveGradeToPrevRow(el);
+    else moveGradeToNextRow(el);
+  } else if (e.key === 'Backspace' && el.value === '') {
+    e.preventDefault();
+    moveGradeToPrevRow(el);
   }
 }
 
