@@ -4244,19 +4244,39 @@ async function loadSubjectsForClass(classCode) {
   try {
     const r = await fetch(API_URL + '?action=getTeacherSubjects&teacherName=' + encodeURIComponent(currentUser.name) + '&classCode=' + encodeURIComponent(classCode) + '&t=' + Date.now());
     const res = await r.json();
+    
+    let subjects = [];
+    if (res.success && res.data) {
+      subjects = res.data;
+    }
+    
+    // 🎯 ترمیم: اضافه کردن درس‌ها از نقشه هاردکد شده در فرانت‌اند
+    // این کار باعث می‌شود اگر درسی در شیت نبود، از روی برنامه هفتگی پیدا شود
+    if (window._subjectTeacherMap && window._subjectTeacherMap[classCode]) {
+      const teacherMap = window._subjectTeacherMap[classCode];
+      for (const sub in teacherMap) {
+        const mappedTeacher = teacherMap[sub];
+        // بررسی اینکه آیا این دبیر در برنامه هفتگی این درس را دارد یا نه
+        if (currentUser.name.includes(mappedTeacher) || mappedTeacher.includes(currentUser.name)) {
+          if (!subjects.includes(sub)) {
+            subjects.push(sub);
+          }
+        }
+      }
+    }
+
     sel.innerHTML = '';
     
-    if (res.success && res.data && res.data.length > 0) {
-      res.data.forEach(sub => {
+    if (subjects.length > 0) {
+      subjects.forEach(sub => {
         sel.innerHTML += `<option value="${escAttr(sub)}">${esc(sub)}</option>`;
       });
       
-      // اگه از پروفایل اومده، یادداشت بذار
       if (res.isFromProfile) {
         const note = document.createElement('div');
         note.id = 'subjectNote';
         note.style.cssText = 'font-size:10.5px; color:#ef6c00; margin-top:4px; line-height:1.5;';
-        note.innerHTML = '💡 این درس‌ها از پروفایل شما خوانده شده. بعد از اولین ذخیره نمره برای این کلاس، فقط درس‌هایی که اینجا استفاده می‌کنید نمایش داده می‌شه.';
+        note.innerHTML = '💡 لیست دروس شما از پروفایل و برنامه هفتگی استخراج شده است.';
         sel.parentElement.appendChild(note);
       }
     } else {
@@ -4264,6 +4284,7 @@ async function loadSubjectsForClass(classCode) {
     }
     loadGradesForClass();
   } catch(e) {
+    console.error(e);
     sel.innerHTML = '<option value="">خطا در دریافت درس</option>';
   }
 }
