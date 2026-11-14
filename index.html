@@ -1497,7 +1497,7 @@ function toggleClassStudents(gradeCode,header){
     body.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12.5px">دانش‌آموزی ثبت نشده</div>';
     body.style.maxHeight='100px';chev.style.transform='rotate(180deg)';return;
   }
-  const sorted=[...cls.students].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'fa'));
+  const sorted = sortStudentsByLastName(cls.students);
   let h='<div style="padding:10px">';
   sorted.forEach((s,idx)=>{
     h+='<div class="student-row"><div class="s-avatar">'+esc(String(s.name||'؟').charAt(0))+'</div><div class="s-info"><div class="s-name">'+esc(s.name||'')+'</div>'+(s.phone?'<div style="font-size:10.5px;color:var(--text-muted);margin-top:2px;direction:ltr;text-align:right">📱 '+esc(s.phone)+'</div>':'')+'</div><span style="font-size:11px;color:var(--text-muted);font-weight:700">#'+toFa(idx+1)+'</span></div>';
@@ -1733,7 +1733,7 @@ async function loadAttendanceList(){
     const r=await fetch(url);
     const result=await r.json();
     if(!result.success||!result.data){el.innerHTML='<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">خطا</div></div>';return}
-    attendanceData=result.data.map(s=>({...s,status:s.status||''}));
+    attendanceData=sortStudentsByLastName(result.data.map(s=>({...s,status:s.status||''})));
     const present=attendanceData.filter(s=>s.status==='حاضر').length;
     const absent=attendanceData.filter(s=>s.status==='غایب').length;
     const late=attendanceData.filter(s=>s.status==='تاخیر').length;
@@ -3392,29 +3392,44 @@ function pickMedia(type){
   input.click();
 }
 
-function compressImage(file,maxWidth,quality){
-  return new Promise(resolve=>{
-    if(!file.type.startsWith('image/')){resolve(file);return}
-    if(file.type==='image/gif'){resolve(file);return}
-    const reader=new FileReader();
-    reader.onload=(e)=>{
-      const img=new Image();
-      img.onload=()=>{
-        const canvas=document.createElement('canvas');
-        let {width,height}=img;
-        if(width>maxWidth){height=Math.round(height*maxWidth/width);width=maxWidth}
-        canvas.width=width;canvas.height=height;
-        canvas.getContext('2d').drawImage(img,0,0,width,height);
-        canvas.toBlob(blob=>{
-          if(!blob){resolve(file);return}
-          if(blob.size>=file.size){resolve(file);return}
-          const newName=file.name.replace(/\.[^.]+$/,'.jpg');
-          resolve(new File([blob],newName,{type:'image/jpeg'}));
-        },'image/jpeg',quality);
+function compressImage(file, maxWidth, quality) {
+  return new Promise(resolve => {
+    if (!file.type.startsWith('image/')) { resolve(file); return; }
+    if (file.type === 'image/gif') { resolve(file); return; }
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        
+        // 🎯 محدود کردن به maxWidth
+        if (width > maxWidth) {
+          height = Math.round(height * maxWidth / width);
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // 🎯 برای عکس‌های پرتره، بالای سر بهتر نمایش داده می‌شه
+        canvas.toBlob(blob => {
+          if (!blob) { resolve(file); return; }
+          if (blob.size >= file.size) { resolve(file); return; }
+          
+          const newName = file.name.replace(/\.[^.]+$/, '.jpg');
+          resolve(new File([blob], newName, { type: 'image/jpeg' }));
+        }, 'image/jpeg', quality);
       };
-      img.onerror=()=>resolve(file);img.src=e.target.result;
+      img.onerror = () => resolve(file);
+      img.src = e.target.result;
     };
-    reader.onerror=()=>resolve(file);reader.readAsDataURL(file);
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
   });
 }
 
@@ -3871,6 +3886,151 @@ function fallbackCopy(text) {
   }
   document.body.removeChild(ta);
 }
+// ============================================================
+// 🔤 سیستم استخراج فامیل از نام کامل (۱۰۰٪ دقیق)
+// ============================================================
+
+// نرمال‌سازی نام برای مقایسه
+function _normalizeNameKey(name) {
+  return String(name || '')
+    .trim()
+    .replace(/ي/g, 'ی')
+    .replace(/ك/g, 'ک')
+    .replace(/\u200c/g, ' ')
+    .replace(/\s+/g, ' ');
+}
+
+// دیکشنری دقیق — کلید: نام کامل، مقدار: فامیل
+const LAST_NAME_MAP = {
+  'امیرعلی آرامی': 'آرامی',
+  'یحیی آقامحمدی': 'آقامحمدی',
+  'امیر علی ابراهیمی': 'ابراهیمی',
+  'محمدسجاد احمدی': 'احمدی',
+  'حسین اردستانی': 'اردستانی',
+  'محمدمهدی اردستانی رستمی': 'اردستانی رستمی',
+  'عارف اردستانی رستمی': 'اردستانی رستمی',
+  'مهدی یار اردستانیان': 'اردستانیان',
+  'حمید رضا اکبری': 'اکبری',
+  'امیرعلی النچری': 'النچری',
+  'امیرمحمد النچری': 'النچری',
+  'عبدالقهار امانی': 'امانی',
+  'سهیل امیری': 'امیری',
+  'محمدرضا بخشی': 'بخشی',
+  'امیرسام براهوئی': 'براهوئی',
+  'امیرعلی بربری': 'بربری',
+  'محمدطاها بربری': 'بربری',
+  'امیرطاها بربری': 'بربری',
+  'امیرحسین برزن': 'برزن',
+  'محمدمهدی بویه زاد': 'بویه زاد',
+  'محمدمهدی تاجیک': 'تاجیک',
+  'سجاد جعفری': 'جعفری',
+  'امیرمحمد جعفری': 'جعفری',
+  'امیرحافظ جعفری': 'جعفری',
+  'محمدیاسین جعفری': 'جعفری',
+  'مصطفی جعفری': 'جعفری',
+  'علیرضا جمالی': 'جمالی',
+  'حسین جوشقانی': 'جوشقانی',
+  'امیرحسین جونوشی فراهانی': 'جونوشی فراهانی',
+  'محمد حسنی': 'حسنی',
+  'پرهام حسنی جوادها': 'حسنی جوادها',
+  'یدالله حسینی': 'حسینی',
+  'امیرحسین حیدری': 'حیدری',
+  'علیرضا خدادادی': 'خدادادی',
+  'محمدرضا خراسانی': 'خراسانی',
+  'محمدحسین خراسانی': 'خراسانی',
+  'امیرعلی خورشیدی': 'خورشیدی',
+  'ابوالفضل خوش آمدی': 'خوش آمدی',
+  'مهدی رحیمی': 'رحیمی',
+  'سجاد رحیمی': 'رحیمی',
+  'علیرضا رضایی': 'رضایی',
+  'مصطفی رضایی': 'رضایی',
+  'محمدمتین زندی': 'زندی',
+  'علی ژاله نیا': 'ژاله نیا',
+  'مبین سارانی': 'سارانی',
+  'امیرمحمد سردشتیان ترابی': 'سردشتیان ترابی',
+  'امیرعلی شاهسون': 'شاهسون',
+  'ایلیا شاهسون طغان': 'شاهسون طغان',
+  'ابوالفضل شاهسوند': 'شاهسوند',
+  'علیرضا شهرابی': 'شهرابی',
+  'امیرمحمد شهریاری': 'شهریاری',
+  'محمدمهدی ظفری': 'ظفری',
+  'محمدعرفان عرب بقرائی جعفری': 'عرب بقرائی جعفری',
+  'امیرعلی عرب بقرائی جعفری': 'عرب بقرائی جعفری',
+  'علی رضا عطائی': 'عطائی',
+  'محمدرضا عظیمی': 'عظیمی',
+  'متین علیشاه': 'علیشاه',
+  'امیرعباس فدائی': 'فدائی',
+  'ابوالفضل فرجی': 'فرجی',
+  'هادی قربانی': 'قربانی',
+  'مسعود قهرمانی ثابت': 'قهرمانی ثابت',
+  'سیدعلی اکبر کاشانی': 'کاشانی',
+  'محمدمهدی کتی': 'کتی',
+  'محمدصادق کچوئی': 'کچوئی',
+  'امیرمحمد کوتی': 'کوتی',
+  'ابوالفضل محبی زاده': 'محبی زاده',
+  'جاوید محمدی': 'محمدی',
+  'ابوالفضل محمدیان': 'محمدیان',
+  'محمدطاها مرادی': 'مرادی',
+  'محمدرضا مسعودی': 'مسعودی',
+  'احمد موسوی': 'موسوی',
+  'محمدحسین مهدوی جعفرآبادی': 'مهدوی جعفرآبادی',
+  'امین رضا مهکی': 'مهکی',
+  'علی نادی حصارقاضی': 'نادی حصارقاضی',
+  'امیرحسین ناصری': 'ناصری',
+  'محمدعرفان ناصری': 'ناصری',
+  'محمدرضا یاوری': 'یاوری'
+};
+
+// نسخه‌ی نرمال‌شده (یه بار ساخته می‌شه، بعد cache می‌شه)
+let _LAST_NAME_MAP_NORMALIZED = null;
+function _getLastNameMapNormalized() {
+  if (_LAST_NAME_MAP_NORMALIZED) return _LAST_NAME_MAP_NORMALIZED;
+  const norm = {};
+  for (const key in LAST_NAME_MAP) {
+    norm[_normalizeNameKey(key)] = LAST_NAME_MAP[key];
+  }
+  _LAST_NAME_MAP_NORMALIZED = norm;
+  return norm;
+}
+
+// تابع اصلی: استخراج فامیل
+function getLastName(fullName) {
+  const name = _normalizeNameKey(fullName);
+  if (!name) return '';
+  
+  // ۱. جستجوی دقیق
+  const map = _getLastNameMapNormalized();
+  if (map[name]) return map[name];
+  
+  // ۲. جستجوی نسبی (برای اسم‌های با فاصله‌ی اضافی)
+  for (const key in map) {
+    if (key === name || key.replace(/\s+/g, '') === name.replace(/\s+/g, '')) {
+      return map[key];
+    }
+  }
+  
+  // ۳. fallback: آخرین کلمه
+  const parts = name.split(' ');
+  return parts.length > 0 ? parts[parts.length - 1] : '';
+}
+
+// تابع مرتب‌سازی دانش‌آموزان بر اساس فامیل
+function sortStudentsByLastName(students) {
+  return [...students].sort((a, b) => {
+    const nameA = a.name || a['نام'] || '';
+    const nameB = b.name || b['نام'] || '';
+    // 🎯 همیشه از دیکشنری (getLastName) استفاده کن — نه از lastName API
+    const lastA = getLastName(nameA);
+    const lastB = getLastName(nameB);
+    const cmp = String(lastA).localeCompare(String(lastB), 'fa');
+    if (cmp !== 0) return cmp;
+    return String(nameA).localeCompare(String(nameB), 'fa');
+  });
+}
+
+// ============================================================
+// پایان بخش Sort
+// ============================================================
 
 // ============================================================
 // 🗺️ انتخاب اپ نقشه برای مسیریابی
@@ -4120,7 +4280,7 @@ async function loadGradesForClass(){
   container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
   _gradesDirty = false;
   if (_gradesAutoSaveTimer) { clearTimeout(_gradesAutoSaveTimer); _gradesAutoSaveTimer = null; }
-
+_gradesSaveState = 'idle';
   try{
     const rClasses = await fetch(API_URL+'?action=getAllClasses&t='+Date.now()).then(r=>r.json());
     const rGrades = await fetch(API_URL+'?action=getGrades&classCode='+encodeURIComponent(classCode)+'&subject='+encodeURIComponent(subject)+'&t='+Date.now()).then(r=>r.json());
@@ -4180,7 +4340,7 @@ async function loadGradesForClass(){
     });
     html += '</tr></thead><tbody>';
 
-    students.sort((a,b)=>String(a.name).localeCompare(String(b.name),'fa')).forEach(s => {
+      sortStudentsByLastName(students).forEach(s => {
       const g = gradeMap[s.nationalId] || {};
       html += `<tr><td class="grade-name">${esc(s.name)}</td>`;
       months.forEach(m => {
@@ -4209,11 +4369,9 @@ async function loadGradesForClass(){
 
     // 🎯 نوار چسبیده به پایین
     html += `
-  <div id="stickySaveBar" style="position:fixed; bottom:10px; left:50%; transform:translateX(-50%); z-index:9000; max-width:680px; width:calc(100% - 24px); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; background:linear-gradient(135deg,#2e7d32,#43a047); color:#fff; box-shadow:0 6px 20px rgba(0,0,0,.3); transition:all .3s; border-radius:14px;">
-    <span class="ssb-status" style="font-size:11.5px; font-weight:700;">—</span>
-    <button class="ssb-btn" onclick="saveTeacherGrades()" style="padding:10px 18px; border:none; border-radius:10px; font-family:inherit; font-weight:800; font-size:12.5px; cursor:pointer; background:rgba(255,255,255,.2); color:#fff; white-space:nowrap;">✅ همه ذخیره شده</button>
+  <div id="stickySaveBar" onclick="saveTeacherGrades()" style="position:fixed; bottom:20px; right:20px; z-index:9000; display:inline-flex; align-items:center; gap:8px; padding:12px 20px; border-radius:50px; background:linear-gradient(135deg,#ef6c00,#f57c00); color:#fff; box-shadow:0 6px 20px rgba(239,108,0,.4); cursor:pointer; transition:all .3s; font-weight:800; font-size:13px; user-select:none;">
+    <span class="ssb-btn" style="white-space:nowrap;">💾 ذخیره نمرات</span>
   </div>
-  <div style="height:90px;"></div>
 `;
 
     container.innerHTML = html;
@@ -4224,42 +4382,46 @@ async function loadGradesForClass(){
     });
 
     updateGradesProgress();
-    updateStickySaveStatus();
-
+_gradesSaveState = 'idle';
+renderSaveButton();
   } catch(e){
     console.error('خطا:', e);
     container.innerHTML = '<div class="empty-state"><div class="empty-title">خطای شبکه</div></div>';
   }
 }
 
-async function saveTeacherGrades(silent){
+async function saveTeacherGrades(silent) {
+  // جلوگیری از کلیک دوباره در حین ذخیره
+  if (_gradesSaveState === 'saving') return;
+
   const classCode = document.getElementById('gradeClassSelect').value;
   const subject = document.getElementById('gradeSubjectSelect').value;
-  if(!subject){ showToast('⚠️ نام درس را وارد کنید'); return; }
+  if (!subject) { showToast('⚠️ نام درس را وارد کنید'); return; }
 
   const inputs = document.querySelectorAll('.grade-input');
   const recordsMap = {};
 
-  inputs.forEach(inp=>{
+  inputs.forEach(inp => {
     const nid = inp.dataset.nid;
     const key = inp.dataset.key;
     let val = inp.value.trim();
-
-    // 🎯 تبدیل 98/99 و م/غ
-    if(val === '98' || val === 'م') val = 'غیبت موجه';
-    else if(val === '99' || val === 'غ') val = 'غیبت غیرموجه';
-
-    if(!recordsMap[nid]) recordsMap[nid] = {};
+    if (val === '98' || val === 'م') val = 'غیبت موجه';
+    else if (val === '99' || val === 'غ') val = 'غیبت غیرموجه';
+    if (!recordsMap[nid]) recordsMap[nid] = {};
     recordsMap[nid][key] = val;
   });
 
-  const records = Object.keys(recordsMap).map(nid => {
-    return { nationalId: nid, ...recordsMap[nid] };
-  });
+  const records = Object.keys(recordsMap).map(nid => ({ nationalId: nid, ...recordsMap[nid] }));
 
-  if(!silent) showToast('⏳ در حال ذخیره...');
+  // 🎯 reset dirty قبل از شروع ذخیره (تا اگر در حین ذخیره کاربر تایپ کرد، به عنوان dirty جدید بمونه)
+  _gradesDirty = false;
+  if (_gradesAutoSaveTimer) { clearTimeout(_gradesAutoSaveTimer); _gradesAutoSaveTimer = null; }
 
-  try{
+  // 🔵 حالت در حال ذخیره
+  _gradesSaveState = 'saving';
+  renderSaveButton();
+
+  try {
     const params = new URLSearchParams();
     params.append('action', 'saveGrades');
     params.append('classCode', classCode);
@@ -4269,16 +4431,30 @@ async function saveTeacherGrades(silent){
 
     const r = await fetch(API_URL, { method: 'POST', body: params });
     const result = await r.json();
-    if(result.success){
-      _gradesDirty = false;
-      if (_gradesAutoSaveTimer) { clearTimeout(_gradesAutoSaveTimer); _gradesAutoSaveTimer = null; }
-      updateStickySaveStatus();
-      if(!silent) showToast('✅ نمرات با موفقیت ذخیره شد');
+
+    if (result.success) {
+      // 🟢 حالت ذخیره شد
+      _gradesSaveState = 'saved';
+      renderSaveButton();
+      showToast('✅ نمرات با موفقیت ذخیره شد');
+
+      // بعد از ۲.۵ ثانیه برگرد به نارنجی (idle) — مگر اینکه کاربر دوباره تغییر داده باشه
+      setTimeout(() => {
+        if (_gradesSaveState === 'saved') {
+          _gradesSaveState = 'idle';
+          renderSaveButton();
+        }
+      }, 2500);
     } else {
-      if(!silent) showToast('❌ ' + (result.message || 'خطا در ذخیره'));
+      // ❌ خطا → برگرد به نارنجی
+      _gradesSaveState = 'idle';
+      renderSaveButton();
+      showToast('❌ ' + (result.message || 'خطا در ذخیره'));
     }
-  }catch(e){
-    if(!silent) showToast('❌ خطای شبکه');
+  } catch (e) {
+    _gradesSaveState = 'idle';
+    renderSaveButton();
+    showToast('❌ خطای شبکه');
   }
 }
 // ============================================================
@@ -4361,30 +4537,41 @@ function updateGradesProgress() {
   });
 }
 
-function updateStickySaveStatus() {
+let _gradesSaveState = 'idle'; // 'idle' | 'saving' | 'saved'
+
+function renderSaveButton() {
   const bar = document.getElementById('stickySaveBar');
   if (!bar) return;
-  const statusEl = bar.querySelector('.ssb-status');
   const btn = bar.querySelector('.ssb-btn');
+  if (!btn) return;
 
-  if (_gradesDirty) {
-    bar.style.background = 'linear-gradient(135deg,#ef6c00,#f57c00)';
-    btn.textContent = '💾 ذخیره نمرات';
-    btn.style.background = '#fff';
-    btn.style.color = '#e65100';
-    if (statusEl) statusEl.textContent = '⚠️ تغییرات ذخیره نشده';
-  } else {
+  if (_gradesSaveState === 'saving') {
+    // 🔵 آبی: در حال ذخیره
+    bar.style.background = 'linear-gradient(135deg,#1976d2,#42a5f5)';
+    bar.style.boxShadow = '0 6px 20px rgba(25,118,210,.5)';
+    bar.style.cursor = 'wait';
+    bar.style.pointerEvents = 'none';
+    btn.textContent = '⏳ در حال ذخیره...';
+  } else if (_gradesSaveState === 'saved') {
+    // 🟢 سبز: ذخیره شد
     bar.style.background = 'linear-gradient(135deg,#2e7d32,#43a047)';
-    btn.textContent = '✅ همه ذخیره شده';
-    btn.style.background = 'rgba(255,255,255,.2)';
-    btn.style.color = '#fff';
-    if (statusEl) statusEl.textContent = '💡 آماده‌ی ثبت';
+    bar.style.boxShadow = '0 6px 20px rgba(46,125,50,.5)';
+    bar.style.cursor = 'default';
+    bar.style.pointerEvents = 'none';
+    btn.textContent = '✅ ذخیره شد';
+  } else {
+    // 🟠 نارنجی: آماده‌ی ذخیره (حالت اولیه و بعد از ویرایش)
+    bar.style.background = 'linear-gradient(135deg,#ef6c00,#f57c00)';
+    bar.style.boxShadow = '0 6px 20px rgba(239,108,0,.4)';
+    bar.style.cursor = 'pointer';
+    bar.style.pointerEvents = 'auto';
+    btn.textContent = '💾 ذخیره نمرات';
   }
 }
 
 function markGradesDirty() {
   _gradesDirty = true;
-  updateStickySaveStatus();
+  renderSaveButton();   // ← جایگزین updateStickySaveStatus
   if (_gradesAutoSaveTimer) clearTimeout(_gradesAutoSaveTimer);
   _gradesAutoSaveTimer = setTimeout(() => {
     if (_gradesDirty && (!document.activeElement || !document.activeElement.classList.contains('grade-input'))) {
@@ -4398,7 +4585,14 @@ function handleGradeInput(el) {
   if (val.length > 2) val = val.slice(0, 2);
   if (el.value !== val) el.value = val;
 
+  // 🎯 اگر بعد از ذخیره‌ی موفق دوباره تایپ شد، برو به حالت نارنجی
+  if (_gradesSaveState === 'saved') {
+    _gradesSaveState = 'idle';
+    renderSaveButton();
+  }
+
   applyGradeColor(el);
+  _gradesDirty = true;
   markGradesDirty();
   updateGradesProgress();
 
@@ -4411,9 +4605,10 @@ function handleGradeInput(el) {
       }, 100);
     }
   } else if (val.length === 1) {
+    // ⏱ ۱.۵ ثانیه صبر برای رقم دوم
     el._advanceTimer = setTimeout(() => {
       if (el.value === val && el.value.length === 1) moveGradeToNextRow(el);
-    }, 700);
+    }, 1500);
   }
 }
 
@@ -4468,16 +4663,17 @@ function handleGradeKeydown(e, el) {
 
 async function loadManagerGradeTable() {
   const el = document.getElementById('managerGradeTable');
-  if(!el) return;
+  if (!el) return;
   
   const classCode = document.getElementById('mgrClassSelect').value;
   const monthIdx = parseInt(document.getElementById('mgrMonthSelect').value);
-  const isFullYear = (monthIdx === -1); // 🎯 چک کردن حالت کل سال
+  const isFullYear = (monthIdx === -1);
   
   const monthNames = ['مهر','آبان','آذر','میان‌ترم ۱','دی','بهمن','اسفند','فروردین','میان‌ترم ۲','اردیبهشت','خرداد'];
   const monthsKeys = ['m','aban','azar','mid1','dey','bahman','esfand','farvardin','mid2','ordibehesht','khordad'];
   const key = isFullYear ? null : monthsKeys[monthIdx];
   const mname = isFullYear ? 'کل سال' : monthNames[monthIdx];
+  const className = getGradeName(classCode);
   
   el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
   
@@ -4488,24 +4684,24 @@ async function loadManagerGradeTable() {
       fetch(API_URL + '?action=getConduct&classCode=' + encodeURIComponent(classCode) + '&t=' + Date.now()).then(r=>r.json())
     ]);
     
-    if(!rClasses.success || !rClasses.data || !rClasses.data[classCode]) {
-      el.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">دانش‌آموزی در این کلاس نیست</div></div>';
+    if (!rClasses.success || !rClasses.data || !rClasses.data[classCode]) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-title">دانش‌آموزی در این کلاس نیست</div></div>';
       return;
     }
     
     const students = rClasses.data[classCode].students || [];
-    if(students.length === 0) {
-      el.innerHTML = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">دانش‌آموزی در این کلاس نیست</div></div>';
+    if (students.length === 0) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-title">دانش‌آموزی در این کلاس نیست</div></div>';
       return;
     }
     
     const allGrades = (rGrades.success && rGrades.data) ? rGrades.data : [];
     
-    // استفاده از لیست درس‌های دقیق خود کلاس
-   const expectedSubjects = {};
+    // درس‌ها بر اساس لیست خود کلاس
+    const expectedSubjects = {};
     const subjList = window._gradeSubjectsMap[classCode] || [];
     const teacherMap = window._subjectTeacherMap[classCode] || {};
-    subjList.forEach(s => { 
+    subjList.forEach(s => {
       const teacherName = teacherMap[s];
       expectedSubjects[s] = [teacherName ? 'آقای ' + teacherName : 'دبیر مربوطه'];
     });
@@ -4517,76 +4713,145 @@ async function loadManagerGradeTable() {
     
     let html = '';
     
-    // 🎯 برای کل سال، هشدار دروس ناقص رو نشون نمی‌دیم تا شلوغ نشه
+    // ─── بنر خلاصه (فقط اگه ماه خاصی انتخاب شده) ───
     if (!isFullYear) {
-      const missingSubjects = {};
+      let doneCount = 0, partialCount = 0, emptyCount = 0;
+      const lessonStats = [];
+      
       Object.keys(expectedSubjects).forEach(sub => {
-        let missing = 0;
         const isConduct = (sub.trim() === 'انضباط' || sub.trim() === 'انظباط');
+        let missingStudents = [];
+        let registered = 0;
         
         if (isConduct) {
           students.forEach(st => {
             const sc = conductMap[st.nationalId];
-            if(!sc || sc[key] === undefined || sc[key] === null || sc[key] === '') missing++;
+            if (!sc || sc[key] === undefined || sc[key] === null || sc[key] === '') {
+              missingStudents.push(st.name);
+            } else registered++;
           });
         } else {
           const subGrades = allGrades.filter(g => g.subject === sub);
           students.forEach(st => {
             const sg = subGrades.find(g => g.nationalId === st.nationalId);
-            if(!sg || sg[key] === undefined || sg[key] === null || sg[key] === '') missing++;
+            if (!sg || sg[key] === undefined || sg[key] === null || sg[key] === '') {
+              missingStudents.push(st.name);
+            } else registered++;
           });
         }
         
-        if(missing > 0) {
-          let teachers = expectedSubjects[sub].length > 0 ? expectedSubjects[sub] : ['نامشخص'];
-          if (isConduct) teachers = ['معاونت/مدیریت'];
-          missingSubjects[sub] = { count: missing, teachers: teachers };
-        }
+        let status, teacher;
+        if (isConduct) teacher = 'معاونت/مدیریت';
+        else teacher = expectedSubjects[sub].length > 0 ? expectedSubjects[sub][0] : 'نامشخص';
+        
+        if (missingStudents.length === 0) { status = 'done'; doneCount++; }
+        else if (registered === 0) { status = 'empty'; emptyCount++; }
+        else { status = 'partial'; partialCount++; }
+        
+        lessonStats.push({ subject: sub, teacher: teacher, total: students.length, registered: registered, missing: missingStudents.length, missingStudents: missingStudents, status: status, isConduct: isConduct });
       });
       
-      const missingArr = Object.keys(missingSubjects);
-      if(missingArr.length > 0) {
-        html += '<div style="background:#fff3e0;border-right:4px solid #ef6c00;border-radius:10px;padding:14px;margin-bottom:14px;">';
-        html += '<div style="font-size:13px;font-weight:800;color:#e65100;margin-bottom:10px;">⚠️ هشدار: ' + toFa(missingArr.length) + ' درس در ماه ' + mname + ' ناقص است</div>';
-        missingArr.forEach(sub => {
-          const info = missingSubjects[sub];
-          const teacherNames = info.teachers.join('، ');
-          html += '<div style="background:#fff;border:1px solid #ffcc80;border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;font-size:12px;">';
-          html += '<span style="font-weight:800;color:#1a2233;">📚 ' + esc(sub) + '</span>';
-          html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">';
-          html += '<span style="color:#c62828;font-weight:700;font-size:11px;">👨‍🏫 ' + esc(teacherNames) + '</span>';
-          html += '<span style="background:#ffebee;color:#c62828;padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:700;">' + toFa(info.count) + ' نفر ثبت نشده</span>';
-          html += '</div></div>';
-        });
+      html += '<div style="background:linear-gradient(135deg,#1a237e,#3949ab); color:#fff; border-radius:14px; padding:16px; margin-bottom:14px; box-shadow:0 4px 16px rgba(26,35,126,.25);">';
+      html += '<div style="font-size:14px; font-weight:800; margin-bottom:12px;">📊 وضعیت نمرات ماه «' + mname + '» — ' + className + '</div>';
+      html += '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; text-align:center;">';
+      html += '<div style="background:rgba(255,255,255,.15); border-radius:10px; padding:10px 6px;"><div style="font-size:24px; font-weight:900; color:#a5d6a7;">' + toFa(doneCount) + '</div><div style="font-size:10.5px; opacity:.9; margin-top:4px;">✅ کامل</div></div>';
+      html += '<div style="background:rgba(255,255,255,.15); border-radius:10px; padding:10px 6px;"><div style="font-size:24px; font-weight:900; color:#ffcc80;">' + toFa(partialCount) + '</div><div style="font-size:10.5px; opacity:.9; margin-top:4px;">⚠️ ناقص</div></div>';
+      html += '<div style="background:rgba(255,255,255,.15); border-radius:10px; padding:10px 6px;"><div style="font-size:24px; font-weight:900; color:#ef9a9a;">' + toFa(emptyCount) + '</div><div style="font-size:10.5px; opacity:.9; margin-top:4px;">🔴 خالی</div></div>';
+      html += '</div></div>';
+      
+      // ─── کارت‌های درس ───
+      html += '<div style="font-size:12.5px; font-weight:800; color:var(--header-2); margin-bottom:10px; padding:0 4px;">📚 لیست دروس</div>';
+      
+      lessonStats.forEach(ls => {
+        window._lessonStatsCache = window._lessonStatsCache || {};
+        window._lessonStatsCache[ls.subject] = ls;
+        
+        const cls = ls.status === 'done' ? 'done' : (ls.status === 'empty' ? 'empty' : 'partial');
+        const borderColor = ls.status === 'done' ? '#2e7d32' : (ls.status === 'empty' ? '#c62828' : '#ef6c00');
+        const pct = ls.total > 0 ? Math.round(ls.registered / ls.total * 100) : 0;
+        
+        html += '<div class="lesson-card" id="lesson-card-' + escAttr(ls.subject) + '" style="background:var(--card); border-radius:12px; padding:14px; margin-bottom:10px; border:1px solid var(--line); border-right:4px solid ' + borderColor + '; box-shadow:0 2px 10px var(--shadow);">';
+        html += '<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;">';
+        html += '<div style="flex:1; min-width:0;">';
+        html += '<div style="font-size:14px; font-weight:800; margin-bottom:4px;">';
+        if (ls.status === 'done') html += '✅ ';
+        else if (ls.status === 'empty') html += '🔴 ';
+        else html += '⚠️ ';
+        html += esc(ls.subject) + '</div>';
+        html += '<div style="font-size:11.5px; color:var(--text-muted);">👨‍🏫 ' + esc(ls.teacher) + '</div>';
         html += '</div>';
+        
+        let badge = '';
+        if (ls.status === 'done') badge = '<span style="background:#e8f5e9; color:#2e7d32; padding:4px 10px; border-radius:10px; font-size:10.5px; font-weight:800; white-space:nowrap;">✅ کامل</span>';
+        else if (ls.status === 'empty') badge = '<span style="background:#ffebee; color:#c62828; padding:4px 10px; border-radius:10px; font-size:10.5px; font-weight:800; white-space:nowrap;">🔴 خالی</span>';
+        else badge = '<span style="background:#fff3e0; color:#ef6c00; padding:4px 10px; border-radius:10px; font-size:10.5px; font-weight:800; white-space:nowrap;">⚠️ ' + toFa(ls.missing) + ' نفر</span>';
+        html += badge;
+        html += '</div>';
+        
+        // نوار پیشرفت
+        const fillColor = ls.status === 'done' ? 'linear-gradient(90deg,#2e7d32,#43a047)' : (ls.status === 'empty' ? 'linear-gradient(90deg,#c62828,#e53935)' : 'linear-gradient(90deg,#ef6c00,#ff9800)');
+        html += '<div style="background:var(--bg); border-radius:8px; height:8px; overflow:hidden; margin-bottom:8px;">';
+        html += '<div style="height:100%; width:' + pct + '%; background:' + fillColor + '; transition:width .3s;"></div>';
+        html += '</div>';
+        
+        // آمار
+        const statColor = ls.status === 'done' ? '#2e7d32' : (ls.status === 'empty' ? '#c62828' : '#ef6c00');
+        html += '<div style="font-size:11px; color:' + statColor + '; font-weight:700; margin-bottom:' + (ls.status !== 'done' ? '10px' : '0') + ';">';
+        html += toFa(ls.registered) + ' از ' + toFa(ls.total) + ' نفر ثبت شده';
+        html += '</div>';
+        
+        // دکمه‌های عملیات
+        if (ls.status !== 'done') {
+          html += '<div style="display:flex; gap:6px; flex-wrap:wrap;">';
+          html += '<button onclick="openLessonSmsModal(\'' + escAttr(ls.subject) + '\', \'' + escAttr(ls.teacher) + '\', \'' + escAttr(className) + '\', \'' + escAttr(mname) + '\', ' + ls.missing + ', \'' + escAttr(JSON.stringify(ls.missingStudents)) + '\')" style="padding:8px 14px; border-radius:9px; border:none; font-family:inherit; font-weight:700; font-size:11.5px; cursor:pointer; background:linear-gradient(135deg,#1976d2,#42a5f5); color:#fff; display:inline-flex; align-items:center; gap:5px;">📲 پیامک به دبیر</button>';
+          html += '<button onclick="showMissingStudents(\'' + escAttr(ls.subject) + '\', \'' + escAttr(JSON.stringify(ls.missingStudents)) + '\')" style="padding:8px 14px; border-radius:9px; border:1px solid var(--line); font-family:inherit; font-weight:700; font-size:11.5px; cursor:pointer; background:#e3f2fd; color:#0d47a1;">📋 جزئیات</button>';
+          html += '</div>';
+        }
+        
+        html += '</div>';
+      });
+      
+      // ─── دکمه‌ی گروهی ───
+      const pendingLessons = lessonStats.filter(ls => ls.status !== 'done' && !ls.isConduct);
+      if (pendingLessons.length > 0) {
+        const teacherGroups = {};
+        pendingLessons.forEach(ls => {
+          if (!teacherGroups[ls.teacher]) teacherGroups[ls.teacher] = { teacher: ls.teacher, subjects: [], totalMissing: 0, subjectDetails: [] };
+          teacherGroups[ls.teacher].subjects.push(ls.subject);
+          teacherGroups[ls.teacher].totalMissing += ls.missing;
+          teacherGroups[ls.teacher].subjectDetails.push({ subject: ls.subject, missing: ls.missing, missingStudents: ls.missingStudents });
+        });
+        const uniqueTeachers = Object.values(teacherGroups);
+        window._pendingTeacherGroups = uniqueTeachers;
+        window._pendingLessonStats = pendingLessons;
+        
+        html += '<button onclick="openBulkSmsModal(\'' + escAttr(className) + '\', \'' + escAttr(mname) + '\')" style="width:100%; padding:13px; background:linear-gradient(135deg,#ef6c00,#f57c00); color:#fff; border:none; border-radius:12px; font-family:inherit; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 12px rgba(239,108,0,.3); margin-top:14px;">📢 یادآوری گروهی به ' + toFa(uniqueTeachers.length) + ' دبیر</button>';
       } else {
-        html += '<div style="background:#e8f5e9;border-right:4px solid #2e7d32;border-radius:10px;padding:14px;margin-bottom:14px;font-size:13px;font-weight:700;color:#2e7d32;">✅ همه دروس در ماه ' + mname + ' به طور کامل ثبت شدن</div>';
+        html += '<div style="background:#e8f5e9; border-right:4px solid #2e7d32; border-radius:10px; padding:14px; margin-top:14px; font-size:13px; font-weight:700; color:#2e7d32; text-align:center;">✅ همه دروس ماه «' + mname + '» کامل ثبت شده‌اند</div>';
       }
+      
     } else {
-       // پیام خوش‌آمد برای کل سال
-       html += '<div style="background:#e3f2fd;border-right:4px solid #0d47a1;border-radius:10px;padding:14px;margin-bottom:14px;font-size:13px;font-weight:700;color:#0d47a1;">📄 گزارش کل سال انتخاب شده است. برای مشاهده نقص‌ها، یک ماه خاص را انتخاب کنید.</div>';
+      // کل سال
+      html += '<div style="background:#e3f2fd; border-right:4px solid #0d47a1; border-radius:10px; padding:14px; margin-bottom:14px; font-size:13px; font-weight:700; color:#0d47a1;">📄 گزارش کل سال انتخاب شده است. برای مشاهده وضعیت دروس، یک ماه خاص انتخاب کنید.</div>';
     }
     
-    // دکمه‌های عملیات
-    html += '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">';
-    html += '<label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;cursor:pointer;padding:8px 12px;background:var(--bg);border-radius:8px;">';
-    html += '<input type="checkbox" id="selectAllStudents" onchange="toggleAllStudents(this)" style="width:18px;height:18px;accent-color:var(--accent);">';
-    html += ' انتخاب همه</label>';
-    html += '<button class="submit-btn primary-blue" onclick="printSelectedStudents()" style="flex:1;padding:10px;font-size:12px;">📥 دانلود انتخاب شده‌ها</button>';
-    html += '<button class="submit-btn primary-orange" onclick="printAllStudents()" style="flex:1;padding:10px;font-size:12px;">📥 دانلود همه</button>';
+    // ─── لیست دانش‌آموزان (همیشه) ───
+    html += '<div style="display:flex; gap:8px; margin:14px 0 12px; flex-wrap:wrap;">';
+    html += '<label style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; cursor:pointer; padding:8px 12px; background:var(--bg); border-radius:8px;"><input type="checkbox" id="selectAllStudents" onchange="toggleAllStudents(this)" style="width:18px; height:18px; accent-color:var(--accent);"> انتخاب همه</label>';
+    html += '<button class="submit-btn primary-blue" onclick="printSelectedStudents()" style="flex:1; padding:10px; font-size:12px;">📥 دانلود انتخاب‌شده‌ها</button>';
+    html += '<button class="submit-btn primary-orange" onclick="printAllStudents()" style="flex:1; padding:10px; font-size:12px;">📥 دانلود همه</button>';
     html += '</div>';
     
-    // لیست دانش‌آموزان
     html += '<div>';
-    students.sort((a,b)=>String(a.name).localeCompare(String(b.name),'fa')).forEach(s => {
-      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:6px;">';
-      html += '<input type="checkbox" class="mgr-student-cb" data-nid="' + escAttr(s.nationalId) + '" onchange="updateSelectAllStatus()" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;">';
-      html += '<div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#1a237e,#3949ab);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;">' + esc(String(s.name).charAt(0)) + '</div>';
-      html += '<div style="flex:1;min-width:0;">';
-      html += '<div style="font-size:12.5px;font-weight:700;">' + esc(s.name) + '</div>';
-      html += '<div style="font-size:10.5px;color:var(--text-muted);direction:ltr;text-align:right;">' + esc(s.nationalId) + '</div>';
+      sortStudentsByLastName(students).forEach(s => {
+      html += '<div style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--card); border:1px solid var(--line); border-radius:10px; margin-bottom:6px;">';
+      html += '<input type="checkbox" class="mgr-student-cb" data-nid="' + escAttr(s.nationalId) + '" onchange="updateSelectAllStatus()" style="width:18px; height:18px; accent-color:var(--accent); cursor:pointer;">';
+      html += '<div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#1a237e,#3949ab); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0;">' + esc(String(s.name).charAt(0)) + '</div>';
+      html += '<div style="flex:1; min-width:0;">';
+      html += '<div style="font-size:12.5px; font-weight:700;">' + esc(s.name) + '</div>';
+      html += '<div style="font-size:10.5px; color:var(--text-muted); direction:ltr; text-align:right;">' + esc(s.nationalId) + '</div>';
       html += '</div>';
-      html += '<button onclick="previewStudentReport(\'' + escAttr(s.nationalId) + '\',' + monthIdx + ')" style="padding:6px 12px;border-radius:8px;font-family:inherit;font-weight:700;font-size:11px;background:#e3f2fd;color:#0d47a1;border:none;cursor:pointer;">📄 مشاهده</button>';
+      html += '<button onclick="previewStudentReport(\'' + escAttr(s.nationalId) + '\',' + monthIdx + ')" style="padding:6px 12px; border-radius:8px; font-family:inherit; font-weight:700; font-size:11px; background:#e3f2fd; color:#0d47a1; border:none; cursor:pointer;">📄 مشاهده</button>';
       html += '</div>';
     });
     html += '</div>';
@@ -4595,8 +4860,733 @@ async function loadManagerGradeTable() {
     
   } catch(e) {
     console.error(e);
-    el.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">خطا در دریافت اطلاعات</div></div>';
+    el.innerHTML = '<div class="empty-state"><div class="empty-title">خطا در دریافت اطلاعات</div></div>';
   }
+}
+// ============================================================
+// 📢 سیستم یادآوری نمرات (SMS + چت + کاوه‌نگار)
+// ============================================================
+
+let _currentLessonSmsContext = null;
+let _currentBulkSmsContext = null;
+let _smsDeliveryQueue = [];
+let _smsDeliveryDone = 0;
+
+function showMissingStudents(subject, missingStudentsJson) {
+  try {
+    const arr = JSON.parse(missingStudentsJson);
+    if (arr.length === 0) { showToast('✅ همه ثبت شده‌اند'); return; }
+    
+    let h = '<div style="font-size:14px; font-weight:800; color:var(--header-2); margin-bottom:10px;">👥 دانش‌آموزان بدون نمره — ' + esc(subject) + '</div>';
+    h += '<div style="max-height:60vh; overflow-y:auto;">';
+    arr.forEach((name, i) => {
+      h += '<div style="padding:9px 12px; background:var(--bg); border-radius:8px; margin-bottom:6px; font-size:12px; display:flex; align-items:center; gap:8px;">';
+      h += '<span style="background:#c62828; color:#fff; width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0;">' + toFa(i + 1) + '</span>';
+      h += '<span style="font-weight:700;">' + esc(name) + '</span>';
+      h += '</div>';
+    });
+    h += '</div>';
+    
+    const overlay = document.createElement('div');
+    overlay.id = 'missingStudentsOverlay';
+    overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:10002; display:flex; align-items:center; justify-content:center; padding:15px; backdrop-filter:blur(3px);';
+    overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
+    overlay.innerHTML = '<div style="background:var(--card); border-radius:16px; padding:18px; max-width:460px; width:100%; max-height:85vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.5);" onclick="event.stopPropagation()">' + h + '<button onclick="document.getElementById(\'missingStudentsOverlay\').remove()" style="margin-top:14px; padding:11px; background:var(--bg); border:1px solid var(--line); border-radius:10px; font-family:inherit; font-weight:700; font-size:12px; color:var(--text-soft); cursor:pointer;">بستن</button></div>';
+    document.body.appendChild(overlay);
+  } catch(e) { showToast('❌ خطا'); }
+}
+
+function openLessonSmsModal(subject, teacher, className, mname, missingCount, missingStudentsJson) {
+  let missingStudents = [];
+  try { missingStudents = JSON.parse(missingStudentsJson); } catch(e) {}
+  
+  _currentLessonSmsContext = { subject, teacher, className, mname, missingCount, missingStudents };
+  
+  document.getElementById('lessonSmsModal')?.remove();
+  
+  let studentsHtml = '';
+  if (missingStudents.length > 0) {
+    studentsHtml = '<div style="margin-bottom:12px;"><label style="display:block; font-size:11.5px; font-weight:700; color:var(--text-soft); margin-bottom:6px;">👥 دانش‌آموزان بدون نمره (' + toFa(missingStudents.length) + ' نفر):</label><div style="max-height:120px; overflow-y:auto; background:var(--bg); border-radius:8px; padding:8px;">';
+    missingStudents.forEach(s => {
+      studentsHtml += '<div style="padding:5px 8px; font-size:11.5px; border-bottom:1px dashed var(--line);">• ' + esc(s) + '</div>';
+    });
+    studentsHtml += '</div></div>';
+  }
+  
+  const defaultText = `🔔 یادآوری ثبت نمرات
+
+استاد گرامی ${teacher}،
+
+نمرات درس «${subject}» پایه «${className}» برای ماه «${mname}» هنوز تکمیل نشده است.
+تعداد ${missingCount} دانش‌آموز بدون نمره مانده‌اند.
+
+لطفاً در اسرع وقت نسبت به ثبت نمرات در سامانه اقدام فرمایید.
+
+با تشکر، مدیریت
+دبیرستان شهید پورصابری`;
+  
+  const overlay = document.createElement('div');
+  overlay.id = 'lessonSmsModal';
+  overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:10001; display:flex; align-items:center; justify-content:center; padding:15px; backdrop-filter:blur(4px);';
+  overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
+  
+  overlay.innerHTML = `
+    <div style="background:var(--card); border-radius:16px; width:100%; max-width:520px; max-height:92vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.5); overflow:hidden;" onclick="event.stopPropagation()">
+      <div style="padding:14px 16px; background:linear-gradient(135deg,#1976d2,#42a5f5); color:#fff; display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-size:14px; font-weight:800;">📲 پیامک به ${esc(teacher)}</div>
+        <button onclick="document.getElementById('lessonSmsModal').remove()" style="background:rgba(255,255,255,.2); border:none; color:#fff; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; font-family:inherit;">✕</button>
+      </div>
+      
+      <div style="flex:1; overflow-y:auto; padding:14px;">
+        ${studentsHtml}
+        
+        <label style="display:block; font-size:11.5px; font-weight:700; color:var(--text-soft); margin-bottom:6px;">📝 متن پیام (قابل ویرایش):</label>
+        <textarea id="lessonSmsText" style="width:100%; padding:11px; border:1px solid var(--line); border-radius:10px; font-family:inherit; font-size:12.5px; background:var(--bg); color:var(--text); min-height:180px; resize:vertical; line-height:1.8;">${esc(defaultText)}</textarea>
+        
+        <button onclick="resetLessonSmsText()" style="margin-top:6px; padding:6px 12px; background:var(--bg); border:1px solid var(--line); border-radius:8px; font-family:inherit; font-size:10.5px; font-weight:700; color:var(--text-soft); cursor:pointer;">↺ بازگشت به متن پیش‌فرض</button>
+        
+        <div style="margin-top:14px;">
+          <label style="display:block; font-size:11.5px; font-weight:700; color:var(--text-soft); margin-bottom:6px;">📤 روش ارسال:</label>
+          <div style="display:flex; gap:8px;">
+            <button class="lesson-method-btn active" id="lessonMethodSms" onclick="setLessonMethod('sms')" style="flex:1; padding:12px 8px; border:2px solid #1976d2; border-radius:10px; background:#e3f2fd; cursor:pointer; text-align:center; font-family:inherit; transition:.15s;">
+              <div style="font-size:22px;">📱</div>
+              <div style="font-size:11px; font-weight:800; color:#0d47a1; margin-top:2px;">SMS</div>
+              <div style="font-size:9.5px; color:#6b7890;">دستی</div>
+            </button>
+            <button class="lesson-method-btn" id="lessonMethodChat" onclick="setLessonMethod('chat')" style="flex:1; padding:12px 8px; border:2px solid var(--line); border-radius:10px; background:var(--bg); cursor:pointer; text-align:center; font-family:inherit; transition:.15s;">
+              <div style="font-size:22px;">💬</div>
+              <div style="font-size:11px; font-weight:800; color:var(--text); margin-top:2px;">چت</div>
+              <div style="font-size:9.5px; color:#6b7890;">خودکار</div>
+            </button>
+          </div>
+        </div>
+        
+        <div id="lessonKvnBox" style="margin-top:10px; display:none;">
+          <label style="display:flex; align-items:center; gap:8px; padding:10px 12px; background:#f3e5f5; border:1px solid #ce93d8; border-radius:10px; cursor:pointer; font-size:11.5px; font-weight:700; color:#6a1b9a;">
+            <input type="checkbox" id="lessonUseKavenegar" style="width:16px; height:16px; accent-color:#7b1fa2;">
+            📡 ارسال خودکار با کاوه‌نگار (اگه API فعال باشه)
+          </label>
+        </div>
+      </div>
+      
+      <div style="padding:12px 14px; background:var(--bg); border-top:1px solid var(--line); display:flex; gap:8px;">
+        <button onclick="document.getElementById('lessonSmsModal').remove()" style="flex:1; padding:11px; border:1px solid var(--line); border-radius:10px; background:var(--card); color:var(--text-soft); font-family:inherit; font-weight:700; font-size:12px; cursor:pointer;">انصراف</button>
+        <button onclick="sendLessonSms()" style="flex:2; padding:11px; border:none; border-radius:10px; background:linear-gradient(135deg,#2e7d32,#43a047); color:#fff; font-family:inherit; font-weight:800; font-size:12.5px; cursor:pointer; box-shadow:0 3px 8px rgba(46,125,50,.3);">📤 ارسال</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(overlay);
+  
+  // ذخیره‌ی متن
+  const savedText = localStorage.getItem('lesson_sms_text_' + subject);
+  if (savedText) document.getElementById('lessonSmsText').value = savedText;
+}
+
+let _currentLessonMethod = 'sms';
+
+function setLessonMethod(method) {
+  _currentLessonMethod = method;
+  const smsBtn = document.getElementById('lessonMethodSms');
+  const chatBtn = document.getElementById('lessonMethodChat');
+  const kvnBox = document.getElementById('lessonKvnBox');
+  
+  if (method === 'sms') {
+    smsBtn.style.borderColor = '#1976d2'; smsBtn.style.background = '#e3f2fd';
+    chatBtn.style.borderColor = 'var(--line)'; chatBtn.style.background = 'var(--bg)';
+    if (kvnBox) kvnBox.style.display = 'block';
+  } else {
+    chatBtn.style.borderColor = '#1976d2'; chatBtn.style.background = '#e3f2fd';
+    smsBtn.style.borderColor = 'var(--line)'; smsBtn.style.background = 'var(--bg)';
+    if (kvnBox) kvnBox.style.display = 'none';
+  }
+}
+
+function resetLessonSmsText() {
+  const ctx = _currentLessonSmsContext;
+  if (!ctx) return;
+  const defaultText = `🔔 یادآوری ثبت نمرات
+
+استاد گرامی ${ctx.teacher}،
+
+نمرات درس «${ctx.subject}» پایه «${ctx.className}» برای ماه «${ctx.mname}» هنوز تکمیل نشده است.
+تعداد ${ctx.missingCount} دانش‌آموز بدون نمره مانده‌اند.
+
+لطفاً در اسرع وقت نسبت به ثبت نمرات در سامانه اقدام فرمایید.
+
+با تشکر، مدیریت
+دبیرستان شهید پورصابری`;
+  document.getElementById('lessonSmsText').value = defaultText;
+}
+
+async function sendLessonSms() {
+  const ctx = _currentLessonSmsContext;
+  if (!ctx) return;
+  const text = document.getElementById('lessonSmsText').value.trim();
+  if (!text) { showToast('⚠️ متن خالی'); return; }
+  
+  localStorage.setItem('lesson_sms_text_' + ctx.subject, text);
+  
+  const useKvn = document.getElementById('lessonUseKavenegar')?.checked;
+  
+  document.getElementById('lessonSmsModal')?.remove();
+  
+  if (_currentLessonMethod === 'sms' && useKvn) {
+    // ارسال خودکار با کاوه‌نگار
+    const teacherInfo = await getTeacherPhoneByName(ctx.teacher);
+    if (!teacherInfo || !teacherInfo.phone) {
+      showToast('❌ شماره دبیر پیدا نشد');
+      return;
+    }
+    
+    const cost = parseFloat(localStorage.getItem('kvn_cost') || '150');
+    if (!confirm('📡 ارسال با کاوه‌نگار به ' + ctx.teacher + '\nهزینه: ~' + toFa(Math.round(cost)) + ' تومان\n\nتأیید؟')) return;
+    
+    showToast('⏳ در حال ارسال...');
+    const res = await sendWithKavenegar(teacherInfo.nid, ctx.teacher, teacherInfo.phone, text, ctx.subject, ctx.className, ctx.mname);
+    if (res.success) showToast('✅ SMS ارسال شد');
+    else showToast('❌ ' + (res.message || 'خطا'));
+  } else if (_currentLessonMethod === 'sms') {
+    // SMS دستی
+    const teacherInfo = await getTeacherPhoneByName(ctx.teacher);
+    if (!teacherInfo || !teacherInfo.phone) {
+      showToast('❌ شماره دبیر پیدا نشد');
+      return;
+    }
+    logReminderToServer(teacherInfo.nid, ctx.teacher, ctx.subject, ctx.className, ctx.mname, 'SMS (دستی)', text);
+    window.location.href = 'sms:' + teacherInfo.phone + '?body=' + encodeURIComponent(text);
+  } else {
+    // چت سیستمی
+    const teacherInfo = await getTeacherPhoneByName(ctx.teacher);
+    if (!teacherInfo) { showToast('❌ دبیر پیدا نشد'); return; }
+    
+    await sendViaChatSystem(teacherInfo.nid, ctx.teacher, text, ctx.subject, ctx.className, ctx.mname);
+  }
+}
+
+async function getTeacherPhoneByName(teacherName) {
+  try {
+    if (window._teachersCache) {
+      const found = window._teachersCache.find(t => t.name === teacherName || t.name.replace('آقای ', '').replace('خانم ', '') === teacherName.replace('آقای ', '').replace('خانم ', ''));
+      if (found) return found;
+    }
+    const r = await fetch(API_URL + '?action=getAllTeachers&t=' + Date.now()).then(r => r.json());
+    if (r.success && r.data) {
+      window._teachersCache = r.data.map(t => ({
+        nid: String(t['کد ملی'] || '').trim(),
+        name: String(t['نام'] || '').trim(),
+        phone: String(t['شماره تماس'] || '').trim(),
+        subject: String(t['درس'] || '').trim()
+      }));
+      const found = window._teachersCache.find(t => t.name === teacherName || t.name.replace('آقای ', '').replace('خانم ', '') === teacherName.replace('آقای ', '').replace('خانم ', ''));
+      if (found) return found;
+    }
+    return null;
+  } catch(e) { return null; }
+}
+
+async function sendViaChatSystem(nid, teacherName, message, subject, className, mname) {
+  try {
+    // از همون API یادآوری که قبلاً ساختیم استفاده می‌کنیم
+    const url = API_URL + '?action=sendTeacherGroupReminder'
+      + '&role=' + encodeURIComponent(currentUser.role)
+      + '&teacherNid=' + encodeURIComponent(nid)
+      + '&teacherName=' + encodeURIComponent(teacherName)
+      + '&className=' + encodeURIComponent(className)
+      + '&senderName=' + encodeURIComponent(currentUser.name)
+      + '&customMessage=' + encodeURIComponent(message)
+      + '&t=' + Date.now();
+    const res = await fetch(url).then(r => r.json());
+    if (res.success) {
+      showToast('✅ پیام در چت دبیر ارسال شد');
+      logReminderToServer(nid, teacherName, subject, className, mname, 'چت سیستمی', message);
+    } else {
+      showToast('❌ ' + (res.message || 'خطا'));
+    }
+    return res;
+  } catch(e) {
+    showToast('❌ خطای شبکه');
+    return { success: false };
+  }
+}
+
+async function sendWithKavenegar(nid, teacherName, phone, message, subject, className, mname) {
+  try {
+    const p = new URLSearchParams();
+    p.append('action', 'sendSmsViaKavenegar');
+    p.append('role', currentUser.role);
+    p.append('phone', phone);
+    p.append('message', message);
+    p.append('teacherNid', nid);
+    p.append('teacherName', teacherName);
+    p.append('subject', subject);
+    p.append('gradeName', className);
+    p.append('month', mname);
+    p.append('sender', currentUser.name);
+    
+    const res = await fetch(API_URL, { method:'POST', body:p }).then(r => r.json());
+    if (res.success) {
+      logReminderToServer(nid, teacherName, subject, className, mname, 'SMS (کاوه‌نگار)', message);
+    }
+    return res;
+  } catch(e) {
+    return { success: false, message: 'خطای شبکه' };
+  }
+}
+
+function logReminderToServer(nid, teacherName, subject, className, mname, method, message) {
+  const p = new URLSearchParams();
+  p.append('action', 'logReminder');
+  p.append('teacherNid', nid || '');
+  p.append('teacherName', teacherName || '');
+  p.append('subject', subject || '');
+  p.append('gradeName', className || '');
+  p.append('month', mname || '');
+  p.append('method', method || '');
+  p.append('status', 'ارسال شد');
+  p.append('sender', currentUser.name);
+  p.append('message', message || '');
+  fetch(API_URL, { method:'POST', body:p }).catch(() => {});
+}
+
+// ─── مودال گروهی ───
+function openBulkSmsModal(className, mname) {
+  const teacherGroups = window._pendingTeacherGroups || [];
+  if (teacherGroups.length === 0) { showToast('⚠️ دبیری در انتظار نیست'); return; }
+  
+  _currentBulkSmsContext = { className, mname, teacherGroups };
+  
+  document.getElementById('bulkSmsUnifiedModal')?.remove();
+  
+  let teachersHtml = '';
+  teacherGroups.forEach((g, idx) => {
+    const teacherKey = 'bulk_teacher_' + idx;
+    teachersHtml += '<label style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--bg); border-radius:8px; margin-bottom:6px; cursor:pointer;">';
+    teachersHtml += '<input type="checkbox" class="bulk-teacher-cb" data-idx="' + idx + '" checked onchange="updateBulkPreview()" style="width:18px; height:18px; accent-color:#1a237e; flex-shrink:0;">';
+    teachersHtml += '<div style="flex:1; min-width:0;">';
+    teachersHtml += '<div style="font-size:12.5px; font-weight:700;">' + esc(g.teacher) + '</div>';
+    teachersHtml += '<div style="font-size:10px; color:#c62828; font-weight:700; margin-top:2px;">' + toFa(g.subjects.length) + ' درس · ' + toFa(g.totalMissing) + ' نفر مانده</div>';
+    teachersHtml += '</div></label>';
+  });
+  
+  const defaultTemplate = `🔔 یادآوری ثبت نمرات
+
+استاد گرامی [نام دبیر]،
+
+نمرات دروس «[دروس]» پایه «[پایه]» برای ماه «[ماه]» هنوز تکمیل نشده است.
+تعداد [تعداد] دانش‌آموز در انتظار نمره هستند.
+
+لطفاً در اسرع وقت نسبت به ثبت نمرات در سامانه اقدام فرمایید.
+
+با تشکر، مدیریت
+دبیرستان شهید پورصابری`;
+  
+  const overlay = document.createElement('div');
+  overlay.id = 'bulkSmsUnifiedModal';
+  overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:10001; display:flex; align-items:center; justify-content:center; padding:15px; backdrop-filter:blur(4px);';
+  overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
+  
+  overlay.innerHTML = `
+    <div style="background:var(--card); border-radius:16px; width:100%; max-width:560px; max-height:92vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.5); overflow:hidden;" onclick="event.stopPropagation()">
+      <div style="padding:14px 16px; background:linear-gradient(135deg,#ef6c00,#f57c00); color:#fff; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:14px; font-weight:800;">📢 یادآوری گروهی</div>
+          <div style="font-size:11px; opacity:.9; margin-top:2px;">🎓 ${esc(className)} · ماه ${esc(mname)}</div>
+        </div>
+        <button onclick="document.getElementById('bulkSmsUnifiedModal').remove()" style="background:rgba(255,255,255,.2); border:none; color:#fff; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; font-family:inherit;">✕</button>
+      </div>
+      
+      <div style="flex:1; overflow-y:auto; padding:14px;">
+        <label style="display:flex; align-items:center; gap:8px; padding:10px 12px; background:linear-gradient(135deg,#e3f2fd,#bbdefb); border-radius:8px; margin-bottom:10px; cursor:pointer; font-weight:800; font-size:12px; color:#0d47a1;">
+          <input type="checkbox" id="bulkSelectAll" checked onchange="toggleAllBulkTeachers(this)" style="width:18px; height:18px; accent-color:#0d47a1;">
+          <span>انتخاب همه (${toFa(teacherGroups.length)} دبیر)</span>
+        </label>
+        
+        <div id="bulkTeacherList">${teachersHtml}</div>
+        
+        <div style="margin-top:14px;">
+          <label style="display:block; font-size:11.5px; font-weight:700; color:var(--text-soft); margin-bottom:6px;">📝 متن پیام:</label>
+          <div style="font-size:10px; color:var(--text-muted); margin-bottom:6px; line-height:1.7;">
+            متغیرها: <code style="background:var(--bg); padding:1px 5px; border-radius:4px; font-size:9.5px;">[نام دبیر]</code>
+            <code style="background:var(--bg); padding:1px 5px; border-radius:4px; font-size:9.5px;">[دروس]</code>
+            <code style="background:var(--bg); padding:1px 5px; border-radius:4px; font-size:9.5px;">[پایه]</code>
+            <code style="background:var(--bg); padding:1px 5px; border-radius:4px; font-size:9.5px;">[ماه]</code>
+            <code style="background:var(--bg); padding:1px 5px; border-radius:4px; font-size:9.5px;">[تعداد]</code>
+          </div>
+          <textarea id="bulkSmsTemplate" oninput="updateBulkPreview()" style="width:100%; padding:11px; border:1px solid var(--line); border-radius:10px; font-family:inherit; font-size:12px; background:var(--bg); color:var(--text); min-height:150px; resize:vertical; line-height:1.8;">${esc(defaultTemplate)}</textarea>
+          
+          <div style="margin-top:10px;">
+            <div style="font-size:11.5px; font-weight:800; color:#2e7d32; margin-bottom:6px;">👁 پیش‌نمایش (برای اولین دبیر انتخاب‌شده):</div>
+            <div id="bulkPreviewBox" style="background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:10px 12px; font-size:11.5px; color:#166534; line-height:1.7; white-space:pre-wrap; max-height:160px; overflow-y:auto;"></div>
+          </div>
+        </div>
+        
+        <div style="margin-top:14px;">
+          <label style="display:block; font-size:11.5px; font-weight:700; color:var(--text-soft); margin-bottom:6px;">📤 روش ارسال:</label>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button class="bulk-method-btn active" id="bulkMethodSms" onclick="setBulkMethod('sms')" style="flex:1; min-width:100px; padding:10px 8px; border:2px solid #1976d2; border-radius:10px; background:#e3f2fd; cursor:pointer; text-align:center; font-family:inherit;">
+              <div style="font-size:20px;">📱</div>
+              <div style="font-size:11px; font-weight:800; color:#0d47a1; margin-top:2px;">SMS</div>
+            </button>
+            <button class="bulk-method-btn" id="bulkMethodChat" onclick="setBulkMethod('chat')" style="flex:1; min-width:100px; padding:10px 8px; border:2px solid var(--line); border-radius:10px; background:var(--bg); cursor:pointer; text-align:center; font-family:inherit;">
+              <div style="font-size:20px;">💬</div>
+              <div style="font-size:11px; font-weight:800; color:var(--text); margin-top:2px;">چت</div>
+            </button>
+            <button class="bulk-method-btn" id="bulkMethodBoth" onclick="setBulkMethod('both')" style="flex:1; min-width:100px; padding:10px 8px; border:2px solid var(--line); border-radius:10px; background:var(--bg); cursor:pointer; text-align:center; font-family:inherit;">
+              <div style="font-size:20px;">📱💬</div>
+              <div style="font-size:11px; font-weight:800; color:var(--text); margin-top:2px;">هر دو</div>
+            </button>
+          </div>
+        </div>
+        
+        <div id="bulkKvnBox" style="margin-top:10px;">
+          <label style="display:flex; align-items:center; gap:8px; padding:10px 12px; background:#f3e5f5; border:1px solid #ce93d8; border-radius:10px; cursor:pointer; font-size:11.5px; font-weight:700; color:#6a1b9a;">
+            <input type="checkbox" id="bulkUseKavenegar" style="width:16px; height:16px; accent-color:#7b1fa2;">
+            📡 ارسال خودکار با کاوه‌نگار
+          </label>
+        </div>
+      </div>
+      
+      <div style="padding:12px 14px; background:var(--bg); border-top:1px solid var(--line); display:flex; gap:8px;">
+        <button onclick="document.getElementById('bulkSmsUnifiedModal').remove()" style="flex:1; padding:11px; border:1px solid var(--line); border-radius:10px; background:var(--card); color:var(--text-soft); font-family:inherit; font-weight:700; font-size:12px; cursor:pointer;">انصراف</button>
+        <button onclick="executeBulkSms()" style="flex:2; padding:11px; border:none; border-radius:10px; background:linear-gradient(135deg,#2e7d32,#43a047); color:#fff; font-family:inherit; font-weight:800; font-size:12.5px; cursor:pointer; box-shadow:0 3px 8px rgba(46,125,50,.3);">📤 ارسال یادآوری‌ها</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(overlay);
+  setTimeout(updateBulkPreview, 100);
+}
+
+let _currentBulkMethod = 'sms';
+
+function setBulkMethod(method) {
+  _currentBulkMethod = method;
+  ['sms', 'chat', 'both'].forEach(m => {
+    const btn = document.getElementById('bulkMethod' + m.charAt(0).toUpperCase() + m.slice(1));
+    if (btn) {
+      if (m === method) { btn.style.borderColor = '#1976d2'; btn.style.background = '#e3f2fd'; }
+      else { btn.style.borderColor = 'var(--line)'; btn.style.background = 'var(--bg)'; }
+    }
+  });
+  const kvnBox = document.getElementById('bulkKvnBox');
+  if (kvnBox) kvnBox.style.display = (method === 'chat') ? 'none' : 'block';
+}
+
+function toggleAllBulkTeachers(source) {
+  document.querySelectorAll('.bulk-teacher-cb').forEach(cb => cb.checked = source.checked);
+  updateBulkPreview();
+}
+
+function updateBulkPreview() {
+  const ctx = _currentBulkSmsContext;
+  if (!ctx) return;
+  const preview = document.getElementById('bulkPreviewBox');
+  if (!preview) return;
+  
+  const all = document.querySelectorAll('.bulk-teacher-cb');
+  const checked = document.querySelectorAll('.bulk-teacher-cb:checked');
+  const master = document.getElementById('bulkSelectAll');
+  if (master) master.checked = (all.length > 0 && all.length === checked.length);
+  
+  const firstCb = document.querySelector('.bulk-teacher-cb:checked');
+  if (!firstCb) { preview.textContent = 'هیچ دبیری انتخاب نشده'; preview.style.color = '#c62828'; return; }
+  preview.style.color = '#166534';
+  
+  const idx = parseInt(firstCb.dataset.idx);
+  const g = ctx.teacherGroups[idx];
+  if (!g) return;
+  
+  const template = document.getElementById('bulkSmsTemplate').value;
+  const subjectsList = g.subjects.join('، ');
+  const previewText = template
+    .replace(/\[نام دبیر\]/g, g.teacher)
+    .replace(/\[دروس\]/g, subjectsList)
+    .replace(/\[پایه\]/g, ctx.className)
+    .replace(/\[ماه\]/g, ctx.mname)
+    .replace(/\[تعداد\]/g, toFa(g.totalMissing));
+  preview.textContent = previewText;
+}
+
+async function executeBulkSms() {
+  const ctx = _currentBulkSmsContext;
+  if (!ctx) return;
+  
+  const template = document.getElementById('bulkSmsTemplate').value;
+  const selectedIdxs = [];
+  document.querySelectorAll('.bulk-teacher-cb:checked').forEach(cb => selectedIdxs.push(parseInt(cb.dataset.idx)));
+  
+  if (selectedIdxs.length === 0) { showToast('⚠️ حداقل یک دبیر انتخاب کنید'); return; }
+  
+  const useKvn = document.getElementById('bulkUseKavenegar')?.checked && _currentBulkMethod !== 'chat';
+  const method = _currentBulkMethod;
+  
+  // ساخت آرایه‌ی ارسال
+  const queue = [];
+  for (const idx of selectedIdxs) {
+    const g = ctx.teacherGroups[idx];
+    const teacherInfo = await getTeacherPhoneByName(g.teacher);
+    if (!teacherInfo) continue;
+    
+    const finalMsg = template
+      .replace(/\[نام دبیر\]/g, g.teacher)
+      .replace(/\[دروس\]/g, g.subjects.join('، '))
+      .replace(/\[پایه\]/g, ctx.className)
+      .replace(/\[ماه\]/g, ctx.mname)
+      .replace(/\[تعداد\]/g, toFa(g.totalMissing));
+    
+    queue.push({ nid: teacherInfo.nid, name: g.teacher, phone: teacherInfo.phone, message: finalMsg, subjects: g.subjects.join('، ') });
+  }
+  
+  document.getElementById('bulkSmsUnifiedModal')?.remove();
+  
+  if (useKvn && method !== 'chat') {
+    // ارسال خودکار با کاوه‌نگار
+    const cost = parseFloat(localStorage.getItem('kvn_cost') || '150');
+    const totalCost = cost * queue.length;
+    if (!confirm('📡 ارسال با کاوه‌نگار به ' + toFa(queue.length) + ' دبیر\nهزینه تخمینی: ~' + toFa(Math.round(totalCost)) + ' تومان\n\nتأیید؟')) return;
+    
+    showToast('⏳ در حال ارسال...');
+    let successCount = 0, errorCount = 0;
+    for (const item of queue) {
+      const res = await sendWithKavenegar(item.nid, item.name, item.phone, item.message, item.subjects, ctx.className, ctx.mname);
+      if (res.success) successCount++;
+      else errorCount++;
+      if (method === 'both') await sendViaChatSystem(item.nid, item.name, item.message, item.subjects, ctx.className, ctx.mname);
+    }
+    if (successCount === 0) showToast('❌ هیچ ارسالی موفق نشد');
+    else if (errorCount === 0) showToast('✅ به ' + toFa(successCount) + ' دبیر ارسال شد');
+    else showToast('⚠️ ' + toFa(successCount) + ' موفق، ' + toFa(errorCount) + ' خطا');
+  } else if (method === 'sms') {
+    // SMS دستی — نمایش صفحه‌ی ۱۰ دکمه‌ای
+    openSmsDeliveryPage(queue, ctx);
+  } else if (method === 'chat') {
+    // چت سیستمی
+    showToast('⏳ در حال ارسال...');
+    let successCount = 0, errorCount = 0;
+    for (const item of queue) {
+      const res = await sendViaChatSystem(item.nid, item.name, item.message, item.subjects, ctx.className, ctx.mname);
+      if (res.success) successCount++;
+      else errorCount++;
+    }
+    if (successCount === 0) showToast('❌ هیچ ارسالی موفق نشد');
+    else if (errorCount === 0) showToast('✅ به ' + toFa(successCount) + ' دبیر ارسال شد');
+    else showToast('⚠️ ' + toFa(successCount) + ' موفق، ' + toFa(errorCount) + ' خطا');
+  } else if (method === 'both') {
+    // هم SMS دستی هم چت
+    showToast('⏳ در حال ارسال چت...');
+    for (const item of queue) {
+      await sendViaChatSystem(item.nid, item.name, item.message, item.subjects, ctx.className, ctx.mname);
+    }
+    openSmsDeliveryPage(queue, ctx);
+  }
+}
+
+// ─── صفحه‌ی ۱۰ دکمه‌ای برای SMS دستی ───
+function openSmsDeliveryPage(queue, ctx) {
+  document.getElementById('smsDeliveryPage')?.remove();
+  _smsDeliveryQueue = queue;
+  _smsDeliveryDone = 0;
+  
+  function renderPage() {
+    let itemsHtml = '';
+    queue.forEach((item, idx) => {
+      const done = item._done ? true : false;
+      itemsHtml += '<div style="padding:10px 12px; background:' + (done ? '#e8f5e9' : 'var(--card)') + '; border:1px solid ' + (done ? '#a5d6a7' : 'var(--line)') + '; border-radius:10px; margin-bottom:8px; display:flex; align-items:center; gap:10px;">';
+      itemsHtml += '<span style="background:' + (done ? '#2e7d32' : '#1976d2') + '; color:#fff; width:30px; height:30px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0;">' + (done ? '✓' : toFa(idx + 1)) + '</span>';
+      itemsHtml += '<div style="flex:1; min-width:0;">';
+      itemsHtml += '<div style="font-size:12.5px; font-weight:700;">' + esc(item.name) + '</div>';
+      itemsHtml += '<div style="font-size:10.5px; color:var(--text-muted); direction:ltr; text-align:right;">' + esc(item.phone) + '</div>';
+      itemsHtml += '</div>';
+      itemsHtml += '<button onclick="sendOneSms(' + idx + ')" ' + (done ? 'disabled' : '') + ' style="padding:8px 14px; border:none; border-radius:8px; font-family:inherit; font-weight:700; font-size:11.5px; cursor:' + (done ? 'not-allowed' : 'pointer') + '; background:' + (done ? '#c8e6c9' : 'linear-gradient(135deg,#1976d2,#42a5f5)') + '; color:' + (done ? '#2e7d32' : '#fff') + ';">' + (done ? '✓ ارسال شد' : '📲 ارسال') + '</button>';
+      itemsHtml += '</div>';
+    });
+    
+    const overlay = document.getElementById('smsDeliveryPage');
+    if (overlay) {
+      overlay.querySelector('#smsDeliveryList').innerHTML = itemsHtml;
+      overlay.querySelector('#smsDeliveryCount').textContent = toFa(_smsDeliveryDone) + ' از ' + toFa(queue.length);
+      const fill = overlay.querySelector('#smsDeliveryProgress');
+      if (fill) fill.style.width = (_smsDeliveryDone / queue.length * 100) + '%';
+    }
+  }
+  
+  const overlay = document.createElement('div');
+  overlay.id = 'smsDeliveryPage';
+  overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:10003; display:flex; align-items:center; justify-content:center; padding:15px; backdrop-filter:blur(4px);';
+  overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `
+    <div style="background:var(--card); border-radius:16px; width:100%; max-width:520px; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.5); overflow:hidden;" onclick="event.stopPropagation()">
+      <div style="padding:14px 16px; background:linear-gradient(135deg,#1976d2,#42a5f5); color:#fff;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:14px; font-weight:800;">📱 پیام‌های آماده ارسال</div>
+          <button onclick="document.getElementById('smsDeliveryPage').remove()" style="background:rgba(255,255,255,.2); border:none; color:#fff; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; font-family:inherit;">✕</button>
+        </div>
+        <div style="font-size:11px; opacity:.9; margin-top:4px;">🎓 ${esc(ctx.className)} · ماه ${esc(ctx.mname)}</div>
+        <div style="margin-top:10px;">
+          <div style="font-size:11px; font-weight:700; margin-bottom:4px;">
+            <span id="smsDeliveryCount">۰ از ${toFa(queue.length)}</span>
+          </div>
+          <div style="background:rgba(255,255,255,.2); border-radius:6px; height:6px; overflow:hidden;">
+            <div id="smsDeliveryProgress" style="height:100%; width:0%; background:#a5d6a7; transition:width .3s;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div style="flex:1; overflow-y:auto; padding:12px;" id="smsDeliveryList">
+        ${itemsHtml}
+      </div>
+      
+      <div style="padding:12px 14px; background:var(--bg); border-top:1px solid var(--line); display:flex; gap:8px;">
+        <button onclick="document.getElementById('smsDeliveryPage').remove()" style="flex:1; padding:11px; border:1px solid var(--line); border-radius:10px; background:var(--card); color:var(--text-soft); font-family:inherit; font-weight:700; font-size:12px; cursor:pointer;">بستن</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(overlay);
+  window._renderSmsDeliveryPage = renderPage;
+}
+
+function sendOneSms(idx) {
+  const item = _smsDeliveryQueue[idx];
+  if (!item || item._done) return;
+  
+  item._done = true;
+  _smsDeliveryDone++;
+  
+  logReminderToServer(item.nid, item.name, item.subjects, '', '', 'SMS (دستی)', item.message);
+  
+  if (window._renderSmsDeliveryPage) window._renderSmsDeliveryPage();
+  
+  window.location.href = 'sms:' + item.phone + '?body=' + encodeURIComponent(item.message);
+}
+// ============================================================
+// 📱 تنظیمات کاوه‌نگار
+// ============================================================
+
+async function renderKavenegarSettings() {
+  const el = document.getElementById('mgrApiSection');
+  if (!el) return;
+  el.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+  
+  try {
+    const [rSettings, rLogs] = await Promise.all([
+      fetch(API_URL + '?action=getKavenegarSettings&t=' + Date.now()).then(r => r.json()),
+      fetch(API_URL + '?action=getReminderLogs&limit=30&t=' + Date.now()).then(r => r.json())
+    ]);
+    
+    const s = (rSettings.success && rSettings.data) ? rSettings.data : {};
+    const logs = (rLogs.success && rLogs.data) ? rLogs.data : [];
+    
+    const enabled = String(s.enabled).toLowerCase() === 'true';
+    const apiKeySet = s.api_key_set;
+    
+    let html = '<div style="font-size:14px; font-weight:800; color:var(--header-2); margin-bottom:14px;">📱 تنظیمات پیامک کاوه‌نگار</div>';
+    
+    // راهنمای بالا
+    html += '<div style="background:#fff8e1; border:1px solid #ffe082; border-radius:10px; padding:12px; margin-bottom:14px; font-size:11.5px; color:#8a6d00; line-height:1.8;">';
+    html += '💡 <b>برای فعال‌سازی SMS خودکار:</b><br>';
+    html += '۱. توی سایت <a href="https://kavenegar.com" target="_blank" style="color:#c62828; font-weight:800;">kavenegar.com</a> یه اکانت بسازید<br>';
+    html += '۲. یه خط خدماتی (Sender) بخرید<br>';
+    html += '۳. API Key رو از پنل بگیرید<br>';
+    html += '۴. اینجا وارد کنید و «تست» بزنید';
+    html += '</div>';
+    
+    // وضعیت
+    html += '<div style="background:' + (enabled ? '#e8f5e9' : '#ffebee') + '; border-right:4px solid ' + (enabled ? '#2e7d32' : '#c62828') + '; border-radius:10px; padding:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">';
+    html += '<div><div style="font-size:12.5px; font-weight:800; color:' + (enabled ? '#2e7d32' : '#c62828') + ';">' + (enabled ? '🟢 فعال' : '🔴 غیرفعال') + '</div>';
+    html += '<div style="font-size:10.5px; color:var(--text-muted); margin-top:2px;">' + (apiKeySet ? '✅ API Key تنظیم شده' : '❌ API Key تنظیم نشده') + '</div></div>';
+    html += '<button onclick="toggleKvnEnabled(\'' + (enabled ? 'false' : 'true') + '\')" style="padding:8px 16px; border:none; border-radius:8px; font-family:inherit; font-weight:700; font-size:11.5px; cursor:pointer; background:' + (enabled ? '#c62828' : '#2e7d32') + '; color:#fff;">' + (enabled ? 'غیرفعال کن' : 'فعال کن') + '</button>';
+    html += '</div>';
+    
+    // فرم
+    html += '<div class="form-card" style="padding:14px;">';
+    html += '<div class="form-group"><label class="form-label">🔑 API Key (از پنل کاوه‌نگار)</label><input type="password" class="form-input" id="kvnApiKey" placeholder="' + (apiKeySet ? 'API Key تنظیم شده — برای تغییر، مقدار جدید وارد کنید' : 'وارد کنید...') + '" style="direction:ltr; text-align:left; font-family:monospace;"></div>';
+    html += '<div class="form-group"><label class="form-label">📞 شماره فرستنده (Sender)</label><input type="text" class="form-input" id="kvnSender" value="' + escAttr(s.sender_number || '') + '" placeholder="مثلاً 10004346" style="direction:ltr; text-align:center; font-family:monospace;"></div>';
+    html += '<div class="form-group"><label class="form-label">💰 هزینه هر پیامک (تومان)</label><input type="number" class="form-input" id="kvnCost" value="' + escAttr(s.cost_per_sms || '150') + '" style="text-align:center;"></div>';
+    html += '<button onclick="saveKvnSettings()" class="submit-btn primary-blue" style="margin-top:6px;">💾 ذخیره تنظیمات</button>';
+    html += '</div>';
+    
+    // تست
+    if (apiKeySet) {
+      html += '<div class="form-card" style="padding:14px; margin-top:14px;">';
+      html += '<div style="font-size:12.5px; font-weight:800; color:var(--header-2); margin-bottom:10px;">🧪 تست API</div>';
+      html += '<div class="form-group"><label class="form-label">شماره تست</label><input type="text" class="form-input" id="kvnTestPhone" placeholder="09121234567" style="direction:ltr; text-align:center; font-family:monospace;"></div>';
+      html += '<button onclick="testKvnApi()" class="submit-btn" style="background:linear-gradient(135deg,#7b1fa2,#9c27b0);">🧪 ارسال پیامک تست</button>';
+      html += '</div>';
+    }
+    
+    // لاگ
+    if (logs.length > 0) {
+      html += '<div style="font-size:12.5px; font-weight:800; color:var(--header-2); margin:14px 0 10px; padding:0 4px;">📜 آخرین یادآوری‌ها</div>';
+      html += '<div style="background:var(--card); border-radius:12px; border:1px solid var(--line); overflow:hidden;">';
+      logs.slice(0, 15).forEach(log => {
+        const statusColor = log.status === 'ارسال شد' ? '#2e7d32' : '#ef6c00';
+        html += '<div style="padding:10px 12px; border-bottom:1px solid var(--line); font-size:11px;">';
+        html += '<div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">';
+        html += '<div style="font-weight:700;">👨‍🏫 ' + esc(log.teacherName) + '</div>';
+        html += '<div style="font-size:10px; color:var(--text-muted);">' + esc(log.date) + ' ' + esc(log.time) + '</div>';
+        html += '</div>';
+        html += '<div style="color:var(--text-muted); margin-top:3px;">📚 ' + esc(log.subject) + ' · ' + esc(log.method) + '</div>';
+        html += '<div style="color:' + statusColor + '; font-weight:700; margin-top:2px;">' + (log.status === 'ارسال شد' ? '✅' : '⏳') + ' ' + esc(log.status) + '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+    
+    el.innerHTML = html;
+  } catch(e) {
+    console.error(e);
+    el.innerHTML = '<div class="empty-state"><div class="empty-title">خطا در بارگذاری</div></div>';
+  }
+}
+
+async function toggleKvnEnabled(val) {
+  const p = new URLSearchParams();
+  p.append('action', 'saveKavenegarSettings');
+  p.append('role', currentUser.role);
+  p.append('enabled', val);
+  const res = await fetch(API_URL, { method:'POST', body:p }).then(r => r.json());
+  if (res.success) {
+    showToast(val === 'true' ? '✅ کاوه‌نگار فعال شد' : '🔒 کاوه‌نگار غیرفعال شد');
+    renderKavenegarSettings();
+  } else showToast('❌ خطا');
+}
+
+async function saveKvnSettings() {
+  const apiKey = document.getElementById('kvnApiKey').value.trim();
+  const sender = document.getElementById('kvnSender').value.trim();
+  const cost = document.getElementById('kvnCost').value.trim();
+  
+  const p = new URLSearchParams();
+  p.append('action', 'saveKavenegarSettings');
+  p.append('role', currentUser.role);
+  if (apiKey) p.append('api_key', apiKey);
+  p.append('sender_number', sender);
+  p.append('cost_per_sms', cost);
+  
+  const res = await fetch(API_URL, { method:'POST', body:p }).then(r => r.json());
+  if (res.success) {
+    showToast('✅ تنظیمات ذخیره شد');
+    localStorage.setItem('kvn_cost', cost);
+    renderKavenegarSettings();
+  } else showToast('❌ خطا');
+}
+
+async function testKvnApi() {
+  const phone = document.getElementById('kvnTestPhone').value.trim();
+  if (!phone) { showToast('⚠️ شماره را وارد کنید'); return; }
+  
+  showToast('⏳ در حال ارسال تست...');
+  const p = new URLSearchParams();
+  p.append('action', 'testKavenegarApi');
+  p.append('role', currentUser.role);
+  p.append('testPhone', phone);
+  p.append('sender', currentUser.name);
+  
+  const res = await fetch(API_URL, { method:'POST', body:p }).then(r => r.json());
+  if (res.success) showToast('✅ پیامک تست ارسال شد');
+  else showToast('❌ ' + (res.message || 'خطا'));
 }
 function toggleAllStudents(source) {
   document.querySelectorAll('.mgr-student-cb').forEach(cb => cb.checked = source.checked);
@@ -4793,34 +5783,29 @@ function showPrintModal(innerHtml) {
 // 📝 توابع مدیریت انضباط
 // ============================================================
 function switchMgrSubTab(tab) {
-  ['mgrGradesSection','mgrConductSection','mgrChatSection'].forEach(id => {
+  ['mgrGradesSection','mgrConductSection','mgrChatSection','mgrApiSection'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
-  ['mgrSubTabGrades','mgrSubTabConduct','mgrSubTabChat'].forEach(id => {
+  ['mgrSubTabGrades','mgrSubTabConduct','mgrSubTabChat','mgrSubTabApi'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.style.background = 'transparent'; el.style.color = 'var(--text-soft)'; }
   });
   
-  if (tab === 'grades') {
-    const sec = document.getElementById('mgrGradesSection');
+  const tabs = { grades:'mgrGradesSection', conduct:'mgrConductSection', chat:'mgrChatSection', api:'mgrApiSection' };
+  const btns = { grades:'mgrSubTabGrades', conduct:'mgrSubTabConduct', chat:'mgrSubTabChat', api:'mgrSubTabApi' };
+  
+  if (tabs[tab]) {
+    const sec = document.getElementById(tabs[tab]);
     if (sec) sec.style.display = 'block';
-    const b = document.getElementById('mgrSubTabGrades'); 
-    if (b) { b.style.background='var(--card)'; b.style.color='var(--header-2)'; }
-    loadManagerGradeTable();
-  } else if (tab === 'conduct') {
-    const sec = document.getElementById('mgrConductSection');
-    if (sec) sec.style.display = 'block';
-    const b = document.getElementById('mgrSubTabConduct'); 
-    if (b) { b.style.background='var(--card)'; b.style.color='var(--header-2)'; }
-    loadConductTable();
-  } else if (tab === 'chat') {
-    const sec = document.getElementById('mgrChatSection');
-    if (sec) sec.style.display = 'block';
-    const b = document.getElementById('mgrSubTabChat'); 
-    if (b) { b.style.background='var(--card)'; b.style.color='var(--header-2)'; }
-    loadChatSettings();
+    const b = document.getElementById(btns[tab]);
+    if (b) { b.style.background = 'var(--card)'; b.style.color = 'var(--header-2)'; }
   }
+  
+  if (tab === 'grades') loadManagerGradeTable();
+  if (tab === 'conduct') loadConductTable();
+  if (tab === 'chat') loadChatSettings();
+  if (tab === 'api') renderKavenegarSettings();
 }
 
 async function loadConductTable() {
@@ -4859,7 +5844,7 @@ async function loadConductTable() {
     months.forEach(m => html += `<th>${m.label}</th>`);
     html += '</tr></thead><tbody>';
 
-    students.sort((a,b)=>String(a.name).localeCompare(String(b.name),'fa')).forEach(s => {
+      sortStudentsByLastName(students).forEach(s => {
       const c = conductMap[s.nationalId] || {};
       html += `<tr><td class="grade-name">${esc(s.name)}</td>`;
       months.forEach(m => {
@@ -5050,7 +6035,7 @@ async function loadAdminGradeTable() {
     months.forEach(m => html += `<th>${m.label}</th>`);
     html += '</tr></thead><tbody>';
     
-    students.sort((a,b)=>String(a.name).localeCompare(String(b.name),'fa')).forEach(s => {
+      sortStudentsByLastName(students).forEach(s => {
       const g = gradeMap[s.nationalId] || {};
       html += `<tr><td class="grade-name">${esc(s.name)}</td>`;
       months.forEach(m => {
@@ -5764,37 +6749,55 @@ async function savePhoneEdit() {
 // 📸 سیستم آپلود و مدیریت عکس (تکی و گروهی)
 // ============================================================
 function openSinglePhoto(nid, name) {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment'; 
-    input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.capture = 'environment'; 
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    showToast('⏳ در حال آماده‌سازی و فشرده‌سازی...');
+    try {
+      // 🎯 فشرده‌سازی قوی‌تر (400px و کیفیت 0.75)
+      const compressedFile = await compressImage(file, 400, 0.75);
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        let base64 = ev.target.result;
+        if (base64.indexOf(',') > -1) base64 = base64.split(',')[1];
         
-        showToast('⏳ در حال آماده‌سازی و فشرده‌سازی...');
+        const params = new URLSearchParams();
+        params.append('action', 'uploadStudentPhoto');
+        params.append('nationalId', nid);
+        params.append('fileData', base64);
+        params.append('mimeType', 'image/jpeg');
+        
+        showToast('⏳ در حال آپلود...');
         try {
-            const compressedFile = await compressImage(file, 400, 0.8);
-            const reader = new FileReader();
-            reader.onload = async (ev) => {
-                const base64 = ev.target.result;
-                const params = new URLSearchParams();
-                params.append('action', 'uploadStudentPhoto');
-                params.append('nationalId', nid);
-                params.append('fileData', base64);
-                params.append('mimeType', 'image/jpeg');
-                
-                showToast('⏳ در حال آپلود...');
-                const res = await fetch(API_URL + '?' + params.toString()).then(r=>r.json());
-                if (res.success) {
-                    showToast('✅ عکس ثبت شد');
-                    renderDirectoryPage();
-                } else showToast('❌ ' + res.message);
-            };
-            reader.readAsDataURL(compressedFile);
-        } catch(err) { showToast('❌ خطا در آپلود عکس'); }
-    };
-    input.click();
+          // ✅ POST به جای GET
+          const res = await fetch(API_URL, {
+            method: 'POST',
+            body: params
+          }).then(r => r.json());
+          
+          if (res.success) {
+            showToast('✅ عکس ثبت شد');
+            renderDirectoryPage();
+          } else {
+            showToast('❌ ' + (res.message || 'خطا'));
+          }
+        } catch(err) {
+          console.error(err);
+          showToast('❌ خطای شبکه: ' + (err.message || ''));
+        }
+      };
+      reader.readAsDataURL(compressedFile);
+    } catch(err) {
+      console.error(err);
+      showToast('❌ خطا در آپلود عکس');
+    }
+  };
+  input.click();
 }
 
 function openPhotoUploadModal() {
@@ -5810,32 +6813,55 @@ function openPhotoUploadModal() {
 }
 
 function loadPhotoUploadClassList() {
-    const cls = document.getElementById('photoUploadClassSelect').value;
-    const students = dirStudentsData.filter(s => s.classCode === cls);
-    const listEl = document.getElementById('photoStudentList');
+  const cls = document.getElementById('photoUploadClassSelect').value;
+  const students = dirStudentsData.filter(s => s.classCode === cls);
+  const listEl = document.getElementById('photoStudentList');
+  
+  if (students.length === 0) {
+    listEl.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #999; padding: 20px;">دانش‌آموزی در این کلاس نیست</div>';
+    return;
+  }
+  
+  // 🎯 مرتب‌سازی بر اساس فامیل
+  const sorted = sortStudentsByLastName(students);
+  
+  let html = '';
+  sorted.forEach(s => {
+    const assigned = photoAssignments[s.nationalId];
+    const hasExisting = s.photoUrl && s.photoUrl.trim() !== '';
     
-    if (students.length === 0) {
-        listEl.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #999; padding: 20px;">دانش‌آموزی در این کلاس نیست</div>';
-        return;
+    let slotContent = '';
+    if (assigned) {
+      slotContent = `<img src="${assigned}">`;
+    } else if (hasExisting) {
+      const imgSrc = s.photoUrl.startsWith('http') ? s.photoUrl.replace('/view', '/preview') : s.photoUrl;
+      slotContent = `<img src="${escAttr(imgSrc)}" onerror="this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a237e,#3949ab);color:#fff;font-weight:800;font-size:16px\\'>${esc(s.name.charAt(0))}</div>'">`;
+    } else {
+      slotContent = `<span style="font-size: 18px; font-weight: 800; color: #fff; background: linear-gradient(135deg, #1a237e, #3949ab); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">${esc(s.name.charAt(0))}</span>`;
     }
     
-    let html = '';
-    students.forEach(s => {
-        const assigned = photoAssignments[s.nationalId];
-        let slotHtml = assigned 
-            ? `<img src="${assigned}">` 
-            : (s.photoUrl ? `<img src="${s.photoUrl.startsWith('http') ? s.photoUrl.replace('/view', '/preview') : s.photoUrl}">` : `<span style="font-size: 18px; font-weight: 800; color: #fff; background: linear-gradient(135deg, #1a237e, #3949ab); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">${s.name.charAt(0)}</span>`);
-
-        html += `
-            <div style="background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                <div class="student-photo-slot ${assigned ? 'dropped' : ''}" data-nid="${s.nationalId}" ondrop="dropPhotoOnStudent(event, '${s.nationalId}')" ondragover="event.preventDefault()" onclick="assignSelectedPhoto('${s.nationalId}')">
-                    ${slotHtml}
-                </div>
-                <div style="font-size: 11.5px; font-weight: 700; text-align: center;">${esc(s.name)}</div>
-            </div>
-        `;
-    });
-    listEl.innerHTML = html;
+    const borderStyle = assigned ? 'border: 2px solid #2e7d32;' : 'border: 2px dashed #cbd5e0;';
+    const selectedStyle = (selectedPhotoIndex > -1) ? 'cursor: pointer; box-shadow: 0 0 0 2px #ffb300;' : '';
+    
+    html += `
+      <div style="background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; ${selectedStyle}" 
+           ondrop="dropPhotoOnStudent(event, '${escAttr(s.nationalId)}')" 
+           ondragover="event.preventDefault(); this.style.background='#e3f2fd';" 
+           ondragleave="this.style.background='var(--card)';">
+        <div class="student-photo-slot" 
+             data-nid="${escAttr(s.nationalId)}" 
+             onclick="assignSelectedPhoto('${escAttr(s.nationalId)}')"
+             style="${borderStyle} width: 70px; height: 70px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--bg); transition: 0.2s;">
+          ${slotContent}
+        </div>
+        <div style="font-size: 11.5px; font-weight: 700; text-align: center; line-height: 1.4; max-width: 100%;">${esc(s.name)}</div>
+      </div>
+    `;
+  });
+  listEl.innerHTML = html;
+  
+  // 🎯 راه‌اندازی auto-scroll برای لیست دانش‌آموزان
+  setupDragAutoScroll();
 }
 
 function setupPhotoDropzone() {
@@ -5878,17 +6904,97 @@ async function handlePhotoFiles(files) {
 }
 
 function renderPhotoThumbnails() {
-    const container = document.getElementById('photoThumbnails');
-    if (pendingPhotos.length === 0) {
-        container.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); width: 100%; text-align: center; padding: 20px;">هنوز عکسی انتخاب نشده است.</div>';
-        return;
-    }
+  const container = document.getElementById('photoThumbnails');
+  
+  if (pendingPhotos.length === 0) {
+    container.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); width: 100%; text-align: center; padding: 20px;">هنوز عکسی انتخاب نشده است.</div>';
+    return;
+  }
+  
+  // 🎯 فقط عکس‌هایی که هنوز تخصیص داده نشدن
+  const available = pendingPhotos.filter(p => !p._assigned);
+  
+  if (available.length === 0) {
+    container.innerHTML = '<div style="font-size: 12px; color: #2e7d32; width: 100%; text-align: center; padding: 20px; font-weight: 700;">✅ همه‌ی عکس‌ها تخصیص داده شدن</div>';
+    return;
+  }
+  
+  let html = '';
+  available.forEach((p, idx) => {
+    const realIdx = pendingPhotos.indexOf(p);
+    const isSelected = (selectedPhotoIndex === realIdx);
+    const borderStyle = isSelected ? 'border: 3px solid #ffb300; box-shadow: 0 0 0 3px rgba(255,179,0,.3);' : 'border: 2px solid transparent;';
+    html += `<img src="${p.base64}" 
+              class="photo-thumb" 
+              draggable="true" 
+              ondragstart="dragPhoto(event, ${realIdx})" 
+              onclick="selectPhoto(${realIdx})" 
+              style="${borderStyle} width: 60px; height: 60px; border-radius: 8px; object-fit: cover; cursor: grab; transition: 0.2s; margin: 4px;"
+              title="${escAttr(p.name)}">`;
+  });
+  container.innerHTML = html;
+}
+// ============================================================
+// 📸 Auto-scroll هنگام درگ در لیست عکس‌ها
+// ============================================================
+
+let _autoScrollInterval = null;
+let _dragAutoScrollSetup = false;
+
+function setupDragAutoScroll() {
+  if (_dragAutoScrollSetup) return;
+  _dragAutoScrollSetup = true;
+  
+  // 🎯 پیدا کردن parent قابل اسکرول
+  const modal = document.getElementById('photoUploadModal');
+  if (!modal) return;
+  
+  const scrollable = modal.querySelector('div[style*="overflow-y"]');
+  if (!scrollable) return;
+  
+  // موس رو دنبال کن
+  document.addEventListener('drag', handleDragMove);
+  document.addEventListener('dragover', handleDragMove);
+  document.addEventListener('dragend', stopDragAutoScroll);
+  document.addEventListener('drop', stopDragAutoScroll);
+  
+  function handleDragMove(e) {
+    if (!e.clientX || !e.clientY) return;
     
-    let html = '';
-    pendingPhotos.forEach((p, idx) => {
-        html += `<img src="${p.base64}" class="photo-thumb" draggable="true" ondragstart="dragPhoto(event, ${idx})" onclick="selectPhoto(${idx})" style="${selectedPhotoIndex === idx ? 'border-color: #2e7d32; border-width: 3px;' : ''}">`;
-    });
-    container.innerHTML = html;
+    const rect = scrollable.getBoundingClientRect();
+    const threshold = 60; // فاصله از لبه
+    const speed = 12; // سرعت اسکرول
+    
+    const nearTop = e.clientY < rect.top + threshold;
+    const nearBottom = e.clientY > rect.bottom - threshold;
+    const withinX = e.clientX >= rect.left && e.clientX <= rect.right;
+    
+    if (nearTop && withinX) {
+      startDragAutoScroll(scrollable, -speed);
+    } else if (nearBottom && withinX) {
+      startDragAutoScroll(scrollable, speed);
+    } else {
+      stopDragAutoScroll();
+    }
+  }
+  
+  function startDragAutoScroll(el, speed) {
+    if (_autoScrollInterval) {
+      if (_autoScrollInterval._speed === speed) return;
+      clearInterval(_autoScrollInterval);
+    }
+    _autoScrollInterval = setInterval(() => {
+      el.scrollTop += speed;
+    }, 16); // ~60fps
+    _autoScrollInterval._speed = speed;
+  }
+  
+  function stopDragAutoScroll() {
+    if (_autoScrollInterval) {
+      clearInterval(_autoScrollInterval);
+      _autoScrollInterval = null;
+    }
+  }
 }
 
 function dragPhoto(e, idx) {
@@ -5909,47 +7015,111 @@ function selectPhoto(idx) {
 }
 
 function assignSelectedPhoto(nid) {
-    if (selectedPhotoIndex !== -1) {
-        assignPhoto(nid, selectedPhotoIndex);
-        selectedPhotoIndex = -1;
-        renderPhotoThumbnails();
-    }
+  if (selectedPhotoIndex === -1) {
+    // 🎯 اگه عکسی انتخاب نشده، راهنما نشون بده
+    showToast('⚠️ اول روی یکی از عکس‌ها بزن، بعد دانش‌آموز رو انتخاب کن');
+    return;
+  }
+  
+  const photo = pendingPhotos[selectedPhotoIndex];
+  if (!photo) return;
+  
+  photoAssignments[nid] = photo.base64;
+  selectedPhotoIndex = -1;
+  
+  // 🎯 حذف عکس از لیست pending (چون تخصیص داده شد)
+  pendingPhotos.splice(selectedPhotoIndex === -1 ? 0 : selectedPhotoIndex, 0); // این خط رو نگه داریم، بعداً حذفش می‌کنیم
+  
+  renderPhotoThumbnails();
+  loadPhotoUploadClassList();
+  updateSavePhotosBtnState();
+  
+  showToast('✅ عکس تخصیص یافت');
+}
+function updateSavePhotosBtnState() {
+  const btn = document.getElementById('savePhotosBtn');
+  if (!btn) return;
+  const count = Object.keys(photoAssignments).length;
+  btn.disabled = (count === 0);
+  if (count > 0) {
+    btn.textContent = `💾 ذخیره ${toFa(count)} عکس`;
+  } else {
+    btn.textContent = '💾 ذخیره عکس‌ها';
+  }
 }
 
 function assignPhoto(nid, photoIdx) {
-    const photo = pendingPhotos[photoIdx];
-    if (!photo) return;
-    photoAssignments[nid] = photo.base64;
-    loadPhotoUploadClassList(); 
-    
-    document.getElementById('savePhotosBtn').disabled = Object.keys(photoAssignments).length === 0;
+  const photo = pendingPhotos[photoIdx];
+  if (!photo) return;
+  
+  photoAssignments[nid] = photo.base64;
+  photo._assigned = true;
+  
+  loadPhotoUploadClassList();
+  renderPhotoThumbnails();
+  updateSavePhotosBtnState();
+  
+  showToast('✅ عکس تخصیص یافت');
 }
 
 async function saveClassPhotos() {
-    const nids = Object.keys(photoAssignments);
-    if (nids.length === 0) return;
+  const nids = Object.keys(photoAssignments);
+  if (nids.length === 0) return;
+  
+  const btn = document.getElementById('savePhotosBtn');
+  const total = nids.length;
+  let successCount = 0;
+  let errorCount = 0;
+  
+  btn.disabled = true;
+  
+  for (let i = 0; i < nids.length; i++) {
+    const nid = nids[i];
+    let base64 = photoAssignments[nid];
+    if (!base64) continue;
     
-    document.getElementById('savePhotosBtn').disabled = true;
-    document.getElementById('savePhotosBtn').textContent = '⏳ در حال ذخیره...';
+    // اگه data URL هست، فقط base64 رو بگیر
+    if (base64.indexOf(',') > -1) base64 = base64.split(',')[1];
     
-    let successCount = 0;
-    for (const nid of nids) {
-        const base64 = photoAssignments[nid];
-        try {
-            const params = new URLSearchParams();
-            params.append('action', 'uploadStudentPhoto');
-            params.append('nationalId', nid);
-            params.append('fileData', base64);
-            params.append('mimeType', 'image/jpeg');
-            
-            const res = await fetch(API_URL + '?' + params.toString()).then(r=>r.json());
-            if (res.success) successCount++;
-        } catch(e) { console.error(e); }
+    btn.textContent = `⏳ در حال ذخیره ${toFa(i+1)} از ${toFa(total)}...`;
+    
+    try {
+      const params = new URLSearchParams();
+      params.append('action', 'uploadStudentPhoto');
+      params.append('nationalId', nid);
+      params.append('fileData', base64);
+      params.append('mimeType', 'image/jpeg');
+      
+      // ✅ POST به جای GET
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        body: params
+      }).then(r => r.json());
+      
+      if (res.success) successCount++;
+      else {
+        errorCount++;
+        console.error('خطا برای ' + nid + ':', res.message);
+      }
+    } catch(e) {
+      errorCount++;
+      console.error('خطای شبکه برای ' + nid + ':', e);
     }
-    
-    showToast(`✅ ${successCount} عکس با موفقیت ذخیره شد`);
-    document.getElementById('photoUploadModal').classList.remove('visible');
-    renderDirectoryPage();
+  }
+  
+  btn.disabled = false;
+  btn.textContent = '💾 ذخیره عکس‌ها';
+  
+  if (errorCount === 0) {
+    showToast(`✅ ${toFa(successCount)} عکس ذخیره شد`);
+  } else if (successCount === 0) {
+    showToast(`❌ هیچ عکسی ذخیره نشد (${toFa(errorCount)} خطا)`);
+  } else {
+    showToast(`⚠️ ${toFa(successCount)} موفق، ${toFa(errorCount)} خطا`);
+  }
+  
+  document.getElementById('photoUploadModal').classList.remove('visible');
+  renderDirectoryPage();
 }
 
 // ============================================================
@@ -7019,6 +8189,7 @@ async function renderManagerGrades(){
         <button class="sub-tab active" id="mgrSubTabGrades" onclick="switchMgrSubTab('grades')" style="flex:1; min-width:100px; padding:9px 4px; border-radius:8px; font-family:inherit; font-weight:700; border:none; background:var(--card); color:var(--header-2); cursor:pointer; font-size:12px;">📊 مشاهده نمرات</button>
         <button class="sub-tab" id="mgrSubTabConduct" onclick="switchMgrSubTab('conduct')" style="flex:1; min-width:100px; padding:9px 4px; border-radius:8px; font-family:inherit; font-weight:700; border:none; background:transparent; color:var(--text-soft); cursor:pointer; font-size:12px;">📝 ثبت انضباط</button>
         <button class="sub-tab" id="mgrSubTabChat" onclick="switchMgrSubTab('chat')" style="flex:1; min-width:100px; padding:9px 4px; border-radius:8px; font-family:inherit; font-weight:700; border:none; background:transparent; color:var(--text-soft); cursor:pointer; font-size:12px;">⚙️ تنظیمات</button>
+        <button class="sub-tab" id="mgrSubTabApi" onclick="switchMgrSubTab('api')" style="flex:1; min-width:100px; padding:9px 4px; border-radius:8px; font-family:inherit; font-weight:700; border:none; background:transparent; color:var(--text-soft); cursor:pointer; font-size:12px;">📱 پیامک</button>
       </div>
       
       <div id="mgrGradesSection">
@@ -7081,6 +8252,7 @@ async function renderManagerGrades(){
       </div>
 
       <div id="mgrChatSection" style="display:none;"></div>
+      <div id="mgrApiSection" style="display:none;"></div>
     </div>
   `;
 
@@ -8213,7 +9385,7 @@ async function loadEvalMgrStudents() {
     const cls = rClasses.data ? rClasses.data[classCode] : null;
     
     if(cls && cls.students) {
-      cls.students.sort((a,b) => String(a.name).localeCompare(String(b.name), 'fa')).forEach(s => {
+        sortStudentsByLastName(cls.students).forEach(s => {
         if(sel) sel.innerHTML += '<option value="' + s.nationalId + '">' + s.name + '</option>';
       });
     }
